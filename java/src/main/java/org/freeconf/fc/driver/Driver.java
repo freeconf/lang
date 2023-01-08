@@ -1,6 +1,6 @@
-package org.freeconf.fc;
+package org.freeconf.fc.driver;
 
-public class Parser {
+public class Driver {
     static {
         try {
             // Exampple:
@@ -12,9 +12,8 @@ public class Parser {
         }
     }
 
-    private native Module parse(String ypath, String yfile);
-
-    public Module parseFile(String ypath, String yfile) {
-        return parse(ypath, yfile);
+    public Driver() {        
     }
+    
+    public static native void release(long poolId);
 }
