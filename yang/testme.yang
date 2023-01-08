@@ -1,0 +1,7 @@
+module testme {
+    description "testing loading yang files";
+
+    leaf x { 
+        type string;
+    }
+}
