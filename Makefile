@@ -1,6 +1,6 @@
 export CGO_ENABLED = 1
 
-GRPC_DEST = fclang_grpc
+GRPC_DEST = c/go/driver/pmeta
 
 clib:
 		go build \

@@ -1,0 +1,5 @@
+package lang
+
+func Nop() {
+
+}

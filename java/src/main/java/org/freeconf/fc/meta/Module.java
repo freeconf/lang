@@ -1,6 +1,7 @@
 package org.freeconf.fc.meta;
 
 import org.freeconf.fc.driver.Closeable;
+import org.freeconf.fc.driver.Driver;
 
 public class Module implements Closeable {
     private long poolId;
@@ -23,5 +24,9 @@ public class Module implements Closeable {
 
     public void Close() {
         org.freeconf.fc.driver.Driver.release(poolId);
+    }
+
+    static {
+        Driver.loadLibrary();
     }
 }

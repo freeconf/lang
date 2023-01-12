@@ -1,0 +1,3 @@
+message Module {
+    string ident = 1;
+}
