@@ -16,7 +16,7 @@ int main(int argc, char **argv) {
     assert(strcmp("testme", m.ident) == 0);
 
     // PKJ
-    DataDef m1;
+    Mod m1;
     int rc1 = pkj_decode(&m1, m.serialized, m.serialized_len);
     printf("m1.ident=%s, m1.desc=%s, rc1=%d\n", m1.ident, m1.description, rc1);
 
