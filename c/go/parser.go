@@ -8,13 +8,18 @@ typedef struct Module {
 	long poolId;
 	char* ident;
 	char* desc;
+	void* serialized;
+	int   serialized_len;
 } Module;
 */
 import "C"
 
 import (
+	"bytes"
 	"unsafe"
 
+	"github.com/freeconf/lang/c/go/driver"
+	"github.com/freeconf/yang/meta"
 	p "github.com/freeconf/yang/parser"
 	"github.com/freeconf/yang/source"
 )
@@ -27,12 +32,24 @@ func parser(ypathPtr *C.char, yfilePtr *C.char) C.struct_Module {
 	if err != nil {
 		return C.struct_Module{}
 	}
-	m := C.struct_Module{
-		ident: C.CString(mod.Ident()),
-		desc:  C.CString(mod.Description()),
+	var buf bytes.Buffer
+	if err = driver.Encode2(mod, &buf); err != nil {
+		return C.struct_Module{}
 	}
-	m.poolId = C.long(pool.Add(mod, freeParser(m)))
+	serialized := buf.Bytes()
+	m := C.struct_Module{
+		ident:          C.CString(mod.Ident()),
+		desc:           C.CString(mod.Description()),
+		serialized:     C.CBytes(serialized),
+		serialized_len: C.int(len(serialized)),
+	}
+	m.poolId = C.long(pool.Add(modRef{mod: mod}, freeParser(m)))
 	return m
+}
+
+type modRef struct {
+	mod        *meta.Module
+	serialized []byte
 }
 
 func freeParser(m C.struct_Module) func() {
@@ -42,6 +59,9 @@ func freeParser(m C.struct_Module) func() {
 		}
 		if m.desc != nil {
 			C.free(unsafe.Pointer(m.desc))
+		}
+		if m.serialized != nil {
+			C.free(unsafe.Pointer(m.serialized))
 		}
 	}
 }

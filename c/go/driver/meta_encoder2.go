@@ -10,8 +10,23 @@ import (
 
 func Encode2(m *meta.Module, out io.Writer) error {
 	var hnd codec.CborHandle
-	e := codec.NewEncoder(out, &hnd)
-	return e.Encode(meta2driver(m))
+	pack := codec.NewEncoder(out, &hnd)
+	e := &encoder{pack: pack}
+	return e.module(m)
+}
+
+type encoder struct {
+	pack *codec.Encoder
+}
+
+func (e *encoder) module(m *meta.Module) error {
+	if err := e.pack.Encode(m.Ident()); err != nil {
+		return err
+	}
+	if err := e.pack.Encode(m.Description()); err != nil {
+		return err
+	}
+	return nil
 }
 
 type DataDef struct {

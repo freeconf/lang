@@ -4,6 +4,12 @@
 sudo apt install gcc g++
 ```
 
+## CBOR
+
+```
+sudo apt install libcbor-dev
+```
+
 ## Flatbuffers
 https://google.github.io/flatbuffers/flatbuffers_guide_building.html
 
