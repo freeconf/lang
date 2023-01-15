@@ -11,6 +11,7 @@ require (
 require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/flatbuffers/go v0.0.0-20230108230133-3b8644d32c50 // indirect
+	github.com/iancoleman/strcase v0.2.0 // indirect
 	github.com/ugorji/go/codec v1.2.8 // indirect
 	github.com/vmihailenco/msgpack/v5 v5.3.5 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect

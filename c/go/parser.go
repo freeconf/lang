@@ -18,7 +18,7 @@ import (
 	"bytes"
 	"unsafe"
 
-	"github.com/freeconf/lang/c/go/driver"
+	"github.com/freeconf/lang/c/go/emeta"
 	"github.com/freeconf/yang/meta"
 	p "github.com/freeconf/yang/parser"
 	"github.com/freeconf/yang/source"
@@ -33,7 +33,7 @@ func parser(ypathPtr *C.char, yfilePtr *C.char) C.struct_Module {
 		return C.struct_Module{}
 	}
 	var buf bytes.Buffer
-	if err = driver.Encode2(mod, &buf); err != nil {
+	if err = emeta.Encode(mod, &buf); err != nil {
 		return C.struct_Module{}
 	}
 	serialized := buf.Bytes()
