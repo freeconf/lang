@@ -1,5 +1,5 @@
 FC_LANG_DIR = ..
-SRC = $(wildcard ./src/*.c)
+SRC = $(wildcard ./*.c)
 OBJS = $(foreach F,$(SRC),./out/$(notdir $(F:.c=.o)))
 
 TESTS = \
@@ -22,7 +22,7 @@ LIBS = \
 
 INCLUDE_DIRS = \
 	-I$(FC_LANG_DIR)/lib \
-	-I./src
+	-I.
 
 all : lib/libfc-c.so test
 
@@ -46,7 +46,7 @@ out/test/% : test/%.c
 		-o $@ $^ \
 		$(LIBS) -lfc-c
 
-out/%.o : src/%.c
+out/%.o : %.c
 	gcc -c \
 		$(GCC_FLAGS) \
 		-Wall \

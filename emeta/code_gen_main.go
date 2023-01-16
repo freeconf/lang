@@ -9,10 +9,10 @@ package main
 import (
 	"os"
 
-	"github.com/freeconf/lang/c/go/emeta"
+	"github.com/freeconf/lang/emeta"
 )
 
-var cDir = "../../src"
+var cDir = "../c"
 
 func main() {
 	structs, err := emeta.ParseSource("./meta.go")

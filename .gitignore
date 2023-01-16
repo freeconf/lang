@@ -1,1 +1,8 @@
-c/src/meta.h
+c/meta.h
+.vscode/
+c/lib/
+c/out/
+lib/
+
+
+python/fc/__pycache__/
