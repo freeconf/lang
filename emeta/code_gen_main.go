@@ -12,13 +12,15 @@ import (
 	"github.com/freeconf/lang/c/go/emeta"
 )
 
+var cDir = "../../src"
+
 func main() {
 	structs, err := emeta.ParseSource("./meta.go")
 	chkerr(err)
-	dest, err := os.Create("../../src/meta.h")
+	dest, err := os.Create(cDir + "/meta.h")
 	chkerr(err)
 	defer dest.Close()
-	err = emeta.GenerateSource(structs, "./templates/meta.h.tmpl", dest)
+	err = emeta.GenerateSource(structs, cDir+"/meta.h.tmpl", dest)
 	chkerr(err)
 }
 

@@ -50,7 +50,7 @@ func (p *ObjectPool) Remove(poolId int64) {
 
 var pool = newObjectPool()
 
-//export destruct
-func destruct(poolId C.long) {
+//export fc_free_pool_item
+func fc_free_pool_item(poolId C.long) {
 	pool.Remove(int64(poolId))
 }

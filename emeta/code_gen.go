@@ -1,7 +1,6 @@
 package emeta
 
 import (
-	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -98,10 +97,12 @@ func GenerateSource(src MetaMeta, tmpl string, out io.Writer) error {
 		panic(err)
 	}
 	funcs := template.FuncMap{
-		"lc":    strings.ToLower,
-		"uc":    strings.ToUpper,
-		"snake": strcase.ToSnake,
-		"ctype": ctype,
+		"lc":         strings.ToLower,
+		"uc":         strings.ToUpper,
+		"snake":      strcase.ToSnake,
+		"cDefType":   cDefType,
+		"cFieldType": cFieldType,
+		"cName":      cName,
 	}
 	t, err := template.New("code_gen").Funcs(funcs).Parse(string(tmplSrc))
 	if err != nil {
@@ -118,22 +119,38 @@ func GenerateSource(src MetaMeta, tmpl string, out io.Writer) error {
 	return nil
 }
 
-func ctype(f *fieldDef) string {
-	switch f.Name {
-	case "Definitions":
-		return "datadef_ptr* definitions"
-	}
-	ctype := f.Type
+func cDefType(d *structDef) string {
+	return "fc_" + whisperingSnake(d.Name)
+}
+
+func cName(f *fieldDef) string {
+	return whisperingSnake(f.Name)
+}
+
+func whisperingSnake(s string) string {
+	return strings.ToLower(strcase.ToSnake(s))
+}
+
+func cFieldType(f *fieldDef) string {
 	switch f.Type {
 	case "string":
-		ctype = "char*"
+		return "char*"
+	case "*bool":
+		return "bool*"
+	case "int":
+		return "int"
 	}
+	switch f.Name {
+	case "Definitions":
+		return "fc_datadef_ptr*"
+	}
+	ctype := whisperingSnake(f.Type)
 	if strings.HasPrefix(f.Type, "[]") {
-		ctype = f.Type[2:] + "**"
+		ctype = ctype[2:] + "**"
 	}
 	if strings.HasPrefix(f.Type, "*") {
-		ctype = f.Type[1:] + "*"
+		ctype = ctype[1:] + "*"
 	}
 
-	return fmt.Sprintf("%s %s", ctype, strings.ToLower(f.Name))
+	return "fc_" + ctype
 }

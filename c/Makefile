@@ -1,46 +1,54 @@
-GO_SRC = $(wildcard ./go/*.go ./go/*/*.go)
-TEST_SRC = $(wildcard ./test/*.c)
+FC_LANG_DIR = ..
+SRC = $(wildcard ./src/*.c)
+OBJS = $(foreach F,$(SRC),./out/$(notdir $(F:.c=.o)))
+
 TESTS = \
-	test_parser
-TEST_OBJ = $(foreach T,$(TESTS), out/$(T).out)
-export LD_LIBRARY_PATH = ./lib
-export YANGPATH = $(abspath ../yang)
+	out/test/test_parser
+
+export LD_LIBRARY_PATH = $(FC_LANG_DIR)/lib:./lib
+export YANGPATH=$(abspath ../yang)
 
 # I think cgo generates code that triggers 'stack smashing detected'
 # so i had to disable this check
 GCC_FLAGS = -fno-stack-protector 
 
 LIB_DIRS = \
-	-L./lib \
-	-L/usr/local/x86_64-linux-gnu \
-	-L/home/dhubler/vendor/QCBOR/build
+	-L$(FC_LANG_DIR)/lib \
+	-L/usr/local/x86_64-linux-gnu
 
 LIBS = \
 	-lfc \
-	-lcbor \
-	-l:libqcbor.a -lm 
+	-lcbor
 
 INCLUDE_DIRS = \
-	-I./lib \
-	-I/home/dhubler/vendor/QCBOR/inc
+	-I$(FC_LANG_DIR)/lib \
+	-I./src
 
-all : lib/libfc.so test
+all : lib/libfc-c.so test
 
+.PHONY: test
 test: $(TESTS)
+	$(TESTS)
 
-$(TESTS) : % : out/%.out
-	./out/$@.out
+lib/libfc-c.so: $(OBJS)
+	gcc \
+	$(LIB_DIRS) \
+	-shared -o $@ $^ \
+	$(LIBS)
 
-lib/libfc.so: $(GO_SRC)
-		go build \
-			-buildmode=c-shared \
-			-o lib/libfc.so ./go/*.go
-
-out/%.out : $(TEST_SRC)
+out/test/% : test/%.c
+	! test -d out/test || mkdir -p out/test
 	gcc \
 		$(GCC_FLAGS) \
 		-Wall \
 		$(INCLUDE_DIRS) \
-		$(LIB_DIRS) \
-		./test/$*.c -o $@ \
-		$(LIBS)
+		$(LIB_DIRS) -L./lib \
+		-o $@ $^ \
+		$(LIBS) -lfc-c
+
+out/%.o : src/%.c
+	gcc -c \
+		$(GCC_FLAGS) \
+		-Wall \
+		$(INCLUDE_DIRS) \
+		$^ -o $@
