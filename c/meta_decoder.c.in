@@ -1,0 +1,117 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <cbor.h>
+#include <stdio.h>
+#include <freeconf/err.h>
+#include <freeconf/meta.h>
+
+fc_error fc_decode_char_ptr(char **s, fc_datadef_ptr parent, cbor_item_t *item) {
+    char *src = (char *)cbor_string_handle(item);
+    size_t len = cbor_string_length(item);
+    *s = (char *)malloc(len + 1);
+    memcpy(*s, src, len);
+    (*s)[len] = 0;
+    return FC_ERR_NONE;
+}
+
+fc_error fc_decode_int(int* i, fc_datadef_ptr parent, cbor_item_t *item) {
+    *i = (int)cbor_get_uint32(item);
+    return FC_ERR_NONE;
+}
+
+fc_error fc_decode_fc_encoding_id(fc_encoding_id *t, fc_datadef_ptr parent, cbor_item_t *item) {
+    *t = (fc_encoding_id)cbor_get_uint32(item);
+    return FC_ERR_NONE;
+}
+
+fc_error fc_decode_fc_optional_bool(fc_optional_bool *b, fc_datadef_ptr parent, cbor_item_t *item) {
+    *b = (fc_optional_bool)cbor_get_uint32(item);
+    return FC_ERR_NONE;
+}
+
+fc_error fc_decode_fc_extension_ptr_ptr(fc_extension_ptr** ext, fc_datadef_ptr parent, cbor_item_t *item) {
+    // TODO
+    return FC_ERR_NONE;
+}
+
+fc_error fc_decode_expect(cbor_item_t* item, int expected)  {
+    if (cbor_typeof(item) != expected) {
+        printf("expected %d but got %d\n", expected, cbor_typeof(item));
+        return FC_UNEXPECTED_ENCODING;
+    }    
+    return FC_ERR_NONE;
+}
+
+fc_error fc_decode_fc_datadef_ptr_ptr(fc_datadef_ptr** defs, fc_datadef_ptr parent, cbor_item_t *item);
+
+{{ range .Meta.Definitions }}
+fc_error fc_decode_{{. | cDefType }}_ptr({{. | cDefType }}** def, fc_datadef_ptr parent, cbor_item_t* item) {
+    fc_error err = fc_decode_expect(item, CBOR_TYPE_ARRAY);
+    if (err != FC_ERR_NONE) {
+        return err;
+    }
+    *def = calloc(1, sizeof({{. | cDefType }}));    
+    {{. | cDefType }}* def_ptr = *def;
+    def_ptr->parent = parent;
+    cbor_item_t** array = cbor_array_handle(item);
+    {{- range $index, $field := .Fields }}
+    err = fc_decode_{{$field | cFieldType | cNameSafe }}(&(def_ptr->{{ $field | cName }}), def, array[{{ $index }}]);
+    if (err != FC_ERR_NONE) {
+        return err;
+    }
+    {{- end }}
+
+    return FC_ERR_NONE;
+}
+{{ end }}
+
+fc_error fc_decode_fc_datadef_ptr_ptr(fc_datadef_ptr** defs, fc_datadef_ptr parent, cbor_item_t *item) {
+    fc_error err = fc_decode_expect(item, CBOR_TYPE_ARRAY);
+    if (err != FC_ERR_NONE) {
+        return err;
+    }
+    size_t len = cbor_array_size(item);
+    (*defs) = malloc(len * sizeof(fc_datadef_ptr));
+    cbor_item_t** array = cbor_array_handle(item);
+    for (int i = 0; i < len; i++) {
+        cbor_item_t** next = cbor_array_handle(array[i]);
+        fc_encoding_id next_type;
+        err = fc_decode_fc_encoding_id(&next_type, NULL, next[0]);
+        if (err != FC_ERR_NONE) {
+            return err;
+        }
+        switch (next_type) {
+            {{ range .Meta.Definitions }}
+            case FC_{{ .Name | snake| uc -}}: {
+                {{. | cDefType }}* def = (*defs)[i];
+                err = fc_decode_{{. | cDefType }}_ptr(&def, parent, array[i]);
+                break;   
+            }
+            {{ end }}
+            default:
+                return FC_NOT_IMPLEMENTED;
+        }
+        if (err != FC_ERR_NONE) {
+            return err;
+        }
+    }
+
+    return FC_ERR_NONE;
+}
+
+fc_error fc_decode_module(fc_module** m, void* buffer, int len) {
+    struct cbor_load_result result;
+    cbor_item_t* item = cbor_load(buffer, len, &result);
+    if (item == NULL) {
+        if (result.error.code != CBOR_ERR_NONE) {
+            return FC_BAD_ENCODING;
+        }
+        return FC_EMPTY_BUFFER;
+    }
+    //cbor_describe(item, stdout);
+    fc_error err = fc_decode_fc_module_ptr(m, NULL, item);
+    cbor_decref(&item);
+    return err;
+}

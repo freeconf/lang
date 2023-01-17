@@ -10,7 +10,9 @@ export YANGPATH=$(abspath ../yang)
 
 # I think cgo generates code that triggers 'stack smashing detected'
 # so i had to disable this check
-GCC_FLAGS = -fno-stack-protector 
+GCC_FLAGS = \
+	-fno-stack-protector \
+	-fPIC
 
 LIB_DIRS = \
 	-L$(FC_LANG_DIR)/lib \
@@ -22,6 +24,7 @@ LIBS = \
 
 INCLUDE_DIRS = \
 	-I$(FC_LANG_DIR)/lib \
+	-I./include \
 	-I.
 
 all : lib/libfc-c.so test

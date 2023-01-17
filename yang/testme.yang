@@ -4,4 +4,12 @@ module testme {
     leaf x { 
         type string;
     }
+
+    container z {
+        description "Z";
+
+        leaf-list q {
+            type int32;
+        }
+    }
 }

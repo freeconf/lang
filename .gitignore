@@ -1,8 +1,8 @@
-c/meta.h
 .vscode/
 c/lib/
 c/out/
+c/
 lib/
-
-
+c/include/freeconf/meta.h
+c/meta_decoder.c
 python/fc/__pycache__/

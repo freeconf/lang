@@ -1,15 +1,16 @@
 package emeta
 
 import (
+	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
 	"go/types"
-	"html/template"
 	"io"
 	"io/ioutil"
 	"os"
 	"strings"
+	"text/template"
 
 	"github.com/iancoleman/strcase"
 )
@@ -23,14 +24,15 @@ func ParseSource(src string) (MetaMeta, error) {
 	if err != nil {
 		return empty, err
 	}
-	g := &visitor{}
+	g := newVistor()
 	ast.Walk(g, f)
 	return g.Meta, nil
 }
 
 type structDef struct {
-	Name   string
-	Fields []*fieldDef
+	Name       string
+	EncodingId int
+	Fields     []*fieldDef
 }
 
 type fieldDef struct {
@@ -41,14 +43,20 @@ type fieldDef struct {
 
 // Yes, this is meta data about the Meta.
 type MetaMeta struct {
-	Definitions     []*structDef
-	DefinitionTypes []string
+	Definitions []*structDef
 }
 
 type visitor struct {
 	Meta          MetaMeta
+	encodingIds   map[string]int
 	currentStruct *structDef
 	currentField  *fieldDef
+}
+
+func newVistor() *visitor {
+	return &visitor{
+		encodingIds: make(map[string]int),
+	}
 }
 
 func (g *visitor) Visit(n ast.Node) ast.Visitor {
@@ -59,20 +67,28 @@ func (g *visitor) Visit(n ast.Node) ast.Visitor {
 	case *ast.TypeSpec:
 		switch x.Type.(type) {
 		case *ast.StructType:
+			name := x.Name.Name
+			defTypeName := "EncodingId" + name
+			encodingId, valid := g.encodingIds[defTypeName]
+			if !valid {
+				panic(fmt.Sprintf("'%s' not defined", defTypeName))
+			}
 			def := &structDef{
-				Name: x.Name.Name,
+				Name:       name,
+				EncodingId: encodingId,
 			}
 			g.Meta.Definitions = append(g.Meta.Definitions, def)
 			g.currentStruct = def
 		}
 	case *ast.ValueSpec:
-		if strings.HasPrefix(x.Names[0].Name, "DefType") {
-			g.Meta.DefinitionTypes = append(g.Meta.DefinitionTypes, x.Names[0].Name)
+		if strings.HasPrefix(x.Names[0].Name, "EncodingId") {
+			g.encodingIds[x.Names[0].Name] = len(g.encodingIds)
 		}
 	case *ast.Field:
 		if g.currentStruct != nil {
+			name := x.Names[0].Name
 			def := &fieldDef{
-				Name: x.Names[0].Name,
+				Name: name,
 				Type: types.ExprString(x.Type),
 			}
 			if x.Tag != nil {
@@ -103,6 +119,7 @@ func GenerateSource(src MetaMeta, tmpl string, out io.Writer) error {
 		"cDefType":   cDefType,
 		"cFieldType": cFieldType,
 		"cName":      cName,
+		"cNameSafe":  cNameSafe,
 	}
 	t, err := template.New("code_gen").Funcs(funcs).Parse(string(tmplSrc))
 	if err != nil {
@@ -129,6 +146,10 @@ func cName(f *fieldDef) string {
 
 func whisperingSnake(s string) string {
 	return strings.ToLower(strcase.ToSnake(s))
+}
+
+func cNameSafe(name string) string {
+	return strings.ReplaceAll(name, "*", "_ptr")
 }
 
 func cFieldType(f *fieldDef) string {

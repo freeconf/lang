@@ -7,21 +7,38 @@
 package main
 
 import (
+	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/freeconf/lang/emeta"
 )
 
-var cDir = "../c"
+var dirs = []string{
+	"../c",
+}
 
 func main() {
-	structs, err := emeta.ParseSource("./meta.go")
+	metas, err := emeta.ParseSource("./meta.go")
 	chkerr(err)
-	dest, err := os.Create(cDir + "/meta.h")
-	chkerr(err)
-	defer dest.Close()
-	err = emeta.GenerateSource(structs, cDir+"/meta.h.tmpl", dest)
-	chkerr(err)
+	for _, dir := range dirs {
+		err = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+			if !strings.HasSuffix(path, ".in") {
+				return nil
+			}
+			destFname := path[:len(path)-3]
+			fmt.Printf("%s => %s\n", path, destFname)
+			dest, err := os.Create(destFname)
+			if err != nil {
+				return err
+			}
+			defer dest.Close()
+			err = emeta.GenerateSource(metas, path, dest)
+			return err
+		})
+		chkerr(err)
+	}
 }
 
 func chkerr(err error) {

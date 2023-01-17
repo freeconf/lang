@@ -32,10 +32,10 @@ func (e *encoder) def(m meta.Definition) any {
 	switch x := m.(type) {
 	case *meta.Module:
 		return Module{
+			EncodingIdModule,
 			x.Ident(),
 			x.Description(),
 			[]Extension{},
-			DefTypeModule,
 			x.Namespace(),
 			x.Prefix(),
 			x.Contact(),
@@ -44,12 +44,41 @@ func (e *encoder) def(m meta.Definition) any {
 			x.Version(),
 			e.defs(x),
 		}
-	case *meta.Leaf:
-		return Leaf{
+	case *meta.List:
+		return List{
+			EncodingIdList,
+			x.Ident(),
+			x.Description(),
+			[]Extension{},
+			boolPtr(x.IsConfigSet(), x.Config()),
+			boolPtr(x.IsMandatorySet(), x.Mandatory()),
+			e.defs(x),
+		}
+	case *meta.Container:
+		return Container{
+			EncodingIdContainer,
+			x.Ident(),
+			x.Description(),
+			[]Extension{},
+			boolPtr(x.IsConfigSet(), x.Config()),
+			boolPtr(x.IsMandatorySet(), x.Mandatory()),
+			e.defs(x),
+		}
+	case *meta.LeafList:
+		return LeafList{
+			EncodingIdLeafList,
 			m.Ident(),
 			x.Description(),
 			[]Extension{},
-			DefTypeLeaf,
+			boolPtr(x.IsConfigSet(), x.Config()),
+			boolPtr(x.IsMandatorySet(), x.Mandatory()),
+		}
+	case *meta.Leaf:
+		return Leaf{
+			EncodingIdLeaf,
+			m.Ident(),
+			x.Description(),
+			[]Extension{},
 			boolPtr(x.IsConfigSet(), x.Config()),
 			boolPtr(x.IsMandatorySet(), x.Mandatory()),
 		}
@@ -57,9 +86,12 @@ func (e *encoder) def(m meta.Definition) any {
 	panic(fmt.Sprintf("not supported yet %T", m))
 }
 
-func boolPtr(isSet bool, v bool) *bool {
+func boolPtr(isSet bool, v bool) OptionalBool {
 	if isSet {
-		return &v
+		if v {
+			return BoolTrue
+		}
+		return BoolFalse
 	}
-	return nil
+	return BoolNotSet
 }
