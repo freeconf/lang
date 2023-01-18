@@ -8,6 +8,8 @@ type EncodingId int
 
 const (
 	EncodingIdExtension = EncodingId(iota)
+	EncodingIdExtensionDef
+	EncodingIdExtensionDefArg
 	EncodingIdModule
 	EncodingIdLeaf
 	EncodingIdLeafList
@@ -26,8 +28,29 @@ const (
 // These are defined in order that when they are generated in C there no circular
 // references so be ware order has implications for compilation in other languages
 
+type ExtensionDefArg struct {
+	Ident       string
+	Description string
+	Ref         string
+	YinElement  bool
+	// Extensions []*Extension
+}
+
+type ExtensionDef struct {
+	Ident       string
+	Description string
+	Ref         string
+	Status      int
+	Args        []ExtensionDefArg
+	// Extensions []*Extension
+}
+
 type Extension struct {
-	Name string
+	Ident   string
+	Prefix  string
+	Keyword string
+	Def     string `reference:"ExensionDef"`
+	Args    []string
 }
 
 type Module struct {

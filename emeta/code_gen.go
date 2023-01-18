@@ -156,8 +156,12 @@ func cFieldType(f *fieldDef) string {
 	switch f.Type {
 	case "string":
 		return "char*"
+	case "[]string":
+		return "char**"
 	case "*bool":
 		return "bool*"
+	case "bool":
+		return "bool"
 	case "int":
 		return "int"
 	}

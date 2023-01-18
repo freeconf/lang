@@ -7,12 +7,49 @@
 #include <freeconf/err.h>
 #include <freeconf/meta.h>
 
+fc_error fc_decode_fc_datadef_ptr_ptr(fc_datadef_ptr** defs, fc_datadef_ptr parent, cbor_item_t *item);
+fc_error fc_decode_fc_extension_def_ptr(fc_extension_def** def, fc_datadef_ptr parent, cbor_item_t* item);
+fc_error fc_decode_fc_extension_ptr(fc_extension** ext, fc_datadef_ptr parent, cbor_item_t* item);
+
+fc_error fc_decode_expect(cbor_item_t* item, int expected)  {
+    if (cbor_typeof(item) != expected) {
+        printf("expected %d but got %d\n", expected, cbor_typeof(item));
+        return FC_UNEXPECTED_ENCODING;
+    }    
+    return FC_ERR_NONE;
+}
+
 fc_error fc_decode_char_ptr(char **s, fc_datadef_ptr parent, cbor_item_t *item) {
     char *src = (char *)cbor_string_handle(item);
     size_t len = cbor_string_length(item);
     *s = (char *)malloc(len + 1);
     memcpy(*s, src, len);
     (*s)[len] = 0;
+    return FC_ERR_NONE;
+}
+
+fc_error fc_decode_char_ptr_ptr(char ***strs_ptr, fc_datadef_ptr parent, cbor_item_t *item) {
+    fc_error err = fc_decode_expect(item, CBOR_TYPE_ARRAY);
+    if (err != FC_ERR_NONE) {
+        return err;
+    }
+
+    size_t len = cbor_array_size(item);    
+    (*strs_ptr) = (char **)malloc(len * sizeof(char*));
+    char** strs = (*strs_ptr);
+    cbor_item_t** array = cbor_array_handle(item);
+    for (int i = 0; i < len; i++) {
+        err = fc_decode_char_ptr(&(strs[i]), NULL, array[i]);
+        if (err != FC_ERR_NONE) {
+            return err;
+        }
+    }
+
+    return FC_ERR_NONE;
+}
+
+fc_error fc_decode_bool(bool* b, fc_datadef_ptr parent, cbor_item_t *item) {
+    *b = cbor_get_bool(item);
     return FC_ERR_NONE;
 }
 
@@ -31,20 +68,30 @@ fc_error fc_decode_fc_optional_bool(fc_optional_bool *b, fc_datadef_ptr parent, 
     return FC_ERR_NONE;
 }
 
-fc_error fc_decode_fc_extension_ptr_ptr(fc_extension_ptr** ext, fc_datadef_ptr parent, cbor_item_t *item) {
+fc_error fc_decode_fc_extension_ptr_ptr(fc_extension_ptr** exts_ptr, fc_datadef_ptr parent, cbor_item_t *item) {
+    fc_error err = fc_decode_expect(item, CBOR_TYPE_ARRAY);
+    if (err != FC_ERR_NONE) {
+        return err;
+    }
+
+    size_t len = cbor_array_size(item);    
+    (*exts_ptr) = (fc_extension_ptr*)malloc(len * sizeof(fc_extension_ptr));
+    fc_extension_ptr* exts = (*exts_ptr);
+    cbor_item_t** array = cbor_array_handle(item);
+    for (int i = 0; i < len; i++) {
+        err = fc_decode_fc_extension_ptr(&(exts[i]), NULL, array[i]);
+        if (err != FC_ERR_NONE) {
+            return err;
+        }
+    }
+
     // TODO
     return FC_ERR_NONE;
 }
 
-fc_error fc_decode_expect(cbor_item_t* item, int expected)  {
-    if (cbor_typeof(item) != expected) {
-        printf("expected %d but got %d\n", expected, cbor_typeof(item));
-        return FC_UNEXPECTED_ENCODING;
-    }    
+fc_error fc_decode_fc_extension_def_arg_ptr_ptr(fc_extension_def_arg*** arg_ptr, fc_datadef_ptr parent, cbor_item_t *item) {
     return FC_ERR_NONE;
 }
-
-fc_error fc_decode_fc_datadef_ptr_ptr(fc_datadef_ptr** defs, fc_datadef_ptr parent, cbor_item_t *item);
 
 {{ range .Meta.Definitions }}
 fc_error fc_decode_{{. | cDefType }}_ptr({{. | cDefType }}** def, fc_datadef_ptr parent, cbor_item_t* item) {

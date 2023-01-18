@@ -1,8 +1,15 @@
 module testme {
     description "testing loading yang files";
+    prefix "t";
+
+    extension x {
+        description "x desc here";
+        argument "arg0";
+    }
 
     leaf x { 
         type string;
+        t:x "arg here";
     }
 
     container z {

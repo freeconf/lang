@@ -31,5 +31,6 @@ typedef struct {{. | cDefType }}_s {
 {{ end}}
 
 typedef fc_extension* fc_extension_ptr;
+typedef fc_extension_def_arg* fc_extension_def_arg_ptr;
 
 #endif

@@ -28,6 +28,21 @@ func (e *encoder) defs(c meta.HasDataDefinitions) []interface{} {
 	return r
 }
 
+func (e *encoder) extensions(m meta.HasExtensions) []Extension {
+	src := m.Extensions()
+	dest := make([]Extension, len(src))
+	for i, x := range src {
+		dest[i] = Extension{
+			x.Ident(),
+			x.Prefix(),
+			x.Keyword(),
+			x.Def().Ident(),
+			x.Arguments(),
+		}
+	}
+	return dest
+}
+
 func (e *encoder) def(m meta.Definition) any {
 	switch x := m.(type) {
 	case *meta.Module:
@@ -35,7 +50,7 @@ func (e *encoder) def(m meta.Definition) any {
 			EncodingIdModule,
 			x.Ident(),
 			x.Description(),
-			[]Extension{},
+			e.extensions(m),
 			x.Namespace(),
 			x.Prefix(),
 			x.Contact(),
@@ -49,7 +64,7 @@ func (e *encoder) def(m meta.Definition) any {
 			EncodingIdList,
 			x.Ident(),
 			x.Description(),
-			[]Extension{},
+			e.extensions(m),
 			boolPtr(x.IsConfigSet(), x.Config()),
 			boolPtr(x.IsMandatorySet(), x.Mandatory()),
 			e.defs(x),
@@ -59,7 +74,7 @@ func (e *encoder) def(m meta.Definition) any {
 			EncodingIdContainer,
 			x.Ident(),
 			x.Description(),
-			[]Extension{},
+			e.extensions(m),
 			boolPtr(x.IsConfigSet(), x.Config()),
 			boolPtr(x.IsMandatorySet(), x.Mandatory()),
 			e.defs(x),
@@ -69,7 +84,7 @@ func (e *encoder) def(m meta.Definition) any {
 			EncodingIdLeafList,
 			m.Ident(),
 			x.Description(),
-			[]Extension{},
+			e.extensions(m),
 			boolPtr(x.IsConfigSet(), x.Config()),
 			boolPtr(x.IsMandatorySet(), x.Mandatory()),
 		}
@@ -78,7 +93,7 @@ func (e *encoder) def(m meta.Definition) any {
 			EncodingIdLeaf,
 			m.Ident(),
 			x.Description(),
-			[]Extension{},
+			e.extensions(m),
 			boolPtr(x.IsConfigSet(), x.Config()),
 			boolPtr(x.IsMandatorySet(), x.Mandatory()),
 		}
