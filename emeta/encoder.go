@@ -33,6 +33,7 @@ func (e *encoder) extensions(m meta.HasExtensions) []Extension {
 	dest := make([]Extension, len(src))
 	for i, x := range src {
 		dest[i] = Extension{
+			EncodingIdExtension,
 			x.Ident(),
 			x.Prefix(),
 			x.Keyword(),
@@ -51,13 +52,13 @@ func (e *encoder) def(m meta.Definition) any {
 			x.Ident(),
 			x.Description(),
 			e.extensions(m),
+			e.defs(x),
 			x.Namespace(),
 			x.Prefix(),
 			x.Contact(),
 			x.Organization(),
 			x.Reference(),
 			x.Version(),
-			e.defs(x),
 		}
 	case *meta.List:
 		return List{
@@ -65,9 +66,9 @@ func (e *encoder) def(m meta.Definition) any {
 			x.Ident(),
 			x.Description(),
 			e.extensions(m),
+			e.defs(x),
 			boolPtr(x.IsConfigSet(), x.Config()),
 			boolPtr(x.IsMandatorySet(), x.Mandatory()),
-			e.defs(x),
 		}
 	case *meta.Container:
 		return Container{
@@ -75,9 +76,9 @@ func (e *encoder) def(m meta.Definition) any {
 			x.Ident(),
 			x.Description(),
 			e.extensions(m),
+			e.defs(x),
 			boolPtr(x.IsConfigSet(), x.Config()),
 			boolPtr(x.IsMandatorySet(), x.Mandatory()),
-			e.defs(x),
 		}
 	case *meta.LeafList:
 		return LeafList{

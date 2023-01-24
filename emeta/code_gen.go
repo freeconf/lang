@@ -167,7 +167,7 @@ func cFieldType(f *fieldDef) string {
 	}
 	switch f.Name {
 	case "Definitions":
-		return "fc_datadef_ptr*"
+		return "fc_meta_array"
 	}
 	ctype := whisperingSnake(f.Type)
 	if strings.HasPrefix(f.Type, "[]") {

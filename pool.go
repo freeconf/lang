@@ -26,6 +26,12 @@ func newObjectPool() *ObjectPool {
 	}
 }
 
+func (p *ObjectPool) Get(id int64) any {
+	p.lock.Lock()
+	defer p.lock.Unlock()
+	return p.objs[id]
+}
+
 func (p *ObjectPool) Add(x interface{}, destructor func()) int64 {
 	p.lock.Lock()
 	defer p.lock.Unlock()

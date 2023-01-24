@@ -46,11 +46,12 @@ type ExtensionDef struct {
 }
 
 type Extension struct {
-	Ident   string
-	Prefix  string
-	Keyword string
-	Def     string `reference:"ExensionDef"`
-	Args    []string
+	EncodingId EncodingId
+	Ident      string
+	Prefix     string
+	Keyword    string
+	Def        string `reference:"ExensionDef"`
+	Args       []string
 }
 
 type Module struct {
@@ -58,13 +59,15 @@ type Module struct {
 	Ident       string
 	Description string
 	Extensions  []Extension
-	Ns          string
-	Prefix      string
-	Contact     string
-	Org         string
-	Ref         string
-	Ver         string
+
 	Definitions []interface{}
+
+	Ns      string
+	Prefix  string
+	Contact string
+	Org     string
+	Ref     string
+	Ver     string
 }
 
 type Leaf struct {
@@ -72,8 +75,9 @@ type Leaf struct {
 	Ident       string
 	Description string
 	Extensions  []Extension
-	Config      OptionalBool
-	Mandatory   OptionalBool
+
+	Config    OptionalBool
+	Mandatory OptionalBool
 }
 
 type LeafList struct {
@@ -81,8 +85,9 @@ type LeafList struct {
 	Ident       string
 	Description string
 	Extensions  []Extension
-	Config      OptionalBool
-	Mandatory   OptionalBool
+
+	Config    OptionalBool
+	Mandatory OptionalBool
 }
 
 type Container struct {
@@ -90,9 +95,11 @@ type Container struct {
 	Ident       string
 	Description string
 	Extensions  []Extension
-	Config      OptionalBool
-	Mandatory   OptionalBool
+
 	Definitions []interface{}
+
+	Config    OptionalBool
+	Mandatory OptionalBool
 }
 
 type List struct {
@@ -100,7 +107,9 @@ type List struct {
 	Ident       string
 	Description string
 	Extensions  []Extension
-	Config      OptionalBool
-	Mandatory   OptionalBool
+
 	Definitions []interface{}
+
+	Config    OptionalBool
+	Mandatory OptionalBool
 }

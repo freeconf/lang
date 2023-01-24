@@ -1,7 +1,6 @@
 .vscode/
 c/lib/
 c/out/
-c/
 lib/
 c/include/freeconf/meta.h
 c/meta_decoder.c

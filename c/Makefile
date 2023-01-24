@@ -3,7 +3,8 @@ SRC = $(wildcard ./*.c)
 OBJS = $(foreach F,$(SRC),./out/$(notdir $(F:.c=.o)))
 
 TESTS = \
-	out/test/test_parser
+	out/test/test_parser \
+	out/test/test_node
 
 export LD_LIBRARY_PATH = $(FC_LANG_DIR)/lib:./lib
 export YANGPATH=$(abspath ../yang)
@@ -31,7 +32,6 @@ all : lib/libfc-c.so test
 
 .PHONY: test
 test: $(TESTS)
-	$(TESTS)
 
 lib/libfc-c.so: $(OBJS)
 	gcc \
@@ -48,6 +48,7 @@ out/test/% : test/%.c
 		$(LIB_DIRS) -L./lib \
 		-o $@ $^ \
 		$(LIBS) -lfc-c
+	$@
 
 out/%.o : %.c
 	gcc -c \
