@@ -2,6 +2,6 @@
 c/lib/
 c/out/
 lib/
-c/include/freeconf/meta.h
-c/meta_decoder.c
+include/freeconf/meta.h
+meta_decoder.c
 python/fc/__pycache__/

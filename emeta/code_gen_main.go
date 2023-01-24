@@ -16,7 +16,7 @@ import (
 )
 
 var dirs = []string{
-	"../c",
+	"..",
 }
 
 func main() {

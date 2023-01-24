@@ -3,6 +3,8 @@ package main
 /*
 
 #include <stdlib.h>
+#include <freeconf/err.h>
+#include "meta_decoder.h"
 
 typedef struct fc_encoded_module {
 	long pool_id;
@@ -41,6 +43,12 @@ func fc_parse_into_encoded_module(ypathPtr *C.char, yfilePtr *C.char) C.struct_f
 	}
 	m.pool_id = C.long(pool.Add(modRef{mod: mod}, freeParser(m)))
 	return m
+}
+
+//export fc_parse_yang
+func fc_parse_yang(m **C.fc_module, ypath *C.char, filename *C.char) *C.fc_error {
+	encoded := fc_parse_into_encoded_module(ypath, filename)
+	return C.fc_decode_module(m, encoded.serialized, encoded.serialized_len)
 }
 
 type modRef struct {
