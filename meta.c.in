@@ -1,0 +1,41 @@
+#include <stdlib.h>
+#include <string.h>
+
+#include "freeconf.h"
+
+extern char* fc_meta_ident(fc_meta *meta) {
+    switch (meta->encoding_id) {
+{{- range .Meta.Definitions}}
+{{- if .HasField "Ident" }}
+        case FC_{{ .Name | snake| uc -}}:
+            return (({{. | cDefType }}*)meta)->ident;
+{{- end }}
+{{- end }}
+    }
+    return NULL;
+}
+
+extern fc_meta_array* fc_definitions(fc_meta *meta) {
+    switch (meta->encoding_id) {
+{{- range .Meta.Definitions}}
+{{- if .HasField "Definitions" }}
+        case FC_{{ .Name | snake| uc -}}:
+            return &((({{. | cDefType }}*)meta)->definitions);
+{{- end }}
+{{- end }}
+    }
+    return NULL;
+}
+
+extern fc_meta* fc_find_meta(fc_meta* meta, char* ident) {
+	fc_meta_array* defs = fc_definitions(meta);
+	if (defs == NULL) {
+		return NULL;
+	}
+	for (int i = 0; i < defs->length; i++) {
+		if (strcmp(fc_meta_ident(defs->metas[i]), ident) == 0) {
+			return meta;
+		}
+	}
+	return NULL;
+}

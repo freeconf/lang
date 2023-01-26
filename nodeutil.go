@@ -1,7 +1,7 @@
 package main
 
 /*
-#include <stdlib.h>
+#include "freeconf.h"
 */
 import "C"
 import (

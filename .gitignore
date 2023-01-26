@@ -5,3 +5,5 @@ lib/
 include/freeconf/meta.h
 meta_decoder.c
 python/fc/__pycache__/
+meta.c
+freeconf.h

@@ -29,6 +29,7 @@ const (
 // references so be ware order has implications for compilation in other languages
 
 type ExtensionDefArg struct {
+	EncodingId  EncodingId
 	Ident       string
 	Description string
 	Ref         string
@@ -37,6 +38,7 @@ type ExtensionDefArg struct {
 }
 
 type ExtensionDef struct {
+	EncodingId  EncodingId
 	Ident       string
 	Description string
 	Ref         string

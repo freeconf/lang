@@ -1,13 +1,7 @@
 package main
 
 /*
-
-typedef struct fc_selection {
-    fc_path* path;
-    fc_node* node;
-    long pool_id;
-} fc_selection;
-
+#include "freeconf.h"
 */
 import "C"
 import (
@@ -17,7 +11,7 @@ import (
 )
 
 //export fc_selection_upsert_from
-func fc_selection_upsert_from(c_sel C.fc_selection, c_node C.fc_node) *C.fc_node_error {
+func fc_selection_upsert_from(c_sel *C.fc_selection, c_node *C.fc_node) *C.fc_node_error {
 	sel, valid := pool.Get(int64(c_sel.node.pool_id)).(node.Selection)
 	if !valid {
 		return newNodeErr(errors.New("no selection found"))

@@ -1,15 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include <cbor.h>
-#include <stdio.h>
-#include <freeconf/err.h>
-#include <freeconf/meta.h>
 
-fc_error fc_decode_fc_datadef_ptr_ptr(fc_datadef_ptr** defs, fc_datadef_ptr parent, cbor_item_t *item);
-fc_error fc_decode_fc_extension_def_ptr(fc_extension_def** def, fc_datadef_ptr parent, cbor_item_t* item);
-fc_error fc_decode_fc_extension_ptr(fc_extension** ext, fc_datadef_ptr parent, cbor_item_t* item);
+#include "freeconf.h"
+
+fc_error fc_decode_fc_meta_array(fc_meta_array* defs, fc_meta* parent, cbor_item_t *item);
+fc_error fc_decode_fc_extension_def_ptr(fc_extension_def** def, fc_meta* parent, cbor_item_t* item);
+fc_error fc_decode_fc_extension_ptr(fc_extension** ext, fc_meta* parent, cbor_item_t* item);
 
 fc_error fc_decode_expect(cbor_item_t* item, int expected)  {
     if (cbor_typeof(item) != expected) {
@@ -19,7 +17,7 @@ fc_error fc_decode_expect(cbor_item_t* item, int expected)  {
     return FC_ERR_NONE;
 }
 
-fc_error fc_decode_char_ptr(char **s, fc_datadef_ptr parent, cbor_item_t *item) {
+fc_error fc_decode_char_ptr(char **s, fc_meta* parent, cbor_item_t *item) {
     char *src = (char *)cbor_string_handle(item);
     size_t len = cbor_string_length(item);
     *s = (char *)malloc(len + 1);
@@ -28,7 +26,7 @@ fc_error fc_decode_char_ptr(char **s, fc_datadef_ptr parent, cbor_item_t *item) 
     return FC_ERR_NONE;
 }
 
-fc_error fc_decode_char_ptr_ptr(char ***strs_ptr, fc_datadef_ptr parent, cbor_item_t *item) {
+fc_error fc_decode_char_ptr_ptr(char ***strs_ptr, fc_meta* parent, cbor_item_t *item) {
     fc_error err = fc_decode_expect(item, CBOR_TYPE_ARRAY);
     if (err != FC_ERR_NONE) {
         return err;
@@ -48,53 +46,52 @@ fc_error fc_decode_char_ptr_ptr(char ***strs_ptr, fc_datadef_ptr parent, cbor_it
     return FC_ERR_NONE;
 }
 
-fc_error fc_decode_bool(bool* b, fc_datadef_ptr parent, cbor_item_t *item) {
+fc_error fc_decode_bool(bool* b, fc_meta* parent, cbor_item_t *item) {
     *b = cbor_get_bool(item);
     return FC_ERR_NONE;
 }
 
-fc_error fc_decode_int(int* i, fc_datadef_ptr parent, cbor_item_t *item) {
+fc_error fc_decode_int(int* i, fc_meta* parent, cbor_item_t *item) {
     *i = (int)cbor_get_uint32(item);
     return FC_ERR_NONE;
 }
 
-fc_error fc_decode_fc_encoding_id(fc_encoding_id *t, fc_datadef_ptr parent, cbor_item_t *item) {
+fc_error fc_decode_fc_encoding_id(fc_encoding_id *t, fc_meta* parent, cbor_item_t *item) {
     *t = (fc_encoding_id)cbor_get_uint32(item);
     return FC_ERR_NONE;
 }
 
-fc_error fc_decode_fc_optional_bool(fc_optional_bool *b, fc_datadef_ptr parent, cbor_item_t *item) {
+fc_error fc_decode_fc_optional_bool(fc_optional_bool *b, fc_meta* parent, cbor_item_t *item) {
     *b = (fc_optional_bool)cbor_get_uint32(item);
     return FC_ERR_NONE;
 }
 
-fc_error fc_decode_fc_extension_ptr_ptr(fc_extension_ptr** exts_ptr, fc_datadef_ptr parent, cbor_item_t *item) {
+fc_error fc_decode_fc_extension_array(fc_extension_array* exts, fc_meta* parent, cbor_item_t *item) {
     fc_error err = fc_decode_expect(item, CBOR_TYPE_ARRAY);
     if (err != FC_ERR_NONE) {
         return err;
     }
 
-    size_t len = cbor_array_size(item);    
-    (*exts_ptr) = (fc_extension_ptr*)malloc(len * sizeof(fc_extension_ptr));
-    fc_extension_ptr* exts = (*exts_ptr);
+    size_t len = cbor_array_size(item);
+    exts->length = len;
+    exts->extensions = (fc_extension**)malloc(len * sizeof(fc_extension*));
     cbor_item_t** array = cbor_array_handle(item);
     for (int i = 0; i < len; i++) {
-        err = fc_decode_fc_extension_ptr(&(exts[i]), NULL, array[i]);
+        err = fc_decode_fc_extension_ptr(&(exts->extensions[i]), parent, array[i]);
         if (err != FC_ERR_NONE) {
             return err;
         }
     }
 
-    // TODO
     return FC_ERR_NONE;
 }
 
-fc_error fc_decode_fc_extension_def_arg_ptr_ptr(fc_extension_def_arg*** arg_ptr, fc_datadef_ptr parent, cbor_item_t *item) {
+fc_error fc_decode_fc_extension_def_arg_ptr_ptr(fc_extension_def_arg*** arg_ptr, fc_meta* parent, cbor_item_t *item) {
     return FC_ERR_NONE;
 }
 
 {{ range .Meta.Definitions }}
-fc_error fc_decode_{{. | cDefType }}_ptr({{. | cDefType }}** def, fc_datadef_ptr parent, cbor_item_t* item) {
+fc_error fc_decode_{{. | cDefType }}_ptr({{. | cDefType }}** def, fc_meta* parent, cbor_item_t* item) {
     fc_error err = fc_decode_expect(item, CBOR_TYPE_ARRAY);
     if (err != FC_ERR_NONE) {
         return err;
@@ -102,9 +99,10 @@ fc_error fc_decode_{{. | cDefType }}_ptr({{. | cDefType }}** def, fc_datadef_ptr
     *def = calloc(1, sizeof({{. | cDefType }}));    
     {{. | cDefType }}* def_ptr = *def;
     def_ptr->parent = parent;
+    fc_meta* meta = (fc_meta*)*def;
     cbor_item_t** array = cbor_array_handle(item);
     {{- range $index, $field := .Fields }}
-    err = fc_decode_{{$field | cFieldType | cNameSafe }}(&(def_ptr->{{ $field | cName }}), def, array[{{ $index }}]);
+    err = fc_decode_{{$field | cFieldType | cNameSafe }}(&(def_ptr->{{ $field | cName }}), meta, array[{{ $index }}]);
     if (err != FC_ERR_NONE) {
         return err;
     }
@@ -114,26 +112,28 @@ fc_error fc_decode_{{. | cDefType }}_ptr({{. | cDefType }}** def, fc_datadef_ptr
 }
 {{ end }}
 
-fc_error fc_decode_fc_datadef_ptr_ptr(fc_datadef_ptr** defs, fc_datadef_ptr parent, cbor_item_t *item) {
+fc_error fc_decode_fc_meta_array(fc_meta_array* defs, fc_meta* parent, cbor_item_t *item) {
     fc_error err = fc_decode_expect(item, CBOR_TYPE_ARRAY);
     if (err != FC_ERR_NONE) {
         return err;
     }
     size_t len = cbor_array_size(item);
-    (*defs) = malloc(len * sizeof(fc_datadef_ptr));
+    defs->metas = (fc_meta**)malloc(len * sizeof(fc_meta*));
+    defs->length = len;
     cbor_item_t** array = cbor_array_handle(item);
     for (int i = 0; i < len; i++) {
         cbor_item_t** next = cbor_array_handle(array[i]);
         fc_encoding_id next_type;
-        err = fc_decode_fc_encoding_id(&next_type, NULL, next[0]);
+        fc_meta** next_meta = &(defs->metas[i]);
+        err = fc_decode_fc_encoding_id(&next_type, parent, next[0]);
         if (err != FC_ERR_NONE) {
             return err;
         }
         switch (next_type) {
             {{ range .Meta.Definitions }}
             case FC_{{ .Name | snake| uc -}}: {
-                {{. | cDefType }}* def = (*defs)[i];
-                err = fc_decode_{{. | cDefType }}_ptr(&def, parent, array[i]);
+                {{. | cDefType }}** def = ({{. | cDefType }}**)(next_meta);
+                err = fc_decode_{{. | cDefType }}_ptr(def, parent, array[i]);
                 break;   
             }
             {{ end }}

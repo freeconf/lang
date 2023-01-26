@@ -27,4 +27,4 @@ lib : lib/libfc.so
 lib/libfc.so:
 		go build \
 			-buildmode=c-shared \
-			-o lib/libfc.so $(SRC)
+			-o lib/libfc.so .

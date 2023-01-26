@@ -41,6 +41,15 @@ type fieldDef struct {
 	Tags []string
 }
 
+func (def *structDef) HasField(name string) bool {
+	for _, f := range def.Fields {
+		if f.Name == name {
+			return true
+		}
+	}
+	return false
+}
+
 // Yes, this is meta data about the Meta.
 type MetaMeta struct {
 	Definitions []*structDef
@@ -168,6 +177,8 @@ func cFieldType(f *fieldDef) string {
 	switch f.Name {
 	case "Definitions":
 		return "fc_meta_array"
+	case "Extensions":
+		return "fc_extension_array"
 	}
 	ctype := whisperingSnake(f.Type)
 	if strings.HasPrefix(f.Type, "[]") {

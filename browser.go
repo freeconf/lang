@@ -1,15 +1,7 @@
 package main
 
 /*
-#cgo CFLAGS: -Iinclude
-
-#include <freeconf/meta.h>
-
-typedef struct fc_browser {
-    fc_module* module;
-    struct fc_node* node;
-} fc_browser;
-
+#include "freeconf.h"
 */
 import "C"
 
