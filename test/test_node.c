@@ -4,12 +4,7 @@
 #include <assert.h>
 
 #include <libfc.h>
-
-#include <freeconf/err.h>
-#include <freeconf/node.h>
-#include <freeconf/browser.h>
-#include <freeconf/parser.h>
-#include <freeconf/node_util.h>
+#include <freeconf.h>
 
 
 fc_node_error* dump_child(void* context, fc_child_request r, fc_node* child) {

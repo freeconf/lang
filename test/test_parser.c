@@ -3,9 +3,7 @@
 #include <string.h>
 #include <assert.h>
 
-#include <freeconf/err.h>
-#include <freeconf/meta.h>
-#include <freeconf/parser.h>
+#include <libfc.h>
 
 int main(int argc, char **argv) {
     char* ypath = getenv("YANGPATH");
