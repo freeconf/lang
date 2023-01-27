@@ -1,4 +1,4 @@
-package emeta
+package codegen
 
 import (
 	"fmt"
@@ -33,7 +33,7 @@ func (e *encoder) extensions(m meta.HasExtensions) []Extension {
 	dest := make([]Extension, len(src))
 	for i, x := range src {
 		dest[i] = Extension{
-			EncodingIdExtension,
+			MetaIdExtension,
 			x.Ident(),
 			x.Prefix(),
 			x.Keyword(),
@@ -48,7 +48,7 @@ func (e *encoder) def(m meta.Definition) any {
 	switch x := m.(type) {
 	case *meta.Module:
 		return Module{
-			EncodingIdModule,
+			MetaIdModule,
 			x.Ident(),
 			x.Description(),
 			e.extensions(m),
@@ -62,7 +62,7 @@ func (e *encoder) def(m meta.Definition) any {
 		}
 	case *meta.List:
 		return List{
-			EncodingIdList,
+			MetaIdList,
 			x.Ident(),
 			x.Description(),
 			e.extensions(m),
@@ -72,7 +72,7 @@ func (e *encoder) def(m meta.Definition) any {
 		}
 	case *meta.Container:
 		return Container{
-			EncodingIdContainer,
+			MetaIdContainer,
 			x.Ident(),
 			x.Description(),
 			e.extensions(m),
@@ -82,7 +82,7 @@ func (e *encoder) def(m meta.Definition) any {
 		}
 	case *meta.LeafList:
 		return LeafList{
-			EncodingIdLeafList,
+			MetaIdLeafList,
 			m.Ident(),
 			x.Description(),
 			e.extensions(m),
@@ -91,7 +91,7 @@ func (e *encoder) def(m meta.Definition) any {
 		}
 	case *meta.Leaf:
 		return Leaf{
-			EncodingIdLeaf,
+			MetaIdLeaf,
 			m.Ident(),
 			x.Description(),
 			e.extensions(m),

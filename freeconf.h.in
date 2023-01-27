@@ -5,45 +5,55 @@
 #include <string.h>
 #include <stdbool.h>
 
-typedef enum fc_encoding_id
+typedef struct fc_err {
+    char message[128];
+} fc_err;
+
+fc_err* fc_err_new(char *msg);
+
+typedef enum fc_meta_id
 {
 {{- range .Meta.Definitions }}
-  FC_{{ .Name | snake| uc -}} = {{ .EncodingId }},
+  FC_{{ .Name | snake| uc -}} = {{ .MetaId }},
 {{- end }}
-} fc_encoding_id;
+} fc_meta_id;
 
-typedef enum fc_optional_bool
+typedef enum fc_meta_optional_bool
 {
   FC_BOOL_NOT_SET,
   FC_BOOL_TRUE,
   FC_BOOL_FALSE
-} fc_optional_bool;
+} fc_meta_optional_bool;
 
 typedef struct fc_meta fc_meta;
-typedef struct fc_meta_array fc_meta_array;
-typedef struct fc_extension_array fc_extension_array;
 
-struct fc_extension_array {
-    struct fc_extension** extensions;
+typedef struct fc_meta_ext_array {
+    struct fc_meta_extension** extensions;
     size_t length;
-};
+} fc_meta_ext_array;
+
+typedef struct fc_meta_ext_def_arg_array {
+    struct fc_ext_def_arg** args;
+    size_t length;
+} fc_meta_ext_def_arg_array;
 
 // Casting things as fc_meta only works because the first several fields
 // all align.  Poorman interface in C.
 struct fc_meta {
     fc_meta* parent;
-    fc_encoding_id encoding_id;
-    fc_extension_array extensions;
+    fc_meta_id meta_id;
 };
 
-extern char* fc_meta_ident(fc_meta *meta);
-extern fc_meta* fc_find_meta(fc_meta* meta, char* ident);
-extern fc_meta_array* fc_definitions(fc_meta *meta);
-
-struct fc_meta_array {
+typedef struct fc_meta_array {
   fc_meta** metas;
   size_t length;
-};
+} fc_meta_array;
+
+extern char* fc_meta_get_ident(fc_meta* meta);
+extern char* fc_meta_get_desc(fc_meta* meta);
+extern fc_meta* fc_meta_find(fc_meta* meta, char* ident);
+extern fc_meta_array* fc_get_defs(fc_meta* meta);
+extern fc_meta_ext_array* fc_get_exts(fc_meta* meta);
 
 {{ range .Meta.Definitions}}
 typedef struct {{. | cDefType }} {
@@ -54,26 +64,21 @@ typedef struct {{. | cDefType }} {
 } {{. | cDefType }};
 {{ end}}
 
-typedef struct fc_encoded_module {
-	long pool_id;
-	void* serialized;
-	int   serialized_len;
-} fc_encoded_module;
+typedef struct fc_pack {
+	long    mem_id;
+	void*   serialized;
+	int     serialized_len;
+} fc_pack;
 
-typedef struct fc_node_error {
-    char message[128];
-} fc_node_error;
-
-
-typedef enum fc_error {
+typedef enum fc_pack_err {
     FC_ERR_NONE,
     FC_BAD_ENCODING,
     FC_EMPTY_BUFFER,
     FC_UNEXPECTED_ENCODING,
     FC_NOT_IMPLEMENTED,
-} fc_error;
+} fc_pack_err;
 
-fc_error fc_decode_module(fc_module **m, void* buffer, int len);
+extern fc_pack_err fc_unpack_fc_meta(fc_meta_module **m, void* buffer, int len);
 
 typedef enum fc_val_type {
     FC_VAL_STRING,
@@ -87,47 +92,49 @@ typedef struct fc_val {
     size_t size;
 } fc_val;
 
-typedef struct fc_path {
-    struct fc_path* parent;
+typedef struct fc_meta_path {
+    struct fc_meta_path* parent;
     fc_meta* meta;
-} fc_path;
+} fc_meta_path;
 
-struct fc_path* fc_new_path(struct fc_path* parent, fc_meta* meta);
+extern fc_meta_path* fc_meta_path_new(fc_meta_path* parent, fc_meta* meta);
 
-typedef struct fc_field_request {
+typedef struct fc_node_field_req {
     void* context;
-	struct fc_selection* selection;
+	struct fc_select* selection;
     fc_meta* meta;
     bool write;
-} fc_field_request;
+} fc_node_field_req;
 
-typedef struct fc_child_request {
+typedef struct fc_node_child_req {
     void* context;
-	struct fc_selection* selection;
+	struct fc_select* selection;
     fc_meta* meta;
-} fc_child_request;
+} fc_node_child_req;
 
 typedef struct fc_node fc_node;
 
 struct fc_node {
-    long pool_id;
+    long mem_id;
     void* context;
-    fc_node_error* (*on_field)(void* context, fc_field_request r, fc_val** val);
-    fc_node_error* (*on_child)(void* context, fc_child_request r, fc_node** child);
+    fc_err* (*on_field)(void* context, fc_node_field_req r, fc_val** val);
+    fc_err* (*on_child)(void* context, fc_node_child_req r, fc_node** child);
 };
 
-fc_node_error* fc_node_on_child_x(fc_node* node, void* context, fc_child_request r, fc_node** child);
+fc_err* fc_node_child(fc_node* node, void* context, fc_node_child_req r, fc_node** child);
 
 typedef struct fc_browser {
-    fc_module* module;
+    fc_meta_module* module;
     struct fc_node* node;
 } fc_browser;
 
-typedef struct fc_selection {
-    fc_path* path;
+typedef struct fc_select {
+    fc_meta_path* path;
     fc_node* node;
     long pool_id;
-} fc_selection;
+} fc_select;
 
+extern fc_browser fc_browser_new(fc_meta_module *m, fc_node *n);
+extern fc_select fc_browser_root_select(fc_browser b);
 
 #endif

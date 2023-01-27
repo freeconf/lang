@@ -7,3 +7,5 @@ meta_decoder.c
 python/fc/__pycache__/
 meta.c
 freeconf.h
+fc_meta.c
+fc_unpack_fc_meta.c

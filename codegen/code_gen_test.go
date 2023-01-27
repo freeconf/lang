@@ -1,4 +1,4 @@
-package emeta
+package codegen
 
 import (
 	"bytes"

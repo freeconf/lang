@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/freeconf/lang/emeta"
+	"github.com/freeconf/lang/codegen"
 )
 
 var dirs = []string{
@@ -20,7 +20,7 @@ var dirs = []string{
 }
 
 func main() {
-	metas, err := emeta.ParseSource("./meta.go")
+	metas, err := codegen.ParseSource("./meta.go")
 	chkerr(err)
 	for _, dir := range dirs {
 		err = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
@@ -34,7 +34,7 @@ func main() {
 				return err
 			}
 			defer dest.Close()
-			err = emeta.GenerateSource(metas, path, dest)
+			err = codegen.GenerateSource(metas, path, dest)
 			return err
 		})
 		chkerr(err)

@@ -1,10 +1,14 @@
 package main
 
+/*
+#include <stdlib.h>
+*/
 import "C"
 
 import (
 	"fmt"
 	"sync"
+	"unsafe"
 )
 
 // ObjectPool keeps track of golang objects and the destructor that is association with
@@ -54,9 +58,15 @@ func (p *ObjectPool) Remove(poolId int64) {
 	}
 }
 
-var pool = newObjectPool()
+var mem = newObjectPool()
 
-//export fc_free_pool_item
-func fc_free_pool_item(poolId C.long) {
-	pool.Remove(int64(poolId))
+//export fc_mem_free
+func fc_mem_free(mem_id C.long) {
+	mem.Remove(int64(mem_id))
+}
+
+func free(ptr unsafe.Pointer) func() {
+	return func() {
+		C.free(ptr)
+	}
 }

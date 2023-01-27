@@ -1,20 +1,20 @@
-package emeta
+package codegen
 
 // This follows structure of yang/meta/core.go for the most part but has a few
 // differences useful for encoding for other languages and in a structure that
 // CBOR encoder can read.
 
-type EncodingId int
+type MetaId int
 
 const (
-	EncodingIdExtension = EncodingId(iota)
-	EncodingIdExtensionDef
-	EncodingIdExtensionDefArg
-	EncodingIdModule
-	EncodingIdLeaf
-	EncodingIdLeafList
-	EncodingIdContainer
-	EncodingIdList
+	MetaIdExtension = MetaId(iota)
+	MetaIdExtensionDef
+	MetaIdExtensionDefArg
+	MetaIdModule
+	MetaIdLeaf
+	MetaIdLeafList
+	MetaIdContainer
+	MetaIdList
 )
 
 type OptionalBool int
@@ -29,7 +29,7 @@ const (
 // references so be ware order has implications for compilation in other languages
 
 type ExtensionDefArg struct {
-	EncodingId  EncodingId
+	MetaId      MetaId
 	Ident       string
 	Description string
 	Ref         string
@@ -38,7 +38,7 @@ type ExtensionDefArg struct {
 }
 
 type ExtensionDef struct {
-	EncodingId  EncodingId
+	MetaId      MetaId
 	Ident       string
 	Description string
 	Ref         string
@@ -48,16 +48,16 @@ type ExtensionDef struct {
 }
 
 type Extension struct {
-	EncodingId EncodingId
-	Ident      string
-	Prefix     string
-	Keyword    string
-	Def        string `reference:"ExensionDef"`
-	Args       []string
+	MetaId  MetaId
+	Ident   string
+	Prefix  string
+	Keyword string
+	Def     string `reference:"ExensionDef"`
+	Args    []string
 }
 
 type Module struct {
-	EncodingId  EncodingId
+	MetaId      MetaId
 	Ident       string
 	Description string
 	Extensions  []Extension
@@ -73,7 +73,7 @@ type Module struct {
 }
 
 type Leaf struct {
-	EncodingId  EncodingId
+	MetaId      MetaId
 	Ident       string
 	Description string
 	Extensions  []Extension
@@ -83,7 +83,7 @@ type Leaf struct {
 }
 
 type LeafList struct {
-	EncodingId  EncodingId
+	MetaId      MetaId
 	Ident       string
 	Description string
 	Extensions  []Extension
@@ -93,7 +93,7 @@ type LeafList struct {
 }
 
 type Container struct {
-	EncodingId  EncodingId
+	MetaId      MetaId
 	Ident       string
 	Description string
 	Extensions  []Extension
@@ -105,7 +105,7 @@ type Container struct {
 }
 
 type List struct {
-	EncodingId  EncodingId
+	MetaId      MetaId
 	Ident       string
 	Description string
 	Extensions  []Extension

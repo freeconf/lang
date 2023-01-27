@@ -25,7 +25,7 @@ TESTS = \
 all : generate lib test
 
 generate:
-	cd emeta; \
+	cd codegen; \
 		go generate .
 
 .PHONY: lib

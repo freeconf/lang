@@ -1,0 +1,72 @@
+#include <stdlib.h>
+#include <string.h>
+
+#include "freeconf.h"
+
+extern char* fc_meta_get_ident(fc_meta* meta) {
+    switch (meta->meta_id) {
+{{- range .Meta.Definitions}}
+{{- if .HasField "Ident" }}
+        case FC_{{ .Name | snake| uc -}}:
+            return (({{. | cDefType }}*)meta)->ident;
+{{- end }}
+{{- end }}
+    }
+    return NULL;
+}
+
+extern char* fc_meta_get_desc(fc_meta* meta) {
+    switch (meta->meta_id) {
+{{- range .Meta.Definitions}}
+{{- if .HasField "Description" }}
+        case FC_{{ .Name | snake| uc -}}:
+            return (({{. | cDefType }}*)meta)->description;
+{{- end }}
+{{- end }}
+    }
+    return NULL;
+}
+
+extern fc_meta_ext_array* fc_meta_get_exts(fc_meta* meta) {
+    switch (meta->meta_id) {
+{{- range .Meta.Definitions}}
+{{- if .HasField "Extensions" }}
+        case FC_{{ .Name | snake| uc -}}:
+            return &((({{. | cDefType }}*)meta)->extensions);
+{{- end }}
+{{- end }}
+    }
+    return NULL;
+}
+
+extern fc_meta_array* fc_meta_get_defs(fc_meta* meta) {
+    switch (meta->meta_id) {
+{{- range .Meta.Definitions}}
+{{- if .HasField "Definitions" }}
+        case FC_{{ .Name | snake| uc -}}:
+            return &((({{. | cDefType }}*)meta)->definitions);
+{{- end }}
+{{- end }}
+    }
+    return NULL;
+}
+
+extern fc_meta* fc_meta_find(fc_meta* meta, char* ident) {
+	fc_meta_array* defs = fc_meta_get_defs(meta);
+	if (defs == NULL) {
+		return NULL;
+	}
+	for (int i = 0; i < defs->length; i++) {
+		if (strcmp(fc_meta_get_ident(defs->metas[i]), ident) == 0) {
+			return meta;
+		}
+	}
+	return NULL;
+}
+
+extern fc_meta_path* fc_meta_path_new(fc_meta_path* parent, fc_meta* meta) {
+    fc_meta_path* new_path = (fc_meta_path*)malloc(sizeof(fc_meta_path));
+    new_path->parent = parent;
+    new_path->meta = meta;
+    return new_path;
+}

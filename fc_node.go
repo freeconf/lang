@@ -13,16 +13,8 @@ import (
 	"github.com/freeconf/yang/val"
 )
 
-//export fc_new_node_err
-func fc_new_node_err(msg *C.char) *C.fc_node_error {
-	var err *C.fc_node_error
-	err = (*C.fc_node_error)(C.malloc(C.size_t(unsafe.Sizeof(*err))))
-	C.strcpy(&err.message[0], msg)
-	return err
-}
-
 type gnode struct {
-	csel  *C.struct_fc_selection
+	csel  *C.struct_fc_select
 	cnode *C.fc_node
 }
 
@@ -30,20 +22,20 @@ func (n gnode) Child(r node.ChildRequest) (child node.Node, err error) {
 	var next *C.fc_node
 	ident := C.CString(r.Meta.Ident())
 	defer C.free(unsafe.Pointer(ident))
-	meta := C.fc_find_meta(n.csel.path.meta, ident)
-	c_r := C.fc_child_request{
+	meta := C.fc_meta_find(n.csel.path.meta, ident)
+	c_r := C.fc_node_child_req{
 		context: n.cnode.context,
 		meta:    meta,
 	}
-	c_err := C.fc_node_on_child_x(n.cnode, n.cnode.context, c_r, &next)
+	c_err := C.fc_node_child(n.cnode, n.cnode.context, c_r, &next)
 	if c_err != nil {
-		return nil, cerrToGo(c_err)
+		return nil, goErr(c_err)
 	}
 	if next == nil {
 		return nil, nil
 	}
-	c_path := fc_new_path(n.csel.path, meta)
-	next_sel := &C.struct_fc_selection{path: c_path, node: next}
+	c_path := C.fc_meta_path_new(n.csel.path, meta)
+	next_sel := &C.struct_fc_select{path: c_path, node: next}
 	return gnode{next_sel, next}, nil
 }
 

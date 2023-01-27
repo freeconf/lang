@@ -1,4 +1,4 @@
-package emeta
+package codegen
 
 import (
 	"fmt"
@@ -30,9 +30,9 @@ func ParseSource(src string) (MetaMeta, error) {
 }
 
 type structDef struct {
-	Name       string
-	EncodingId int
-	Fields     []*fieldDef
+	Name   string
+	MetaId int
+	Fields []*fieldDef
 }
 
 type fieldDef struct {
@@ -57,14 +57,14 @@ type MetaMeta struct {
 
 type visitor struct {
 	Meta          MetaMeta
-	encodingIds   map[string]int
+	metaIds       map[string]int
 	currentStruct *structDef
 	currentField  *fieldDef
 }
 
 func newVistor() *visitor {
 	return &visitor{
-		encodingIds: make(map[string]int),
+		metaIds: make(map[string]int),
 	}
 }
 
@@ -77,21 +77,21 @@ func (g *visitor) Visit(n ast.Node) ast.Visitor {
 		switch x.Type.(type) {
 		case *ast.StructType:
 			name := x.Name.Name
-			defTypeName := "EncodingId" + name
-			encodingId, valid := g.encodingIds[defTypeName]
+			defTypeName := "MetaId" + name
+			metaId, valid := g.metaIds[defTypeName]
 			if !valid {
 				panic(fmt.Sprintf("'%s' not defined", defTypeName))
 			}
 			def := &structDef{
-				Name:       name,
-				EncodingId: encodingId,
+				Name:   name,
+				MetaId: metaId,
 			}
 			g.Meta.Definitions = append(g.Meta.Definitions, def)
 			g.currentStruct = def
 		}
 	case *ast.ValueSpec:
-		if strings.HasPrefix(x.Names[0].Name, "EncodingId") {
-			g.encodingIds[x.Names[0].Name] = len(g.encodingIds)
+		if strings.HasPrefix(x.Names[0].Name, "MetaId") {
+			g.metaIds[x.Names[0].Name] = len(g.metaIds)
 		}
 	case *ast.Field:
 		if g.currentStruct != nil {
@@ -122,14 +122,11 @@ func GenerateSource(src MetaMeta, tmpl string, out io.Writer) error {
 		panic(err)
 	}
 	funcs := template.FuncMap{
-		"lc":         strings.ToLower,
-		"uc":         strings.ToUpper,
-		"snake":      strcase.ToSnake,
-		"cDefType":   cDefType,
-		"cFieldType": cFieldType,
-		"cName":      cName,
-		"cNameSafe":  cNameSafe,
+		"lc":    strings.ToLower,
+		"uc":    strings.ToUpper,
+		"snake": strcase.ToSnake,
 	}
+	cTemplateFuncs(funcs)
 	t, err := template.New("code_gen").Funcs(funcs).Parse(string(tmplSrc))
 	if err != nil {
 		panic(err)
@@ -143,50 +140,4 @@ func GenerateSource(src MetaMeta, tmpl string, out io.Writer) error {
 		panic(err)
 	}
 	return nil
-}
-
-func cDefType(d *structDef) string {
-	return "fc_" + whisperingSnake(d.Name)
-}
-
-func cName(f *fieldDef) string {
-	return whisperingSnake(f.Name)
-}
-
-func whisperingSnake(s string) string {
-	return strings.ToLower(strcase.ToSnake(s))
-}
-
-func cNameSafe(name string) string {
-	return strings.ReplaceAll(name, "*", "_ptr")
-}
-
-func cFieldType(f *fieldDef) string {
-	switch f.Type {
-	case "string":
-		return "char*"
-	case "[]string":
-		return "char**"
-	case "*bool":
-		return "bool*"
-	case "bool":
-		return "bool"
-	case "int":
-		return "int"
-	}
-	switch f.Name {
-	case "Definitions":
-		return "fc_meta_array"
-	case "Extensions":
-		return "fc_extension_array"
-	}
-	ctype := whisperingSnake(f.Type)
-	if strings.HasPrefix(f.Type, "[]") {
-		ctype = ctype[2:] + "**"
-	}
-	if strings.HasPrefix(f.Type, "*") {
-		ctype = ctype[1:] + "*"
-	}
-
-	return "fc_" + ctype
 }

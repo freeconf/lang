@@ -3,12 +3,13 @@
 #include <string.h>
 #include <assert.h>
 
-#include <libfc.h>
+#include "libfc.h"
+#include "freeconf.h"
 
 int main(int argc, char **argv) {
     char* ypath = getenv("YANGPATH");
-    fc_module* m;
-    fc_error err = fc_parse_yang(&m, ypath, "testme");
+    fc_meta_module* m;
+    fc_pack_err err = fc_yang_parse(&m, ypath, "testme");
     printf("err=%d\n", err);
     assert(err == FC_ERR_NONE);
     assert(m != NULL);
