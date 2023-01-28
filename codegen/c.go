@@ -42,6 +42,8 @@ func cFieldType(f *fieldDef) string {
 		return "bool"
 	case "int":
 		return "int"
+	case "int64":
+		return "long"
 	case "[]ExtensionDefArg":
 		return "fc_meta_ext_def_arg_array"
 	}

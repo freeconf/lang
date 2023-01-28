@@ -65,7 +65,6 @@ typedef struct {{. | cDefType }} {
 {{ end}}
 
 typedef struct fc_pack {
-	long    mem_id;
 	void*   serialized;
 	int     serialized_len;
 } fc_pack;
@@ -99,42 +98,41 @@ typedef struct fc_meta_path {
 
 extern fc_meta_path* fc_meta_path_new(fc_meta_path* parent, fc_meta* meta);
 
-typedef struct fc_node_field_req {
-    void* context;
-	struct fc_select* selection;
-    fc_meta* meta;
-    bool write;
-} fc_node_field_req;
+typedef struct fc_node_field_req fc_node_field_req;
+typedef struct fc_node_child_req fc_node_child_req;
 
-typedef struct fc_node_child_req {
-    void* context;
-	struct fc_select* selection;
-    fc_meta* meta;
-} fc_node_child_req;
-
-typedef struct fc_node fc_node;
-
-struct fc_node {
+typedef struct fc_node {
     long mem_id;
     void* context;
-    fc_err* (*on_field)(void* context, fc_node_field_req r, fc_val** val);
-    fc_err* (*on_child)(void* context, fc_node_child_req r, fc_node** child);
-};
-
-fc_err* fc_node_child(fc_node* node, void* context, fc_node_child_req r, fc_node** child);
-
-typedef struct fc_browser {
-    fc_meta_module* module;
-    struct fc_node* node;
-} fc_browser;
+    fc_err* (*on_field)(struct fc_node* self, fc_node_field_req r, fc_val** val);
+    fc_err* (*on_child)(struct fc_node* self, fc_node_child_req r, struct fc_node** child);
+} fc_node;
 
 typedef struct fc_select {
     fc_meta_path* path;
     fc_node* node;
-    long pool_id;
+    long mem_id;
 } fc_select;
 
-extern fc_browser fc_browser_new(fc_meta_module *m, fc_node *n);
-extern fc_select fc_browser_root_select(fc_browser b);
+struct fc_node_field_req {
+	fc_select selection;
+    fc_meta* meta;
+    bool write;
+};
+
+struct fc_node_child_req {
+	fc_select selection;
+    fc_meta* meta;
+};
+
+fc_err* fc_select_child(fc_select select, fc_node_child_req r, fc_node** child);
+
+typedef struct fc_browser {    
+    fc_meta_module* module;
+    fc_node node;
+    long mem_id;
+} fc_browser;
+
+
 
 #endif

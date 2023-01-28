@@ -17,6 +17,11 @@ fc_pack_err unpack_expect(cbor_item_t* item, int expected)  {
     return FC_ERR_NONE;
 }
 
+fc_pack_err unpack_long(long *l, fc_meta* parent, cbor_item_t *item) {
+    *l = (long)cbor_get_uint64(item);
+    return FC_ERR_NONE;
+}
+
 fc_pack_err unpack_char_ptr(char **s, fc_meta* parent, cbor_item_t *item) {
     char *src = (char *)cbor_string_handle(item);
     size_t len = cbor_string_length(item);

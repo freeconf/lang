@@ -23,8 +23,9 @@ func fc_yang_parse_pack(ypathPtr *C.char, yfilePtr *C.char) C.fc_pack {
 	if err != nil {
 		return C.fc_pack{}
 	}
+	mem_id := mem.Add(mod, nil)
 	var buf bytes.Buffer
-	if err = codegen.Encode(mod, &buf); err != nil {
+	if err = codegen.Encode(mod, mem_id, &buf); err != nil {
 		return C.fc_pack{}
 	}
 	serialized := buf.Bytes()
@@ -32,13 +33,13 @@ func fc_yang_parse_pack(ypathPtr *C.char, yfilePtr *C.char) C.fc_pack {
 		serialized:     C.CBytes(serialized),
 		serialized_len: C.int(len(serialized)),
 	}
-	m.mem_id = C.long(mem.Add(modRef{mod: mod}, freePack(m)))
 	return m
 }
 
 //export fc_yang_parse
 func fc_yang_parse(m **C.fc_meta_module, ypath *C.char, filename *C.char) C.fc_pack_err {
 	pack := fc_yang_parse_pack(ypath, filename)
+	defer freePack(pack)
 	return C.fc_unpack_fc_meta(m, pack.serialized, pack.serialized_len)
 }
 
@@ -47,10 +48,8 @@ type modRef struct {
 	serialized []byte
 }
 
-func freePack(m C.fc_pack) func() {
-	return func() {
-		if m.serialized != nil {
-			C.free(unsafe.Pointer(m.serialized))
-		}
+func freePack(m C.fc_pack) {
+	if m.serialized != nil {
+		C.free(unsafe.Pointer(m.serialized))
 	}
 }

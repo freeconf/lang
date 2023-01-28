@@ -8,16 +8,17 @@ import (
 	"github.com/ugorji/go/codec"
 )
 
-func Encode(m *meta.Module, out io.Writer) error {
+func Encode(m *meta.Module, memId int64, out io.Writer) error {
 	var hnd codec.CborHandle
 	hnd.EncodeOptions.StructToArray = true
-	e := &encoder{}
+	e := &encoder{memId: memId}
 	data := e.def(m)
 	pack := codec.NewEncoder(out, &hnd)
 	return pack.Encode(data)
 }
 
 type encoder struct {
+	memId int64
 }
 
 func (e *encoder) defs(c meta.HasDataDefinitions) []interface{} {
@@ -53,6 +54,7 @@ func (e *encoder) def(m meta.Definition) any {
 			x.Description(),
 			e.extensions(m),
 			e.defs(x),
+			e.memId,
 			x.Namespace(),
 			x.Prefix(),
 			x.Contact(),

@@ -14,8 +14,7 @@ import (
 )
 
 type gnode struct {
-	csel  *C.struct_fc_select
-	cnode *C.fc_node
+	csel C.struct_fc_select
 }
 
 func (n gnode) Child(r node.ChildRequest) (child node.Node, err error) {
@@ -24,19 +23,19 @@ func (n gnode) Child(r node.ChildRequest) (child node.Node, err error) {
 	defer C.free(unsafe.Pointer(ident))
 	meta := C.fc_meta_find(n.csel.path.meta, ident)
 	c_r := C.fc_node_child_req{
-		context: n.cnode.context,
-		meta:    meta,
+		meta: meta,
 	}
-	c_err := C.fc_node_child(n.cnode, n.cnode.context, c_r, &next)
+	c_err := C.fc_select_child(n.csel, c_r, &next)
 	if c_err != nil {
 		return nil, goErr(c_err)
 	}
 	if next == nil {
 		return nil, nil
 	}
+
 	c_path := C.fc_meta_path_new(n.csel.path, meta)
-	next_sel := &C.struct_fc_select{path: c_path, node: next}
-	return gnode{next_sel, next}, nil
+	next_sel := C.struct_fc_select{path: c_path, node: *next}
+	return gnode{next_sel}, nil
 }
 
 func (n gnode) Next(r node.ListRequest) (next node.Node, key []val.Value, err error) {

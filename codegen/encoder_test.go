@@ -15,7 +15,7 @@ func TestMetaEncoder(t *testing.T) {
 	ypath := source.Dir("../../../yang")
 	m := parser.RequireModule(ypath, "testme")
 	var buf bytes.Buffer
-	fc.AssertEqual(t, nil, Encode(m, &buf))
+	fc.AssertEqual(t, nil, Encode(m, 0, &buf))
 
 	var hnd codec.CborHandle
 	d := codec.NewDecoder(&buf, &hnd)

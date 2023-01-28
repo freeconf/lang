@@ -64,6 +64,8 @@ type Module struct {
 
 	Definitions []interface{}
 
+	MemId int64
+
 	Ns      string
 	Prefix  string
 	Contact string
