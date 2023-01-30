@@ -58,7 +58,7 @@ extern fc_meta* fc_meta_find(fc_meta* meta, char* ident) {
 	}
 	for (int i = 0; i < defs->length; i++) {
 		if (strcmp(fc_meta_get_ident(defs->metas[i]), ident) == 0) {
-			return meta;
+			return defs->metas[i];
 		}
 	}
 	return NULL;
@@ -70,3 +70,11 @@ extern fc_meta_path* fc_meta_path_new(fc_meta_path* parent, fc_meta* meta) {
     new_path->meta = meta;
     return new_path;
 }
+
+extern fc_meta_path* fc_meta_path_new_root(fc_meta_module* mod) {
+    fc_meta_path* new_path = (fc_meta_path*)malloc(sizeof(fc_meta_path));
+    new_path->parent = NULL;
+    new_path->meta = (fc_meta*)mod;
+    return new_path;
+}
+

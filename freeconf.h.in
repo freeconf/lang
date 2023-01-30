@@ -97,6 +97,7 @@ typedef struct fc_meta_path {
 } fc_meta_path;
 
 extern fc_meta_path* fc_meta_path_new(fc_meta_path* parent, fc_meta* meta);
+extern fc_meta_path* fc_meta_path_new_root(fc_meta_module* mod);
 
 typedef struct fc_node_field_req fc_node_field_req;
 typedef struct fc_node_child_req fc_node_child_req;
@@ -109,30 +110,32 @@ typedef struct fc_node {
 } fc_node;
 
 typedef struct fc_select {
+    struct fc_select *parent;
     fc_meta_path* path;
     fc_node* node;
+    fc_err* last_err;
     long mem_id;
 } fc_select;
 
 struct fc_node_field_req {
-	fc_select selection;
+	fc_select* selection;
     fc_meta* meta;
     bool write;
 };
 
 struct fc_node_child_req {
-	fc_select selection;
+	fc_select* selection;
     fc_meta* meta;
 };
 
-fc_err* fc_select_child(fc_select select, fc_node_child_req r, fc_node** child);
+fc_select* fc_select_new(long mem_id, fc_node* node, fc_meta_path* path);
+fc_err* fc_select_child(fc_node_child_req r, fc_node** child);
 
 typedef struct fc_browser {    
     fc_meta_module* module;
-    fc_node node;
+    fc_node* node;
     long mem_id;
 } fc_browser;
-
 
 
 #endif

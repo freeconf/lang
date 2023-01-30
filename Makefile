@@ -5,6 +5,7 @@ export YANGPATH=$(abspath test/yang)
 # so i had to disable this check
 GCC_FLAGS = \
 	-fno-stack-protector \
+	-fsanitize=address \
 	-fPIC
 
 INCLUDE_DIRS = \
@@ -42,12 +43,12 @@ out/libfc.so:
 .PHONY: test
 test: $(TESTS)
 
-out/test_% : test/test_%.c
+out/test_% : test/test_%.c generate out/libfc.so 
 	gcc \
 		$(GCC_FLAGS) \
 		-Wall \
 		$(INCLUDE_DIRS) \
 		$(LIB_DIRS) \
-		-o $@ $^ \
+		-o $@ $< \
 		$(LIBS)
 	$@
