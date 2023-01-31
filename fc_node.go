@@ -6,7 +6,6 @@ package main
 import "C"
 import (
 	"context"
-	"fmt"
 	"unsafe"
 
 	"github.com/freeconf/yang/meta"
@@ -20,20 +19,13 @@ type gnode struct {
 }
 
 func (n gnode) Child(r node.ChildRequest) (child node.Node, err error) {
-	var next *C.fc_node
-	ident := C.CString(r.Meta.Ident())
-	defer C.free(unsafe.Pointer(ident))
-
-	// replica of *potentially* what originally requested child
-	c_sel := C.fc_select_new(0, n.c_node, n.c_path)
+	c_sel, c_meta := n.new_select_and_meta(r.Meta)
 	defer C.free(unsafe.Pointer(c_sel))
-
-	c_meta := C.fc_meta_find(n.c_path.meta, ident)
-
 	c_r := C.fc_node_child_req{
 		selection: c_sel,
 		meta:      c_meta,
 	}
+	var next *C.fc_node
 	c_err := C.fc_select_child(c_r, &next)
 	if c_err != nil {
 		return nil, go_err(c_err)
@@ -41,7 +33,6 @@ func (n gnode) Child(r node.ChildRequest) (child node.Node, err error) {
 	if next == nil {
 		return nil, nil
 	}
-	fmt.Printf("!! here %s\n", r.Meta.Ident())
 	child_path := C.fc_meta_path_new(n.c_path, c_meta)
 	return gnode{c_node: next, c_path: child_path}, nil
 }
@@ -50,7 +41,30 @@ func (n gnode) Next(r node.ListRequest) (next node.Node, key []val.Value, err er
 	return nil, nil, nil
 }
 
+func (n gnode) new_select_and_meta(m meta.Identifiable) (*C.fc_select, *C.fc_meta) {
+	ident := C.CString(m.Ident())
+	defer C.free(unsafe.Pointer(ident))
+
+	// replica of *potentially* what originally requested child
+	c_sel := C.fc_select_new(0, n.c_node, n.c_path)
+	defer C.free(unsafe.Pointer(c_sel))
+
+	c_meta := C.fc_meta_find(n.c_path.meta, ident)
+	return c_sel, c_meta
+}
+
 func (n gnode) Field(r node.FieldRequest, hnd *node.ValueHandle) error {
+	c_sel, c_meta := n.new_select_and_meta(r.Meta)
+	defer C.free(unsafe.Pointer(c_sel))
+	c_r := C.fc_node_field_req{
+		selection: c_sel,
+		meta:      c_meta,
+	}
+	var v *C.fc_val
+	c_err := C.fc_select_field(c_r, &v)
+	if c_err != nil {
+		return go_err(c_err)
+	}
 	return nil
 }
 

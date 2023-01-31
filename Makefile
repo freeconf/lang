@@ -26,8 +26,7 @@ TESTS = \
 all : generate lib test
 
 generate:
-	cd codegen; \
-		go generate .
+	go run codegen/code_gen_main.go -codegen_dir ./codegen ./*.in 
 
 .PHONY: lib
 lib : out/libfc.so

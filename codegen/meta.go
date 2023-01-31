@@ -1,119 +1,111 @@
 package codegen
 
-// This follows structure of yang/meta/core.go for the most part but has a few
-// differences useful for encoding for other languages and in a structure that
-// CBOR encoder can read.
+/**
+* Parse meta_defs.go and use it to generate meta data about the definitions that can be used
+* to generate defs in other languages
+ */
 
-type MetaId int
-
-const (
-	MetaIdExtension = MetaId(iota)
-	MetaIdExtensionDef
-	MetaIdExtensionDefArg
-	MetaIdModule
-	MetaIdLeaf
-	MetaIdLeafList
-	MetaIdContainer
-	MetaIdList
+import (
+	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/token"
+	"go/types"
+	"path/filepath"
+	"strings"
 )
 
-type OptionalBool int
-
-const (
-	BoolNotSet = iota
-	BoolTrue
-	BoolFalse
-)
-
-// These are defined in order that when they are generated in C there no circular
-// references so be ware order has implications for compilation in other languages
-
-type ExtensionDefArg struct {
-	MetaId      MetaId
-	Ident       string
-	Description string
-	Ref         string
-	YinElement  bool
-	// Extensions []*Extension
+// Yes, this is meta data about the Meta.
+type MetaMeta struct {
+	Definitions []*structDef
 }
 
-type ExtensionDef struct {
-	MetaId      MetaId
-	Ident       string
-	Description string
-	Ref         string
-	Status      int
-	Args        []ExtensionDefArg
-	// Extensions []*Extension
+type structDef struct {
+	Name   string
+	MetaId int
+	Fields []*fieldDef
 }
 
-type Extension struct {
-	MetaId  MetaId
-	Ident   string
-	Prefix  string
-	Keyword string
-	Def     string `reference:"ExensionDef"`
-	Args    []string
+type fieldDef struct {
+	Name string
+	Type string
+	Tags []string
 }
 
-type Module struct {
-	MetaId      MetaId
-	Ident       string
-	Description string
-	Extensions  []Extension
-
-	Definitions []interface{}
-
-	MemId int64
-
-	Ns      string
-	Prefix  string
-	Contact string
-	Org     string
-	Ref     string
-	Ver     string
+func ParseMetaDefs(homeDir string) (MetaMeta, error) {
+	var empty MetaMeta
+	fset := token.NewFileSet()
+	f, err := parser.ParseFile(fset, filepath.Join(homeDir, "meta_defs.go"), nil, 0)
+	if err != nil {
+		return empty, err
+	}
+	g := newVistor()
+	ast.Walk(g, f)
+	return g.Meta, nil
 }
 
-type Leaf struct {
-	MetaId      MetaId
-	Ident       string
-	Description string
-	Extensions  []Extension
-
-	Config    OptionalBool
-	Mandatory OptionalBool
+func (def *structDef) HasField(name string) bool {
+	for _, f := range def.Fields {
+		if f.Name == name {
+			return true
+		}
+	}
+	return false
 }
 
-type LeafList struct {
-	MetaId      MetaId
-	Ident       string
-	Description string
-	Extensions  []Extension
-
-	Config    OptionalBool
-	Mandatory OptionalBool
+type visitor struct {
+	Meta          MetaMeta
+	metaIds       map[string]int
+	currentStruct *structDef
+	currentField  *fieldDef
 }
 
-type Container struct {
-	MetaId      MetaId
-	Ident       string
-	Description string
-	Extensions  []Extension
-
-	Definitions []interface{}
-
-	Config    OptionalBool
-	Mandatory OptionalBool
+func newVistor() *visitor {
+	return &visitor{
+		metaIds: make(map[string]int),
+	}
 }
 
-type List struct {
-	MetaId      MetaId
-	Ident       string
-	Description string
-	Extensions  []Extension
-
-	Definitions []interface{}
-
-	Config    OptionalBool
-	Mandatory OptionalBool
+func (g *visitor) Visit(n ast.Node) ast.Visitor {
+	if n == nil {
+		return nil
+	}
+	switch x := n.(type) {
+	case *ast.TypeSpec:
+		switch x.Type.(type) {
+		case *ast.StructType:
+			name := x.Name.Name
+			defTypeName := "MetaId" + name
+			metaId, valid := g.metaIds[defTypeName]
+			if !valid {
+				panic(fmt.Sprintf("'%s' not defined", defTypeName))
+			}
+			def := &structDef{
+				Name:   name,
+				MetaId: metaId,
+			}
+			g.Meta.Definitions = append(g.Meta.Definitions, def)
+			g.currentStruct = def
+		}
+	case *ast.ValueSpec:
+		if strings.HasPrefix(x.Names[0].Name, "MetaId") {
+			g.metaIds[x.Names[0].Name] = len(g.metaIds)
+		}
+	case *ast.Field:
+		if g.currentStruct != nil {
+			name := x.Names[0].Name
+			def := &fieldDef{
+				Name: name,
+				Type: types.ExprString(x.Type),
+			}
+			if x.Tag != nil {
+				def.Tags = []string{x.Tag.Value}
+			}
+			g.currentStruct.Fields = append(g.currentStruct.Fields, def)
+			g.currentField = def
+		}
+		// default:
+		// 	fmt.Printf("unaccounted for %T, %v\n", n, n)
+	}
+	return g
 }

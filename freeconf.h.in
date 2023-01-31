@@ -80,9 +80,9 @@ typedef enum fc_pack_err {
 extern fc_pack_err fc_unpack_fc_meta(fc_meta_module **m, void* buffer, int len);
 
 typedef enum fc_val_type {
-    FC_VAL_STRING,
-    FC_VAL_INT32,
-    // ...
+{{- range .Val.Definitions}}
+    FC_VAL_{{.Name | snake | uc }},
+{{- end}}
 } fc_val_type;
 
 typedef struct fc_val {
@@ -130,6 +130,7 @@ struct fc_node_child_req {
 
 fc_select* fc_select_new(long mem_id, fc_node* node, fc_meta_path* path);
 fc_err* fc_select_child(fc_node_child_req r, fc_node** child);
+fc_err* fc_select_field(fc_node_field_req r, fc_val** val);
 
 typedef struct fc_browser {    
     fc_meta_module* module;

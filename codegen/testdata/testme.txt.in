@@ -1,0 +1,13 @@
+{{ range .Meta.Definitions}}
+meta {{. | cDefType }} {
+{{- range .Fields }}
+    {{. | cFieldType}} {{. | cName}};
+{{- end }}
+}
+{{ end}}
+
+val {
+{{ range .Val.Definitions}}
+    {{.Name}} = {{.TypeId}}, List ?= {{.IsList}};
+{{ end}}
+}

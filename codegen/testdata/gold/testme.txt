@@ -1,0 +1,164 @@
+
+meta fc_meta_extension_def_arg {
+    fc_meta_id meta_id;
+    char* ident;
+    char* description;
+    char* ref;
+    bool yin_element;
+}
+
+meta fc_meta_extension_def {
+    fc_meta_id meta_id;
+    char* ident;
+    char* description;
+    char* ref;
+    int status;
+    fc_meta_ext_def_arg_array args;
+}
+
+meta fc_meta_extension {
+    fc_meta_id meta_id;
+    char* ident;
+    char* prefix;
+    char* keyword;
+    char* def;
+    char** args;
+}
+
+meta fc_meta_module {
+    fc_meta_id meta_id;
+    char* ident;
+    char* description;
+    fc_meta_ext_array extensions;
+    fc_meta_array definitions;
+    long mem_id;
+    char* ns;
+    char* prefix;
+    char* contact;
+    char* org;
+    char* ref;
+    char* ver;
+}
+
+meta fc_meta_leaf {
+    fc_meta_id meta_id;
+    char* ident;
+    char* description;
+    fc_meta_ext_array extensions;
+    fc_meta_optional_bool config;
+    fc_meta_optional_bool mandatory;
+}
+
+meta fc_meta_leaf_list {
+    fc_meta_id meta_id;
+    char* ident;
+    char* description;
+    fc_meta_ext_array extensions;
+    fc_meta_optional_bool config;
+    fc_meta_optional_bool mandatory;
+}
+
+meta fc_meta_container {
+    fc_meta_id meta_id;
+    char* ident;
+    char* description;
+    fc_meta_ext_array extensions;
+    fc_meta_array definitions;
+    fc_meta_optional_bool config;
+    fc_meta_optional_bool mandatory;
+}
+
+meta fc_meta_list {
+    fc_meta_id meta_id;
+    char* ident;
+    char* description;
+    fc_meta_ext_array extensions;
+    fc_meta_array definitions;
+    fc_meta_optional_bool config;
+    fc_meta_optional_bool mandatory;
+}
+
+
+val {
+
+    Binary = 0, List ?= false;
+
+    Bits = 1, List ?= false;
+
+    Bool = 2, List ?= false;
+
+    Decimal64 = 3, List ?= false;
+
+    Empty = 4, List ?= false;
+
+    Enum = 5, List ?= false;
+
+    IdentityRef = 6, List ?= false;
+
+    InstanceRef = 7, List ?= false;
+
+    Int8 = 8, List ?= false;
+
+    Int16 = 9, List ?= false;
+
+    Int32 = 10, List ?= false;
+
+    Int64 = 11, List ?= false;
+
+    LeafRef = 12, List ?= false;
+
+    String = 13, List ?= false;
+
+    UInt8 = 14, List ?= false;
+
+    UInt16 = 15, List ?= false;
+
+    UInt32 = 16, List ?= false;
+
+    UInt64 = 17, List ?= false;
+
+    Union = 18, List ?= false;
+
+    Any = 19, List ?= false;
+
+    BinaryList = 20, List ?= true;
+
+    BitsList = 21, List ?= true;
+
+    BoolList = 22, List ?= true;
+
+    Decimal64List = 23, List ?= true;
+
+    EmptyList = 24, List ?= true;
+
+    EnumList = 25, List ?= true;
+
+    IdentityRefList = 26, List ?= true;
+
+    InstanceRefList = 27, List ?= true;
+
+    Int8List = 28, List ?= true;
+
+    Int16List = 29, List ?= true;
+
+    Int32List = 30, List ?= true;
+
+    Int64List = 31, List ?= true;
+
+    LeafRefList = 32, List ?= true;
+
+    StringList = 33, List ?= true;
+
+    UInt8List = 34, List ?= true;
+
+    UInt16List = 35, List ?= true;
+
+    UInt32List = 36, List ?= true;
+
+    UInt64List = 37, List ?= true;
+
+    UnionList = 38, List ?= true;
+
+    AnyList = 39, List ?= true;
+
+}

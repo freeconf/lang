@@ -7,36 +7,32 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/freeconf/lang/codegen"
 )
 
-var dirs = []string{
-	"..",
-}
+var homeDir = flag.String("codegen_dir", ".", "File path to directory containing _defs.go files")
 
 func main() {
-	metas, err := codegen.ParseSource("./meta.go")
+	flag.Parse()
+	vars, err := codegen.ParseDefs(*homeDir)
 	chkerr(err)
-	for _, dir := range dirs {
-		err = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-			if !strings.HasSuffix(path, ".in") {
-				return nil
-			}
-			destFname := path[:len(path)-3]
-			fmt.Printf("%s => %s\n", path, destFname)
-			dest, err := os.Create(destFname)
-			if err != nil {
-				return err
-			}
-			defer dest.Close()
-			err = codegen.GenerateSource(metas, path, dest)
-			return err
-		})
+	for _, path := range flag.Args() {
+		if !strings.HasSuffix(path, ".in") {
+			chkerr(fmt.Errorf("expected .in file ext on '%s'", path))
+		}
+		destFname := path[:len(path)-3]
+		fmt.Printf("%s => %s\n", path, destFname)
+		dest, err := os.Create(destFname)
+		if err != nil {
+			chkerr(err)
+		}
+		defer dest.Close()
+		err = codegen.GenerateSource(vars, path, dest)
 		chkerr(err)
 	}
 }
