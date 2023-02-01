@@ -20,7 +20,7 @@ func fc_select_upsert_from(c_sel *C.fc_select, c_node *C.fc_node) *C.fc_err {
 		// If node is a go node, use it directly
 		g_node = mem.Get(int64(c_node.mem_id)).(node.Node)
 	} else {
-		g_node = gnode{c_node: c_node, c_path: c_sel.path}
+		g_node = &gnode{c_node: c_node, c_path: c_sel.path}
 	}
 	resp_sel := sel.UpdateFrom(g_node)
 	if resp_sel.LastErr != nil {

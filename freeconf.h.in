@@ -85,10 +85,24 @@ typedef enum fc_val_type {
 {{- end}}
 } fc_val_type;
 
+typedef union {
+    int i32;
+    long i64;
+    float decimal;
+    char* str;
+    void* buf;
+} fc_val_data;
+
 typedef struct fc_val {
-    fc_val_type type;
-    void* data;
+    fc_val_type data_type;
+    //fc_val_data data;
+    int i32;
+    long i64;
+    float decimal;
+    char* str;
+    void* buf;    
     size_t size;
+    int list_length;
 } fc_val;
 
 typedef struct fc_meta_path {
@@ -105,7 +119,7 @@ typedef struct fc_node_child_req fc_node_child_req;
 typedef struct fc_node {
     long mem_id;
     void* context;
-    fc_err* (*on_field)(struct fc_node* self, fc_node_field_req r, fc_val** val);
+    fc_err* (*on_field)(struct fc_node* self, fc_node_field_req r, fc_val* val);
     fc_err* (*on_child)(struct fc_node* self, fc_node_child_req r, struct fc_node** child);
 } fc_node;
 
@@ -130,7 +144,7 @@ struct fc_node_child_req {
 
 fc_select* fc_select_new(long mem_id, fc_node* node, fc_meta_path* path);
 fc_err* fc_select_child(fc_node_child_req r, fc_node** child);
-fc_err* fc_select_field(fc_node_field_req r, fc_val** val);
+fc_err* fc_select_field(fc_node_field_req r, fc_val* val);
 
 typedef struct fc_browser {    
     fc_meta_module* module;

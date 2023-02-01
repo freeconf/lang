@@ -17,9 +17,20 @@ fc_err* dump_child(fc_node* self, fc_node_child_req r, fc_node** child) {
     return NULL;
 }
 
-fc_err* dump_field(fc_node* self, fc_node_field_req r, fc_val** val) {
+fc_err* dump_field(fc_node* self, fc_node_field_req r, fc_val* val) {
     fc_meta_leaf* meta = (fc_meta_leaf*)r.meta;
-    int rc = fprintf((FILE*)(self->context), "FIELD %s\n", meta->ident);
+    int rc = 0;
+    switch (val->data_type) {
+        case FC_VAL_STRING:
+            rc = fprintf((FILE*)(self->context), "FIELD %s, %s\n", meta->ident, val->str);
+            break;
+        case FC_VAL_INT_32:
+            rc = fprintf((FILE*)(self->context), "FIELD %s, %d\n", meta->ident, val->i32);
+            break;
+        default:
+            rc = fprintf((FILE*)(self->context), "FIELD %s\n", meta->ident);
+            break;
+    }
     if (rc < 0) {
         return fc_err_new("file write error");
     }
@@ -29,12 +40,12 @@ fc_err* dump_field(fc_node* self, fc_node_field_req r, fc_val** val) {
 int main(int argc, char **argv) {
     char* ypath = getenv("YANGPATH");
     fc_meta_module* m;
-    fc_pack_err err = fc_yang_parse(&m, ypath, "testme");
+    fc_pack_err err = fc_yang_parse(&m, ypath, "testme-1");
     assert(err == FC_ERR_NONE);
 
     // assert(strcmp("testme", m->ident) == 0);
     fc_node* json;
-    fc_err* nerr = fc_json_node_rdr(&json, "./test/testdata/testme-sample.json");
+    fc_err* nerr = fc_json_node_rdr(&json, "./test/testdata/testme-sample-1.json");
     if (nerr != NULL) {
         printf("%s\n", nerr->message);
         assert(nerr == FC_ERR_NONE);

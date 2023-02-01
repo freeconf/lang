@@ -6,6 +6,7 @@ package main
 import "C"
 import (
 	"context"
+	"fmt"
 	"unsafe"
 
 	"github.com/freeconf/yang/meta"
@@ -18,7 +19,8 @@ type gnode struct {
 	c_path *C.struct_fc_meta_path
 }
 
-func (n gnode) Child(r node.ChildRequest) (child node.Node, err error) {
+func (n *gnode) Child(r node.ChildRequest) (child node.Node, err error) {
+	fmt.Printf("child, self.c_node=%p\n", n.c_node)
 	c_sel, c_meta := n.new_select_and_meta(r.Meta)
 	defer C.free(unsafe.Pointer(c_sel))
 	c_r := C.fc_node_child_req{
@@ -34,64 +36,77 @@ func (n gnode) Child(r node.ChildRequest) (child node.Node, err error) {
 		return nil, nil
 	}
 	child_path := C.fc_meta_path_new(n.c_path, c_meta)
-	return gnode{c_node: next, c_path: child_path}, nil
+	return &gnode{c_node: next, c_path: child_path}, nil
 }
 
-func (n gnode) Next(r node.ListRequest) (next node.Node, key []val.Value, err error) {
+func (n *gnode) Next(r node.ListRequest) (next node.Node, key []val.Value, err error) {
 	return nil, nil, nil
 }
 
-func (n gnode) new_select_and_meta(m meta.Identifiable) (*C.fc_select, *C.fc_meta) {
+func (n *gnode) new_select_and_meta(m meta.Identifiable) (*C.fc_select, *C.fc_meta) {
 	ident := C.CString(m.Ident())
 	defer C.free(unsafe.Pointer(ident))
 
 	// replica of *potentially* what originally requested child
 	c_sel := C.fc_select_new(0, n.c_node, n.c_path)
-	defer C.free(unsafe.Pointer(c_sel))
-
 	c_meta := C.fc_meta_find(n.c_path.meta, ident)
 	return c_sel, c_meta
 }
 
-func (n gnode) Field(r node.FieldRequest, hnd *node.ValueHandle) error {
+func (n *gnode) Field(r node.FieldRequest, hnd *node.ValueHandle) error {
+	fmt.Printf("field, self.c_node=%p\n", n.c_node)
 	c_sel, c_meta := n.new_select_and_meta(r.Meta)
+
+	fmt.Printf("field, c_sel.node=%p\n", c_sel.node)
 	defer C.free(unsafe.Pointer(c_sel))
 	c_r := C.fc_node_field_req{
 		selection: c_sel,
 		meta:      c_meta,
+		write:     C.bool(r.Write),
 	}
-	var v *C.fc_val
-	c_err := C.fc_select_field(c_r, &v)
+	var c_val C.fc_val
+	if r.Write {
+		c_val = cee_val(hnd.Val)
+	}
+	// HACK: Find out why this is nec
+	c_r.selection.node = n.c_node
+
+	fmt.Printf("field, c_r.selection.node=%p\n", c_r.selection.node)
+	c_err := C.fc_select_field(c_r, &c_val)
+	defer free_val(c_val)
+	if !r.Write {
+		hnd.Val = go_val(c_val)
+	}
 	if c_err != nil {
 		return go_err(c_err)
 	}
 	return nil
 }
 
-func (n gnode) Choose(sel node.Selection, choice *meta.Choice) (m *meta.ChoiceCase, err error) {
+func (n *gnode) Choose(sel node.Selection, choice *meta.Choice) (m *meta.ChoiceCase, err error) {
 	return nil, nil
 }
 
-func (n gnode) BeginEdit(r node.NodeRequest) error {
+func (n *gnode) BeginEdit(r node.NodeRequest) error {
 	return nil
 }
 
-func (n gnode) EndEdit(r node.NodeRequest) error {
+func (n *gnode) EndEdit(r node.NodeRequest) error {
 	return nil
 }
 
-func (n gnode) Action(r node.ActionRequest) (output node.Node, err error) {
+func (n *gnode) Action(r node.ActionRequest) (output node.Node, err error) {
 	return nil, nil
 }
 
-func (n gnode) Notify(r node.NotifyRequest) (node.NotifyCloser, error) {
+func (n *gnode) Notify(r node.NotifyRequest) (node.NotifyCloser, error) {
 	return nil, nil
 }
 
-func (n gnode) Peek(sel node.Selection, consumer interface{}) interface{} {
+func (n *gnode) Peek(sel node.Selection, consumer interface{}) interface{} {
 	return nil
 }
 
-func (n gnode) Context(sel node.Selection) context.Context {
+func (n *gnode) Context(sel node.Selection) context.Context {
 	return sel.Context
 }

@@ -1,0 +1,15 @@
+module testme-1 {
+    description "testing loading yang files";
+ 
+    container z {
+        description "Z";
+
+        leaf q {
+            type int32;
+        }
+    }
+
+    leaf x { 
+        type string;
+    }
+}

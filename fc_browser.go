@@ -20,7 +20,7 @@ func fc_browser_new(m *C.fc_meta_module, c_node *C.fc_node) *C.fc_browser {
 	b.module = m
 	b.node = c_node
 	c_path := C.fc_meta_path_new_root(m)
-	n := gnode{c_node: c_node, c_path: c_path}
+	n := &gnode{c_node: c_node, c_path: c_path}
 	gb := node.NewBrowser(gm, n)
 	b.mem_id = C.long(mem.Add(gb, nil))
 	return b
