@@ -1,7 +1,8 @@
 package main
 
 /*
-#include "freeconf.h"
+#include <stdlib.h>
+#include <freeconf_lang.h>
 */
 import "C"
 
@@ -36,20 +37,14 @@ func fc_yang_parse_pack(ypathPtr *C.char, yfilePtr *C.char) C.fc_pack {
 	return m
 }
 
-//export fc_yang_parse
-func fc_yang_parse(m **C.fc_meta_module, ypath *C.char, filename *C.char) C.fc_pack_err {
-	pack := fc_yang_parse_pack(ypath, filename)
-	defer freePack(pack)
-	return C.fc_unpack_fc_meta(m, pack.serialized, pack.serialized_len)
+//export fc_yang_pack_free
+func fc_yang_pack_free(p C.fc_pack) {
+	if p.serialized != nil {
+		C.free(unsafe.Pointer(p.serialized))
+	}
 }
 
 type modRef struct {
 	mod        *meta.Module
 	serialized []byte
-}
-
-func freePack(m C.fc_pack) {
-	if m.serialized != nil {
-		C.free(unsafe.Pointer(m.serialized))
-	}
 }

@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <freeconf_lang.h>
 
 typedef struct fc_err {
     char message[128];
@@ -64,10 +65,6 @@ typedef struct {{. | cDefType }} {
 } {{. | cDefType }};
 {{ end}}
 
-typedef struct fc_pack {
-	void*   serialized;
-	int     serialized_len;
-} fc_pack;
 
 typedef enum fc_pack_err {
     FC_ERR_NONE,
@@ -78,6 +75,7 @@ typedef enum fc_pack_err {
 } fc_pack_err;
 
 extern fc_pack_err fc_unpack_fc_meta(fc_meta_module **m, void* buffer, int len);
+extern fc_pack_err fc_yang_parse(fc_meta_module** m, char* ypath, char* filename);
 
 typedef enum fc_val_type {
 {{- range .Val.Definitions}}
@@ -143,6 +141,7 @@ struct fc_node_child_req {
 };
 
 fc_select* fc_select_new(long mem_id, fc_node* node, fc_meta_path* path);
+void fc_select_delete(fc_select *sel);
 fc_err* fc_select_child(fc_node_child_req r, fc_node** child);
 fc_err* fc_select_field(fc_node_field_req r, fc_val* val);
 

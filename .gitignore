@@ -9,3 +9,5 @@ meta.c
 freeconf.h
 fc_meta.c
 fc_unpack_fc_meta.c
+python/fc/meta.py
+python/fc/unpack_meta.py

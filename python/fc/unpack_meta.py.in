@@ -1,0 +1,46 @@
+from cbor2 import *
+from .meta import *
+
+def unpack_string(parent, pack):
+    return pack
+
+def unpack_string_array(parent, pack):
+    return pack
+
+def unpack_int64(parent, pack):
+    return pack
+
+def unpack_int(parent, pack):
+    return pack
+
+def unpack_MetaId(parent, pack):
+    return pack
+
+def unpack_ExtensionDefArg_array(parent, pack):
+    pass
+
+def unpack_Extension_array(parent, pack):
+    pass
+
+def unpack_DataDefinitions_array(parent, pack):
+    pass
+
+def unpack_OptionalBool(parent, pack):
+    pass
+
+def unpack_bool(parent, pack):
+    return pack
+
+{{ range .Meta.Definitions }}
+def unpack_{{.Name}}(parent, pack):
+    ddef = {{.Name}}()
+    ddef.parent = parent
+    {{- range $index, $field := .Fields }}
+    ddef.{{.PyName}} = unpack_{{$field.PyUnpackName}}(ddef, pack[{{ $index }}]);
+    {{- end}}
+    return ddef
+{{ end }}
+
+def unpack_module(buf):
+    data = decoder.loads(buf)
+    return unpack_Module(None, data)

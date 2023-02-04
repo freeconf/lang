@@ -1,5 +1,5 @@
-export YANGPATH = $(abspath ../yang)
-export LD_LIBRARY_PATH = $(abspath ../c/lib)
+export YANGPATH = $(abspath ../test/yang)
+export LD_LIBRARY_PATH = $(abspath ../out)
 export PYTHONPATH = $(abspath .)
 
 .PHONY: test

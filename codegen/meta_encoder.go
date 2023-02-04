@@ -21,8 +21,8 @@ type encoder struct {
 	memId int64
 }
 
-func (e *encoder) defs(c meta.HasDataDefinitions) []interface{} {
-	r := make([]interface{}, len(c.DataDefinitions()))
+func (e *encoder) defs(c meta.HasDataDefinitions) []DataDefinitions {
+	r := make([]DataDefinitions, len(c.DataDefinitions()))
 	for i, def := range c.DataDefinitions() {
 		r[i] = e.def(def)
 	}

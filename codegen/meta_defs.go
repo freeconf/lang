@@ -52,7 +52,7 @@ type Extension struct {
 	Ident   string
 	Prefix  string
 	Keyword string
-	Def     string `reference:"ExensionDef"`
+	ExtDef  string
 	Args    []string
 }
 
@@ -62,7 +62,7 @@ type Module struct {
 	Description string
 	Extensions  []Extension
 
-	Definitions []interface{}
+	Definitions []DataDefinitions
 
 	MemId int64
 
@@ -100,11 +100,13 @@ type Container struct {
 	Description string
 	Extensions  []Extension
 
-	Definitions []interface{}
+	Definitions []DataDefinitions
 
 	Config    OptionalBool
 	Mandatory OptionalBool
 }
+
+type DataDefinitions interface{}
 
 type List struct {
 	MetaId      MetaId
@@ -112,7 +114,7 @@ type List struct {
 	Description string
 	Extensions  []Extension
 
-	Definitions []interface{}
+	Definitions []DataDefinitions
 
 	Config    OptionalBool
 	Mandatory OptionalBool

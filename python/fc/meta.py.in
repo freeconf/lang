@@ -1,0 +1,11 @@
+
+
+{{ range .Meta.Definitions}}
+class {{ .Name }}():
+
+    def __init__(self):
+        parent = None
+{{- range .Fields }}
+        {{.PyName}} = None
+{{- end }}
+{{ end }}

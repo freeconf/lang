@@ -30,6 +30,17 @@ func cNameSafe(name string) string {
 	return strings.ReplaceAll(name, "*", "_ptr")
 }
 
+func (f *fieldDef) IsArray() bool {
+	return strings.HasPrefix(f.Type, "[]")
+}
+
+func (f *fieldDef) BaseType() string {
+	if f.IsArray() {
+		return f.Type[2:]
+	}
+	return f.Type
+}
+
 func cFieldType(f *fieldDef) string {
 	switch f.Type {
 	case "string":

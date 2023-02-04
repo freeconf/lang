@@ -16,7 +16,7 @@ import (
 func fc_browser_new(m *C.fc_meta_module, c_node *C.fc_node) *C.fc_browser {
 	gm := mem.Get(int64(m.mem_id)).(*meta.Module)
 	var b *C.fc_browser
-	b = (*C.fc_browser)(C.calloc(0, C.size_t(unsafe.Sizeof(*b))))
+	b = (*C.fc_browser)(C.calloc(1, C.size_t(unsafe.Sizeof(*b))))
 	b.module = m
 	b.node = c_node
 	c_path := C.fc_meta_path_new_root(m)

@@ -26,7 +26,9 @@ TESTS = \
 all : generate lib test
 
 generate:
-	go run codegen/code_gen_main.go -codegen_dir ./codegen ./*.in 
+	go run codegen/code_gen_main.go -codegen_dir ./codegen \
+		./*.in \
+		python/fc/*.in
 
 .PHONY: lib
 lib : out/libfc.so
@@ -42,7 +44,7 @@ out/libfc.so:
 .PHONY: test
 test: $(TESTS)
 
-out/test_% : test/test_%.c generate out/libfc.so 
+out/test_% : test/test_%.c
 	gcc \
 		$(GCC_FLAGS) \
 		-Wall \

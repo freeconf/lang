@@ -6,7 +6,6 @@
 #include <libfc.h>
 #include <freeconf.h>
 
-
 fc_err* dump_child(fc_node* self, fc_node_child_req r, fc_node** child) {
     fc_meta_container* meta = (fc_meta_container*)r.meta;
     int rc = fprintf((FILE*)(self->context), "CHILD %s\n", meta->ident);
@@ -60,7 +59,10 @@ int main(int argc, char **argv) {
     nerr = fc_select_upsert_from(root, json);
     if (nerr != NULL) {
         printf("%s\n", nerr->message);
-        assert(nerr == FC_ERR_NONE);
+        assert(nerr == FC_ERR_NONE);        
     }
+    fc_select_delete(root);
+    free(b);
+
     return 0;
 }

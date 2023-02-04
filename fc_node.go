@@ -6,7 +6,6 @@ package main
 import "C"
 import (
 	"context"
-	"fmt"
 	"unsafe"
 
 	"github.com/freeconf/yang/meta"
@@ -20,7 +19,6 @@ type gnode struct {
 }
 
 func (n *gnode) Child(r node.ChildRequest) (child node.Node, err error) {
-	fmt.Printf("child, self.c_node=%p\n", n.c_node)
 	c_sel, c_meta := n.new_select_and_meta(r.Meta)
 	defer C.free(unsafe.Pointer(c_sel))
 	c_r := C.fc_node_child_req{
@@ -54,11 +52,9 @@ func (n *gnode) new_select_and_meta(m meta.Identifiable) (*C.fc_select, *C.fc_me
 }
 
 func (n *gnode) Field(r node.FieldRequest, hnd *node.ValueHandle) error {
-	fmt.Printf("field, self.c_node=%p\n", n.c_node)
 	c_sel, c_meta := n.new_select_and_meta(r.Meta)
 
-	fmt.Printf("field, c_sel.node=%p\n", c_sel.node)
-	defer C.free(unsafe.Pointer(c_sel))
+	defer C.fc_select_delete(c_sel)
 	c_r := C.fc_node_field_req{
 		selection: c_sel,
 		meta:      c_meta,
@@ -68,10 +64,6 @@ func (n *gnode) Field(r node.FieldRequest, hnd *node.ValueHandle) error {
 	if r.Write {
 		c_val = cee_val(hnd.Val)
 	}
-	// HACK: Find out why this is nec
-	c_r.selection.node = n.c_node
-
-	fmt.Printf("field, c_r.selection.node=%p\n", c_r.selection.node)
 	c_err := C.fc_select_field(c_r, &c_val)
 	defer free_val(c_val)
 	if !r.Write {
