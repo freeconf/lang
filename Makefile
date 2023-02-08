@@ -53,3 +53,18 @@ out/test_% : test/test_%.c
 		-o $@ $< \
 		$(LIBS)
 	$@
+
+proto:
+	test -d comm/pb || mkdir comm/pb
+	protoc \
+		--go_out=comm  \
+		--go-grpc_out=comm \
+		comm/*.proto
+
+proto-py:
+	test -d python/pb || mkdir python/pb
+	cd python; \
+		. venv/bin/activate && \
+		python -m grpc_tools.protoc \
+			-I../comm --python_out=pb --pyi_out=pb \
+			--grpc_python_out=pb ../comm/meta.proto

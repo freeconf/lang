@@ -1,0 +1,102 @@
+syntax="proto3";
+
+option go_package = "./pb";
+
+package pb;
+
+message LoadModuleRequest {
+      string dir = 1;
+      string name = 2;
+}
+
+service Parser {
+      rpc LoadModule (LoadModuleRequest) returns (Module) {}
+}
+
+message ExtensionDefArg {
+    string ident = 1;
+    string description = 2;
+    string reference = 3;
+    bool yinElement = 5;    
+}
+
+message ExtensionDef {
+    string ident = 1;
+    string description = 2;
+    string reference = 3;
+    int32 status = 4;
+    repeated ExtensionDefArg args = 5;
+}
+
+message Extension {
+      string ident = 1;
+      string prefix = 2;
+      string keyword = 3;
+      string extDef = 4;
+      repeated string args = 5;
+}
+
+enum OptionalBool {
+    NOT_SPECIFIED = 0;
+    TRUE = 1;
+    FALSE = 2;
+}
+
+message Container {
+      string ident = 1;
+      string description = 2;
+      repeated Extension extensions = 3;
+      repeated DataDef definitions = 4;
+      OptionalBool config = 14;
+      OptionalBool mandatory = 15;
+}
+
+message Leaf {
+      string ident = 1;
+      string description = 2;
+      repeated Extension extensions = 3;
+      OptionalBool config = 14;
+      OptionalBool mandatory = 15;
+}
+
+message List {
+    string ident = 1;
+    string description = 2;
+    repeated Extension extensions = 3;
+    repeated DataDef definitions = 4;
+    OptionalBool config = 14;
+    OptionalBool mandatory = 15;    
+}
+
+message LeafList {
+    string ident = 1;
+    string description = 2;
+    repeated Extension extensions = 3;
+    OptionalBool config = 14;
+    OptionalBool mandatory = 15;    
+}
+
+message DataDef {
+      oneof def_oneof {
+           int32 reference = 1;
+           Leaf leaf = 2;
+           Container container = 3;
+      }
+}
+
+message Module {
+      string ident = 1;
+      string description = 2;
+      repeated Extension extensions = 3;
+      repeated DataDef definitions = 4;
+      string namespace = 5;
+      string prefix = 6;
+      string contact = 7;
+      string organization = 8;
+      string reference = 9;
+      string version = 10;
+}
+
+message DataDefHandle {
+      int64 id = 1;
+}
