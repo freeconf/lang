@@ -4,7 +4,6 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"path/filepath"
 	"strings"
 )
 
@@ -26,7 +25,7 @@ type valDef struct {
 func ParseValDefs(homeDir string) (ValMeta, error) {
 	var empty ValMeta
 	fset := token.NewFileSet()
-	f, err := parser.ParseFile(fset, filepath.Join(homeDir, "val_defs.go"), nil, 0)
+	f, err := parser.ParseFile(fset, homeDir+"codegen/val_defs.go", nil, 0)
 	if err != nil {
 		return empty, err
 	}

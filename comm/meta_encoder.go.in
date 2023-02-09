@@ -1,0 +1,81 @@
+package comm
+
+import (
+	"github.com/freeconf/lang/comm/pb"
+	"github.com/freeconf/yang/meta"
+)
+
+type MetaEncoder struct {
+}
+
+func (e *MetaEncoder) encodeOptionalBool(value bool, specified bool) pb.OptionalBool {
+    if !specified {
+        return pb.OptionalBool_NOT_SPECIFIED
+    }
+    if value {
+        return pb.OptionalBool_TRUE
+    }
+    return pb.OptionalBool_FALSE
+}
+
+func (e *MetaEncoder) encodeExtensionList(parent any, from []*meta.Extension) []*pb.Extension {
+    to := make([]*pb.Extension, len(from))    
+    for i, x := range from {
+        to[i] = e.encodeExtension(parent, x)
+    }
+    return to
+}
+
+func (e *MetaEncoder) encodeDataDefList(parent any, from []meta.Definition) []*pb.DataDef {
+    to := make([]*pb.DataDef, len(from))    
+    for i, d := range from {
+        switch x := d.(type) {
+{{ range .Meta2.Definitions}}
+{{ if .IsDataDef }}
+            case *meta.{{.Name}}:
+                to[i] = &pb.DataDef{DefOneof:&pb.DataDef_{{.Name}}{ {{.Name}}:e.encode{{.Name}}(parent, x)}}
+{{- end }}
+{{- end }}        
+        }
+    }
+    return to
+}
+
+func (e *MetaEncoder) encodeExtensionDefArgList(parent *pb.ExtensionDef, from []*meta.ExtensionDefArg) []*pb.ExtensionDefArg {
+    to := make([]*pb.ExtensionDefArg, len(from))    
+    for i, f := range from {
+        to[i] = e.encodeExtensionDefArg(parent, f)
+    }
+    return to
+}
+
+func (e *MetaEncoder) encodeStatus(parent *pb.ExtensionDef, from meta.Status) pb.Status {
+    return pb.Status(from)
+}
+
+
+{{ range .Meta2.Definitions}}
+{{ if .IsMetaDef }}
+func (e *MetaEncoder) encode{{.Name}}(parent any, from *meta.{{.Name}}) *pb.{{.Name}} {
+    var def pb.{{.Name}}
+    {{- range .Fields}}
+        {{- if eq .Type "OptionalBool" }}
+        def.{{.GoName}} = e.encodeOptionalBool(from.{{.GoName}}(), from.Is{{.GoName}}Set())
+        {{- else if eq .Type "DataDef" }}
+        def.{{.GoName}} = e.encodeDataDefList(&def, from.DataDefinitions())
+        {{- else if eq .GoName "Def" }}
+        def.{{.GoName}} = from.Def().Ident()
+        {{- else if .CustomEncoder }}
+        def.{{.GoName}} = e.encode{{.CustomEncoder}}(&def, from.{{.GoName}}())
+        {{- else }}
+        def.{{.GoName}} = from.{{.GoName}}()
+        {{- end }}
+    {{- end }}
+    return &def
+}
+{{- end }}
+{{- end }}
+
+func (e *MetaEncoder) Encode(from *meta.Module) *pb.Module {
+    return e.encodeModule(nil, from)
+}

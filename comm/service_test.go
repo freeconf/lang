@@ -10,24 +10,9 @@ import (
 
 	"github.com/freeconf/lang/comm/pb"
 	"github.com/freeconf/yang/fc"
-	"github.com/freeconf/yang/parser"
-	"github.com/freeconf/yang/source"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
-
-type server struct {
-	pb.UnimplementedParserServer
-}
-
-func (s *server) LoadModule(ctx context.Context, in *pb.LoadModuleRequest) (*pb.Module, error) {
-	ypath := source.Dir(in.Dir)
-	m, err := parser.LoadModule(ypath, in.Name)
-	if err != nil {
-		return nil, err
-	}
-	return new(metaEncoder).encode(m), nil
-}
 
 func startServer(addr string) {
 	if err := os.RemoveAll(addr); err != nil {
@@ -40,7 +25,7 @@ func startServer(addr string) {
 	}
 
 	s := grpc.NewServer()
-	pb.RegisterParserServer(s, &server{})
+	pb.RegisterParserServer(s, &Service{})
 	go func() {
 		defer l.Close()
 		if err := s.Serve(l); err != nil {

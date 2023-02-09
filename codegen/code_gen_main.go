@@ -15,7 +15,7 @@ import (
 	"github.com/freeconf/lang/codegen"
 )
 
-var homeDir = flag.String("codegen_dir", ".", "File path to directory containing _defs.go files")
+var homeDir = flag.String("home_dir", "./", "File path to directory containing _defs.go files")
 
 func main() {
 	flag.Parse()

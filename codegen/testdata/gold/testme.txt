@@ -21,7 +21,7 @@ meta fc_meta_extension {
     char* ident;
     char* prefix;
     char* keyword;
-    char* def;
+    char* ext_def;
     char** args;
 }
 

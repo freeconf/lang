@@ -26,7 +26,8 @@ TESTS = \
 all : generate lib test
 
 generate:
-	go run codegen/code_gen_main.go -codegen_dir ./codegen \
+	go run codegen/code_gen_main.go \
+		./comm/*.in \
 		./*.in \
 		python/fc/*.in
 
@@ -54,12 +55,18 @@ out/test_% : test/test_%.c
 		$(LIBS)
 	$@
 
+.PHONY: bin/fc-lang
+bin/fc-lang :
+	test -d $(dir $@) || mkdir -p $(dir $@)
+	go build -o $@ cmd/fc-lang/main.go
+
 proto:
 	test -d comm/pb || mkdir comm/pb
 	protoc \
+		-I./comm \
 		--go_out=comm  \
 		--go-grpc_out=comm \
-		comm/*.proto
+		comm/meta.proto comm/parser.proto
 
 proto-py:
 	test -d python/pb || mkdir python/pb
@@ -67,4 +74,4 @@ proto-py:
 		. venv/bin/activate && \
 		python -m grpc_tools.protoc \
 			-I../comm --python_out=pb --pyi_out=pb \
-			--grpc_python_out=pb ../comm/meta.proto
+			--grpc_python_out=pb ../comm/meta.proto ../comm/parser.proto

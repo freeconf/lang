@@ -1,0 +1,17 @@
+syntax="proto3";
+
+option go_package = "./pb";
+
+package pb;
+
+import "meta.proto";
+
+message LoadModuleRequest {
+      string dir = 1;
+      string name = 2;
+}
+
+service Parser {
+      rpc LoadModule (LoadModuleRequest) returns (Module) {}
+}
+

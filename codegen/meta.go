@@ -11,7 +11,6 @@ import (
 	"go/parser"
 	"go/token"
 	"go/types"
-	"path/filepath"
 	"strings"
 )
 
@@ -35,7 +34,7 @@ type fieldDef struct {
 func ParseMetaDefs(homeDir string) (MetaMeta, error) {
 	var empty MetaMeta
 	fset := token.NewFileSet()
-	f, err := parser.ParseFile(fset, filepath.Join(homeDir, "meta_defs.go"), nil, 0)
+	f, err := parser.ParseFile(fset, homeDir+"codegen/meta_defs.go", nil, 0)
 	if err != nil {
 		return empty, err
 	}

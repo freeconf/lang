@@ -13,8 +13,9 @@ import (
 //go:generate go run code_gen_main.go
 
 type Vars struct {
-	Meta MetaMeta
-	Val  ValMeta
+	Meta  MetaMeta
+	Meta2 Meta2Meta
+	Val   ValMeta
 }
 
 func ParseDefs(homeDir string) (vars Vars, err error) {
@@ -22,6 +23,9 @@ func ParseDefs(homeDir string) (vars Vars, err error) {
 		return
 	}
 	if vars.Val, err = ParseValDefs(homeDir); err != nil {
+		return
+	}
+	if vars.Meta2, err = ParseMeta2Defs(homeDir); err != nil {
 		return
 	}
 	return

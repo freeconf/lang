@@ -4,13 +4,29 @@ option go_package = "./pb";
 
 package pb;
 
-message LoadModuleRequest {
-      string dir = 1;
-      string name = 2;
+enum OptionalBool {
+      NOT_SPECIFIED = 0;
+      TRUE = 1;
+      FALSE = 2;
 }
 
-service Parser {
-      rpc LoadModule (LoadModuleRequest) returns (Module) {}
+enum Status {
+      CURRENT = 0;
+      DEPRECATED = 1;
+      OBSOLETE = 2;
+}
+
+message Module {
+      string ident = 1;
+      string description = 2;
+      repeated Extension extensions = 3;
+      repeated DataDef definitions = 4;
+      string namespace = 5;
+      string prefix = 6;
+      string contact = 7;
+      string organization = 8;
+      string reference = 9;
+      string version = 10;
 }
 
 message ExtensionDefArg {
@@ -24,22 +40,16 @@ message ExtensionDef {
     string ident = 1;
     string description = 2;
     string reference = 3;
-    int32 status = 4;
-    repeated ExtensionDefArg args = 5;
+    Status status = 4;
+    repeated ExtensionDefArg arguments = 5;
 }
 
 message Extension {
       string ident = 1;
       string prefix = 2;
       string keyword = 3;
-      string extDef = 4;
-      repeated string args = 5;
-}
-
-enum OptionalBool {
-    NOT_SPECIFIED = 0;
-    TRUE = 1;
-    FALSE = 2;
+      string def = 4;
+      repeated string arguments = 5;
 }
 
 message Container {
@@ -78,25 +88,9 @@ message LeafList {
 
 message DataDef {
       oneof def_oneof {
-           int32 reference = 1;
            Leaf leaf = 2;
-           Container container = 3;
+           LeafList leafList = 3;
+           Container container = 4;
+           List list = 5;
       }
-}
-
-message Module {
-      string ident = 1;
-      string description = 2;
-      repeated Extension extensions = 3;
-      repeated DataDef definitions = 4;
-      string namespace = 5;
-      string prefix = 6;
-      string contact = 7;
-      string organization = 8;
-      string reference = 9;
-      string version = 10;
-}
-
-message DataDefHandle {
-      int64 id = 1;
 }

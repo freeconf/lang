@@ -9,6 +9,7 @@ require (
 )
 
 require (
+	github.com/emicklei/proto v1.11.1 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/flatbuffers/go v0.0.0-20230108230133-3b8644d32c50 // indirect
 	github.com/iancoleman/strcase v0.2.0 // indirect
