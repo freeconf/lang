@@ -17,8 +17,10 @@ func main() {
 		log.Fatalf(usage, os.Args[0])
 	}
 	addr := os.Args[1]
-	if err := os.Remove(addr); err != nil {
-		log.Fatal(err)
+	if _, ferr := os.Stat(addr); ferr == nil {
+		if err := os.Remove(addr); err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	l, err := net.Listen("unix", addr)

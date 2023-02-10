@@ -11,7 +11,12 @@ message LoadModuleRequest {
       string name = 2;
 }
 
+message LoadModuleResponse {
+    Module module = 1;
+    uint64 handle = 2;
+}
+
 service Parser {
-      rpc LoadModule (LoadModuleRequest) returns (Module) {}
+      rpc LoadModule (LoadModuleRequest) returns (LoadModuleResponse) {}
 }
 

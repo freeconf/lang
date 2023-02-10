@@ -88,9 +88,9 @@ message LeafList {
 
 message DataDef {
       oneof def_oneof {
+           Container container = 1;
            Leaf leaf = 2;
            LeafList leafList = 3;
-           Container container = 4;
-           List list = 5;
+           List list = 4;
       }
 }

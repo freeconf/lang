@@ -1,0 +1,54 @@
+import fc.meta
+import pb.meta_pb2
+
+class Decoder():
+    """Convert the protobuf Module to a meta Module """
+
+    def decode_ExtensionDefArgList(self, parent, encoded):
+        pass
+
+    def decode_ExtensionList(self, parent, encoded):
+        pass
+
+    def decode_Status(self, parent, encoded):
+        return fc.meta.Status(encoded)
+
+    def decode_OptionalBool(self, parent, encoded):
+        if encoded == pb.meta_pb2.NOT_SPECIFIED:
+            return None
+        if encoded == pb.meta_pb2.TRUE:
+            return True
+        return False
+
+    def decode_DataDefList(self, parent, encoded_list):
+        to = []
+        for encoded in encoded_list:
+{{- $conditional := "if" }}
+{{- range .Meta2.DataDefs }}
+            {{ $conditional }} hasattr(encoded, '{{.Name}}'):
+                to.append(self.decode_{{.Type}}(parent, encoded.{{.Name}}))
+    {{- $conditional = "elif" }}
+{{- end }}
+            else:
+                raise Exception(f'no recognized data definition types {dir(encoded)}')
+
+        return to        
+
+{{ range .Meta2.Definitions }}
+{{- if .IsMetaDef }}
+    def decode_{{.Name}}(self, parent, encoded):
+        to = fc.meta.{{.Name}}()
+        to.parent = parent
+        {{- range .Fields }}
+        {{- if .PyCustomDecoder }}
+        to.{{.PyName}} = self.decode_{{.PyCustomDecoder}}(to, encoded.{{.PyName}} )
+        {{- else }}
+        to.{{.PyName}} = encoded.{{.PyName}}
+        {{- end }}
+        {{- end}}
+        return to
+{{ end }}
+{{ end }}
+
+    def decode(self, encoded_module):
+        return self.decode_Module(None, encoded_module)

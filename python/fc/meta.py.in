@@ -1,11 +1,21 @@
+from enum import Enum
 
+class Status(Enum):
+    CURRENT = 0
+    DEPRECATED = 1
+    OBSOLETE = 2
 
-{{ range .Meta.Definitions}}
+{{ range .Meta2.Definitions}}
+{{- if .IsMetaDef }}
 class {{ .Name }}():
-
-    def __init__(self):
-        parent = None
+    __slots__ = [
+        "parent",
+{{- if eq .Name "Module" }}
+        "handle",
+{{- end }}
 {{- range .Fields }}
-        {{.PyName}} = None
+        "{{.PyName}}",
+{{- end }}
+    ]
 {{- end }}
 {{ end }}
