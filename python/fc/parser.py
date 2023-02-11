@@ -1,34 +1,20 @@
-import fc
-import ctypes
-import numpy
-from .unpack_meta import unpack_module
+import pb.fc_lang_pb2
+import pb.fc_lang_pb2_grpc
+import fc.meta_decoder
 
-class Module():
+class Parser():
 
-    def __init__(self):
-        self.ident = "todo"
+    def __init__(self, driver):
+        self.driver = driver
+        self.stub = pb.fc_lang_pb2_grpc.ParserStub(driver.channel)        
 
+    def load_module(self, dir, name):
+        req = pb.fc_lang_pb2.LoadModuleRequest(dir=dir, name=name)
+        resp = self.stub.LoadModule(req)
+        m = fc.meta_decoder.Decoder().decode(resp.module)
+        m.handle = resp.handle
+        return m
 
-class Pack(ctypes.Structure):
-    _fields_ = [
-        ("serialized", ctypes.c_void_p),
-        ("serialized_len", ctypes.c_int),
-    ]
+    def release_module(self, m):
+        self.driver.release(m.handle)
 
-
-def parser(ypath, fname):
-    pack = fc.library.fc_yang_parse_pack(cstr(ypath), cstr(fname))
-    try:
-        ptr = ctypes.cast(pack.serialized, ctypes.POINTER(ctypes.c_ubyte))
-        # works but i'd like to find a way to do this w/o bringing in all of numpy
-        buf = numpy.ctypeslib.as_array(ptr, (pack.serialized_len,))
-        return unpack_module(buf)
-    finally:
-        fc.library.fc_yang_pack_free(pack)
-
-
-def cstr(s):
-    return s.encode('utf-8')
-
-fc.library.fc_yang_parse_pack.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
-fc.library.fc_yang_parse_pack.restype = Pack

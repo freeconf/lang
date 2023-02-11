@@ -3,6 +3,7 @@ import os.path
 import time
 import subprocess
 import grpc
+import pb.fc_lang_pb2_grpc
 
 class Driver():
 
@@ -17,6 +18,7 @@ class Driver():
         self.fc_lang_proc = subprocess.Popen(['fc-lang', self.sock_file])
         self.wait_for_startup()
         self.channel = grpc.insecure_channel(f'unix://{self.sock_file}')
+        self.stub = pb.fc_lang_pb2_grpc.DriverStub(self.channel)
 
     def wait_for_startup(self):
         for i in range(0, 10):
@@ -30,3 +32,8 @@ class Driver():
     def unload(self):
         self.fc_lang_proc.terminate()
         self.fc_lang_proc = None
+
+    def release(self, handle):
+        req = pb.fc_lang_pb2.ReleaseRequest(handle=handle)
+        self.stub.Release(req)
+

@@ -60,18 +60,24 @@ bin/fc-lang :
 	test -d $(dir $@) || mkdir -p $(dir $@)
 	go build -o $@ cmd/fc-lang/main.go
 
-proto:
-	test -d comm/pb || mkdir comm/pb
+
+proto: proto-go proto-py
+
+proto-go:
+	! test -d comm/pb || rm -rf comm/pb
+	mkdir comm/pb
 	protoc \
 		-I./comm \
 		--go_out=comm  \
 		--go-grpc_out=comm \
-		comm/meta.proto comm/parser.proto
+		comm/fc-lang.proto comm/meta.proto
 
 proto-py:
-	test -d python/pb || mkdir python/pb
+	! test -d python/pb || rm -rf python/pb
+	mkdir python/pb
 	cd python; \
 		. venv/bin/activate && \
 		python -m grpc_tools.protoc \
 			-I../comm --python_out=pb --pyi_out=pb \
-			--grpc_python_out=pb ../comm/meta.proto ../comm/parser.proto
+			--grpc_python_out=pb \
+			../comm/fc-lang.proto ../comm/meta.proto

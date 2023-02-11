@@ -29,7 +29,9 @@ func main() {
 	}
 
 	s := grpc.NewServer()
-	pb.RegisterParserServer(s, &comm.Service{})
+	impl := &comm.Service{}
+	pb.RegisterParserServer(s, impl)
+	pb.RegisterDriverServer(s, impl)
 	defer l.Close()
 	if err := s.Serve(l); err != nil {
 		log.Fatalf("grpc server error. %s", err)

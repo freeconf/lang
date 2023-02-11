@@ -10,6 +10,7 @@ import (
 
 type Service struct {
 	pb.UnimplementedParserServer
+	pb.UnimplementedDriverServer
 }
 
 func (s *Service) LoadModule(ctx context.Context, in *pb.LoadModuleRequest) (*pb.LoadModuleResponse, error) {
@@ -22,4 +23,9 @@ func (s *Service) LoadModule(ctx context.Context, in *pb.LoadModuleRequest) (*pb
 		Handle: Handles.Put(m),
 		Module: new(MetaEncoder).Encode(m),
 	}, nil
+}
+
+func (s *Service) Release(ctx context.Context, in *pb.ReleaseRequest) (*pb.Void, error) {
+	Handles.Release(in.Handle)
+	return &pb.Void{}, nil
 }
