@@ -1,0 +1,11 @@
+syntax="proto3";
+
+option go_package = "./pb";
+
+package pb;
+
+message Void {}
+
+message Handle {
+    uint64 handle = 1;
+}

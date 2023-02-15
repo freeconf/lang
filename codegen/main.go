@@ -10,6 +10,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/exec"
 	"strings"
 
 	"github.com/freeconf/lang/codegen"
@@ -34,6 +35,11 @@ func main() {
 		defer dest.Close()
 		err = codegen.GenerateSource(vars, path, dest)
 		chkerr(err)
+		if strings.HasSuffix(destFname, ".go") {
+			formatter := exec.Command("gofmt", "-w", destFname)
+			err = formatter.Run()
+			chkerr(err)
+		}
 	}
 }
 

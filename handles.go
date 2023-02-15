@@ -1,8 +1,11 @@
-package comm
+package lang
 
 import (
+	"context"
 	"fmt"
 	"sync"
+
+	"github.com/freeconf/lang/pb"
 )
 
 var Handles = newHandlePool()
@@ -13,6 +16,15 @@ type HandlePool struct {
 	handles map[uint64]any
 	counter uint64
 	lock    sync.RWMutex
+}
+
+type HandleService struct {
+	pb.UnimplementedHandlesServer
+}
+
+func (s *HandleService) Release(ctx context.Context, in *pb.Handle) (*pb.Void, error) {
+	Handles.Release(in.Handle)
+	return &pb.Void{}, nil
 }
 
 func newHandlePool() *HandlePool {

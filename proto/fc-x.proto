@@ -1,0 +1,22 @@
+syntax="proto3";
+
+option go_package = "./pb";
+
+package pb;
+
+// import "fc-common.proto";
+
+message ChildRequest {
+      uint64 handle = 1;
+      string meta = 2;
+      bool write = 3;
+} 
+
+message ChildResponse {
+      uint64 handle = 1;
+      string err = 2;
+}
+
+service XNode {
+      rpc Child(ChildRequest) returns (ChildResponse) {}
+}

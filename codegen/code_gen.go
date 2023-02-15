@@ -13,23 +13,22 @@ import (
 //go:generate go run code_gen_main.go
 
 type Vars struct {
-	Meta       MetaMeta
-	Meta2      Meta2Meta
-	MetaByName map[string]*structDef2
-	Val        ValMeta
+	Meta MetaMeta
 }
 
 func ParseDefs(homeDir string) (vars Vars, err error) {
 	if vars.Meta, err = ParseMetaDefs(homeDir); err != nil {
 		return
 	}
-	if vars.Val, err = ParseValDefs(homeDir); err != nil {
-		return
-	}
-	if vars.Meta2, err = ParseMeta2Defs(homeDir); err != nil {
-		return
-	}
 	return
+}
+
+func title(s string) string {
+	return strings.ToUpper(s[0:1]) + s[1:]
+}
+
+func whisperingSnake(s string) string {
+	return strings.ToLower(strcase.ToSnake(s))
 }
 
 func GenerateSource(vars Vars, tmpl string, out io.Writer) error {
@@ -46,7 +45,6 @@ func GenerateSource(vars Vars, tmpl string, out io.Writer) error {
 		"uc":    strings.ToUpper,
 		"snake": strcase.ToSnake,
 	}
-	cTemplateFuncs(funcs)
 	t, err := template.New("code_gen").Funcs(funcs).Parse(string(tmplSrc))
 	if err != nil {
 		panic(err)

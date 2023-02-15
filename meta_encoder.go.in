@@ -1,7 +1,7 @@
-package comm
+package lang
 
 import (
-	"github.com/freeconf/lang/comm/pb"
+	"github.com/freeconf/lang/pb"
 	"github.com/freeconf/yang/meta"
 )
 
@@ -30,8 +30,8 @@ func (e *MetaEncoder) encodeDataDefList(parent any, from []meta.Definition) []*p
     to := make([]*pb.DataDef, len(from))    
     for i, d := range from {
         switch x := d.(type) {
-{{ range .Meta2.Definitions}}
-{{ if .IsDataDef }}
+{{- range .Meta.Definitions}}
+{{- if .IsDataDef }}
             case *meta.{{.Name}}:
                 to[i] = &pb.DataDef{DefOneof:&pb.DataDef_{{.Name}}{ {{.Name}}:e.encode{{.Name}}(parent, x)}}
 {{- end }}
@@ -53,8 +53,7 @@ func (e *MetaEncoder) encodeStatus(parent *pb.ExtensionDef, from meta.Status) pb
     return pb.Status(from)
 }
 
-
-{{ range .Meta2.Definitions}}
+{{ range .Meta.Definitions}}
 {{ if .IsMetaDef }}
 func (e *MetaEncoder) encode{{.Name}}(parent any, from *meta.{{.Name}}) *pb.{{.Name}} {
     var def pb.{{.Name}}

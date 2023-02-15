@@ -2,38 +2,31 @@ package main
 
 import (
 	"log"
-	"net"
 	"os"
 
-	"github.com/freeconf/lang/comm"
-	"github.com/freeconf/lang/comm/pb"
-	"google.golang.org/grpc"
+	"github.com/freeconf/lang"
+	"github.com/freeconf/lang/pb"
 )
 
-const usage = "Usage: %s path-to-socket-file"
+const usage = "Usage: %s path-to-socket-file [path-to-x-socket-file]"
 
 func main() {
-	if len(os.Args) != 2 {
+	if len(os.Args) < 2 {
 		log.Fatalf(usage, os.Args[0])
 	}
-	addr := os.Args[1]
-	if _, ferr := os.Stat(addr); ferr == nil {
-		if err := os.Remove(addr); err != nil {
-			log.Fatal(err)
-		}
+	var c pb.XNodeClient
+	if len(os.Args) >= 3 {
+		var err error
+		c, err = lang.CreateXClient(os.Args[2])
+		chkerr(err)
 	}
+	s, err := lang.NewService(os.Args[1], c)
+	chkerr(err)
+	chkerr(s.Serve())
+}
 
-	l, err := net.Listen("unix", addr)
+func chkerr(err error) {
 	if err != nil {
-		log.Fatal("listen error:", err)
-	}
-
-	s := grpc.NewServer()
-	impl := &comm.Service{}
-	pb.RegisterParserServer(s, impl)
-	pb.RegisterDriverServer(s, impl)
-	defer l.Close()
-	if err := s.Serve(l); err != nil {
-		log.Fatalf("grpc server error. %s", err)
+		panic(err)
 	}
 }

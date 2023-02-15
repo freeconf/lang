@@ -24,7 +24,7 @@ class Decoder():
         to = []
         for encoded in encoded_list:
 {{- $conditional := "if" }}
-{{- range .Meta2.DataDefs }}
+{{- range .Meta.DataDefs }}
             {{ $conditional }} hasattr(encoded, '{{.Name}}'):
                 to.append(self.decode_{{.Type}}(parent, encoded.{{.Name}}))
     {{- $conditional = "elif" }}
@@ -34,7 +34,7 @@ class Decoder():
 
         return to        
 
-{{ range .Meta2.Definitions }}
+{{ range .Meta.Definitions }}
 {{- if .IsMetaDef }}
     def decode_{{.Name}}(self, parent, encoded):
         to = fc.meta.{{.Name}}()

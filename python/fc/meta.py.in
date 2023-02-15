@@ -5,7 +5,7 @@ class Status(Enum):
     DEPRECATED = 1
     OBSOLETE = 2
 
-{{ range .Meta2.Definitions}}
+{{ range .Meta.Definitions}}
 {{- if .IsMetaDef }}
 class {{ .Name }}():
     __slots__ = [

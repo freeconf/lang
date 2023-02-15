@@ -1,110 +1,155 @@
 package codegen
 
-/**
-* Parse meta_defs.go and use it to generate meta data about the definitions that can be used
-* to generate defs in other languages
- */
-
 import (
 	"fmt"
-	"go/ast"
-	"go/parser"
-	"go/token"
-	"go/types"
-	"strings"
+	"os"
+	"path/filepath"
+
+	"github.com/emicklei/proto"
 )
 
-// Yes, this is meta data about the Meta.
 type MetaMeta struct {
 	Definitions []*structDef
+	ByName      map[string]*structDef
+	DataDefs    []*fieldDef
 }
 
 type structDef struct {
 	Name   string
-	MetaId int
 	Fields []*fieldDef
 }
 
 type fieldDef struct {
-	Name string
-	Type string
-	Tags []string
+	Name     string
+	Type     string
+	Repeated bool
 }
 
-func ParseMetaDefs(homeDir string) (MetaMeta, error) {
-	var empty MetaMeta
-	fset := token.NewFileSet()
-	f, err := parser.ParseFile(fset, homeDir+"codegen/meta_defs.go", nil, 0)
-	if err != nil {
-		return empty, err
+func (f *fieldDef) PyType() string {
+	if f.Repeated {
+		return f.Type + "[]"
 	}
-	g := newVistor()
-	ast.Walk(g, f)
-	return g.Meta, nil
+	return f.Type
 }
 
-func (def *structDef) HasField(name string) bool {
-	for _, f := range def.Fields {
-		if f.Name == name {
-			return true
-		}
+func (f *fieldDef) PyName() string {
+	// avoid python reserved words
+	switch f.Name {
+	case "def":
+		return "ext_def"
+	}
+
+	return whisperingSnake(f.Name)
+}
+
+func (f *fieldDef) PyUnpackName() string {
+	t := f.PyType()
+	if f.Repeated {
+		return t[:len(t)-2] + "_array"
+	}
+	return t
+}
+
+func (s *structDef) IsDataDef() bool {
+	switch s.Name {
+	case "Container", "List", "Leaf", "LeafList":
+		return true
 	}
 	return false
 }
 
-type visitor struct {
-	Meta          MetaMeta
-	metaIds       map[string]int
-	currentStruct *structDef
-	currentField  *fieldDef
+func (s *structDef) IsMetaDef() bool {
+	switch s.Name {
+	case "DataDef":
+		return false
+	}
+	return true
 }
 
-func newVistor() *visitor {
-	return &visitor{
-		metaIds: make(map[string]int),
+func (f *fieldDef) GoName() string {
+	return title(f.Name)
+}
+
+func (f *fieldDef) PyCustomDecoder() string {
+	return f.CustomEncoder()
+}
+
+func (f *fieldDef) CustomEncoder() string {
+	switch f.Name {
+	case "extDef":
+		return title(f.Name)
+	}
+	switch f.Type {
+	case "string", "bool", "int32", "int64":
+		return ""
+	}
+	encoder := f.Type
+	if f.Repeated {
+		encoder = encoder + "List"
+	}
+	return encoder
+}
+
+func ParseMetaDefs(homeDir string) (MetaMeta, error) {
+	var empty MetaMeta
+	fname := filepath.Join(homeDir, "proto/meta.proto")
+	reader, err := os.Open(fname)
+	if err != nil {
+		return empty, fmt.Errorf("failed to open. %w", err)
+	}
+	defer reader.Close()
+
+	p := proto.NewParser(reader)
+	defs, _ := p.Parse()
+	if err != nil {
+		return empty, fmt.Errorf("failed to parse. %w", err)
+	}
+	w := &walker{
+		Meta: MetaMeta{
+			ByName: make(map[string]*structDef),
+		},
+	}
+	proto.Walk(defs, w.handle)
+	return w.Meta, nil
+}
+
+type walker struct {
+	Meta    MetaMeta
+	current *structDef
+}
+
+func (w *walker) handle(v proto.Visitee) {
+	switch x := v.(type) {
+	case *proto.NormalField:
+		w.field(x)
+	case *proto.Message:
+		w.message(x)
+	case *proto.OneOfField:
+		w.oneOfField(x)
 	}
 }
 
-func (g *visitor) Visit(n ast.Node) ast.Visitor {
-	if n == nil {
-		return nil
+func (w *walker) oneOfField(pf *proto.OneOfField) {
+	f := &fieldDef{
+		Name: pf.Name,
+		Type: pf.Type,
 	}
-	switch x := n.(type) {
-	case *ast.TypeSpec:
-		switch x.Type.(type) {
-		case *ast.StructType:
-			name := x.Name.Name
-			defTypeName := "MetaId" + name
-			metaId, valid := g.metaIds[defTypeName]
-			if !valid {
-				panic(fmt.Sprintf("'%s' not defined", defTypeName))
-			}
-			def := &structDef{
-				Name:   name,
-				MetaId: metaId,
-			}
-			g.Meta.Definitions = append(g.Meta.Definitions, def)
-			g.currentStruct = def
-		}
-	case *ast.ValueSpec:
-		if strings.HasPrefix(x.Names[0].Name, "MetaId") {
-			g.metaIds[x.Names[0].Name] = len(g.metaIds)
-		}
-	case *ast.Field:
-		if g.currentStruct != nil {
-			name := x.Names[0].Name
-			def := &fieldDef{
-				Name: name,
-				Type: types.ExprString(x.Type),
-			}
-			if x.Tag != nil {
-				def.Tags = []string{x.Tag.Value}
-			}
-			g.currentStruct.Fields = append(g.currentStruct.Fields, def)
-			g.currentField = def
-		}
-		// default:
-		// 	fmt.Printf("unaccounted for %T, %v\n", n, n)
+	w.Meta.DataDefs = append(w.Meta.DataDefs, f)
+}
+
+func (w *walker) message(msg *proto.Message) {
+	w.current = &structDef{
+		Name: msg.Name,
 	}
-	return g
+	w.Meta.Definitions = append(w.Meta.Definitions, w.current)
+	w.Meta.ByName[msg.Name] = w.current
+}
+
+func (w *walker) field(pf *proto.NormalField) {
+	f := &fieldDef{
+		Name:     pf.Name,
+		Type:     pf.Type,
+		Repeated: pf.Repeated,
+	}
+	w.current.Fields = append(w.current.Fields, f)
 }
