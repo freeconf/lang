@@ -33,6 +33,7 @@ func NewService(addr string, c pb.XNodeClient) (*Service, error) {
 	pb.RegisterParserServer(impl.gserver, &ParserService{})
 	pb.RegisterHandlesServer(impl.gserver, &HandleService{})
 	pb.RegisterNodeServer(impl.gserver, &NodeService{Client: c})
+	pb.RegisterNodeUtilServer(impl.gserver, &NodeUtilService{})
 	return impl, nil
 }
 

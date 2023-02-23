@@ -12,10 +12,15 @@ generate:
 test:
 	go test .
 
+PY_TESTS = \
+	test_driver.py \
+	test_parser.py \
+	test_node.py
+
 test-py:
-	mkdir python/pb
 	cd python; \
 		. venv/bin/activate && \
+		python ./test_
 
 .PHONY: bin/fc-lang
 bin/fc-lang :

@@ -1,0 +1,88 @@
+syntax="proto3";
+
+option go_package = "./pb";
+
+package pb;
+
+import "meta.proto";
+
+message Void {}
+
+////////////
+
+message LoadModuleRequest {
+      string dir = 1;
+      string name = 2;
+}
+
+message LoadModuleResponse {
+    Module module = 1;
+    uint64 handle = 2;
+}
+
+service Parser {
+      rpc LoadModule (LoadModuleRequest) returns (LoadModuleResponse) {}
+}
+
+////////////
+
+message ReleaseRequest {
+      uint64 gHnd = 1;
+}
+
+service Handles {
+      rpc Release (ReleaseRequest) returns (Void) {}
+}
+
+////////////
+
+message NewBrowserRequest {
+      uint64 gModuleHnd = 1;
+      uint64 xBrowserHnd = 2;
+      uint64 xNodeHnd = 3;
+}
+
+message JSONRdrRequest {
+      string fname = 1;
+}
+
+message NewBrowserResponse {
+      uint64 gBrowserHnd = 1;
+}
+
+message UpsertFromRequest {
+      uint64 gSelHnd = 1;
+      uint64 xNodeHnd = 2;
+      uint64 gNodeHnd = 3;
+}
+
+message UpsertFromResponse {
+      // uint64 gSelHnd = 1;
+      // uint64 xNodeHnd = 2;
+      // uint64 gNodeHnd = 3;
+}
+
+message BrowserRootRequest {
+      uint64 gBrowserHnd = 1;
+      uint64 xBrowserHnd = 2;
+}
+
+message BrowserRootResponse {
+      uint64 gSelHnd = 1;
+}
+
+service Node {
+      rpc NewBrowser(NewBrowserRequest) returns (NewBrowserResponse) {}
+      rpc BrowserRoot(BrowserRootRequest) returns (BrowserRootResponse) {}
+      rpc UpsertFrom(UpsertFromRequest) returns (UpsertFromResponse) {}
+}
+
+////////////
+
+message JSONRdrResponse {
+      uint64 gNodeHnd = 1;
+}
+
+service NodeUtil {
+      rpc JSONRdr(JSONRdrRequest) returns (JSONRdrResponse) {}
+}

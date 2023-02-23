@@ -38,7 +38,7 @@ func TestXClient(t *testing.T) {
 	req := &pb.ChildRequest{}
 	resp, err := xc.Child(ctx, req)
 	fc.AssertEqual(t, nil, err)
-	fc.AssertEqual(t, uint64(1000), resp.Handle)
+	fc.AssertEqual(t, uint64(1000), resp.XNodeHnd)
 }
 
 type dummyXNode struct {
@@ -46,5 +46,5 @@ type dummyXNode struct {
 }
 
 func (*dummyXNode) Child(context.Context, *pb.ChildRequest) (*pb.ChildResponse, error) {
-	return &pb.ChildResponse{Handle: 1000}, nil
+	return &pb.ChildResponse{XNodeHnd: 1000}, nil
 }

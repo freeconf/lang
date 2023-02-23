@@ -6,7 +6,7 @@ class Status(Enum):
     OBSOLETE = 2
 
 {{ range .Meta.Definitions}}
-{{- if .IsMetaDef }}
+{{ if .IsMetaDef }}
 class {{ .Name }}():
     __slots__ = [
         "parent",
@@ -18,4 +18,12 @@ class {{ .Name }}():
 {{- end }}
     ]
 {{- end }}
-{{ end }}
+{{- end }}
+
+def get_def(meta, ident):
+    if not hasattr(meta, 'definitions'):
+        raise Exception(f'{type(meta)} does not have definitions')
+    for ddef in meta.definitions:
+        if ddef.ident == ident:
+            return ddef
+    return None

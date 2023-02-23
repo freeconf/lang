@@ -22,8 +22,8 @@ type HandleService struct {
 	pb.UnimplementedHandlesServer
 }
 
-func (s *HandleService) Release(ctx context.Context, in *pb.Handle) (*pb.Void, error) {
-	Handles.Release(in.Handle)
+func (s *HandleService) Release(ctx context.Context, in *pb.ReleaseRequest) (*pb.Void, error) {
+	Handles.Release(in.GHnd)
 	return &pb.Void{}, nil
 }
 
@@ -31,6 +31,24 @@ func newHandlePool() *HandlePool {
 	return &HandlePool{
 		handles: make(map[uint64]any),
 	}
+}
+
+func (p *HandlePool) Reserve() uint64 {
+	p.lock.Lock()
+	defer p.lock.Unlock()
+	p.counter++
+	id := p.counter
+	return id
+}
+
+func (p *HandlePool) CompleteReservation(reservation uint64, x any) {
+	p.lock.Lock()
+	defer p.lock.Unlock()
+	_, found := p.handles[reservation]
+	if found {
+		panic(fmt.Sprintf("reservation %d already fullfilled, cannot store %t", reservation, x))
+	}
+	p.handles[reservation] = x
 }
 
 func (p *HandlePool) Get(handle uint64) any {

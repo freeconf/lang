@@ -4,19 +4,94 @@ option go_package = "./pb";
 
 package pb;
 
-// import "fc-common.proto";
+message XVoid {}
 
 message ChildRequest {
-      uint64 handle = 1;
-      string meta = 2;
+      uint64 xSelHnd = 1;
+      uint64 gSelHnd = 2;
+      string metaIdent = 3;
+      bool new = 4;
+      bool delete = 5;      
+}
+
+message Val {
+      oneof value {
+            string str = 1;
+            int32 i32 = 2;
+            int64 i64 = 3;
+      }
+}
+
+message FieldRequest {
+      uint64 xSelHnd = 1;
+      string metaIdent = 2;
       bool write = 3;
-} 
+      bool clear = 4;
+      Val toWrite = 5;
+}
+
+message FieldResponse {
+      Val fromRead = 1;
+}
 
 message ChildResponse {
-      uint64 handle = 1;
-      string err = 2;
+      uint64 xNodeHnd = 1;
+}
+
+message NodeSourceRequest {
+      uint64 xBrowserHnd = 1;
+}
+
+message NodeSourceResponse {
+      uint64 xSelHnd = 1;
+}
+
+message RootSelectionRequest {
+      uint64 xBrowserHnd = 1;
+      uint64 gSelHnd = 2;
+}
+
+message RootSelectionResponse {
+      uint64 xSelHnd = 1;
+}
+
+message SelectRequest {
+      uint64 gSelHnd = 1;
+      uint64 xSelHnd = 2;
+      uint64 xNodeHnd = 3;
+      uint64 xBrowserHnd = 4;
+      string metaIdent = 5;
+}
+
+message SelectResponse {
+      uint64 xSelHnd = 1;      
+}
+
+message SplitRequest {
+      uint64 gSelHnd = 1;
+      uint64 xNodeHnd = 2;
+      string moduleIdent = 3;
+      string metaPath = 4;
+}
+
+message SplitResponse {
+      uint64 xSelHnd = 1;
 }
 
 service XNode {
+      rpc RootSelection(RootSelectionRequest) returns (RootSelectionResponse) {}
+      // rpc NewSelection(NewSelectionRequest) returns (NewSelectionResponse) {}
+      rpc NodeSource(NodeSourceRequest) returns (NodeSourceResponse) {}
+      rpc Select(SelectRequest) returns (SelectResponse) {}
       rpc Child(ChildRequest) returns (ChildResponse) {}
+      rpc Field(FieldRequest) returns (FieldResponse) {}
+      rpc Split(SplitRequest) returns (SplitResponse) {}
+}
+
+message XReleaseRequest {
+      uint64 xHnd = 1;
+}
+
+service XHandles {
+      rpc Release (XReleaseRequest) returns (XVoid) {}
 }
