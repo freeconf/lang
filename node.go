@@ -2,7 +2,6 @@ package lang
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/freeconf/lang/pb"
 	"github.com/freeconf/yang/meta"
@@ -16,91 +15,103 @@ type NodeService struct {
 }
 
 func (s *NodeService) NewBrowser(ctx context.Context, in *pb.NewBrowserRequest) (*pb.NewBrowserResponse, error) {
-	m := Handles.Get(in.GModuleHnd).(*meta.Module)
-	n := &gnode{client: s.Client, xNodeHnd: in.XNodeHnd, xBrowserHnd: in.XBrowserHnd}
+	m := Handles.Get(in.ModuleHnd).(*meta.Module)
+	n := Handles.Get(in.NodeHnd).(node.Node)
 	b := node.NewBrowser(m, n)
-	return &pb.NewBrowserResponse{GBrowserHnd: Handles.Put(b)}, nil
+	browserHnd := Handles.Put(b)
+	return &pb.NewBrowserResponse{BrowserHnd: browserHnd}, nil
 }
 
 func (s *NodeService) BrowserRoot(ctx context.Context, in *pb.BrowserRootRequest) (*pb.BrowserRootResponse, error) {
-	b := Handles.Get(in.GBrowserHnd).(*node.Browser)
-	resp := pb.BrowserRootResponse{GSelHnd: Handles.Put(b.Root())}
+	b := Handles.Get(in.BrowserHnd).(*node.Browser)
+	root := b.Root()
+	selHndObj := root.Context.Value(selHndContextKey)
+	var resp pb.BrowserRootResponse
+	if selHndObj != nil {
+		resp.SelHnd = selHndObj.(uint64)
+	} else {
+		resp.SelHnd = Handles.Put(root)
+	}
 	return &resp, nil
 }
 
 func (s *NodeService) UpsertFrom(ctx context.Context, in *pb.UpsertFromRequest) (*pb.UpsertFromResponse, error) {
-	sel := Handles.Get(in.GSelHnd).(node.Selection)
+	sel := Handles.Get(in.SelHnd).(node.Selection)
 	var err error
 	var n node.Node
-	if in.XNodeHnd > 0 {
-		req := pb.SplitRequest{
-			GSelHnd:     in.GSelHnd,
-			XNodeHnd:    in.XNodeHnd,
-			ModuleIdent: sel.Browser.Meta.Ident(),
-			MetaPath:    sel.Path.StringNoModule(),
-		}
-		_, err := s.Client.Split(ctx, &req)
-		if err != nil {
-			return nil, err
-		}
-		n = &gnode{client: s.Client, xNodeHnd: in.XNodeHnd}
-	} else if in.GNodeHnd > 0 {
-		n = Handles.Get(in.GNodeHnd).(node.Node)
+	n, found := Handles.Get(in.NodeHnd).(node.Node)
+	if !found {
+		n = &gnode{client: s.Client, nodeHnd: in.NodeHnd}
+		Handles.Record(n, in.NodeHnd)
 	}
+	// req := pb.SplitRequest{
+	// 	NodeHnd:   in.NodeHnd,
+	// 	ModuleHnd: Handles.Hnd(sel.Browser.Meta),
+	// 	MetaPath:  sel.Path.StringNoModule(),
+	// }
+	// resp, err := s.Client.Split(ctx, &req)
+	// split := sel.Split(n)
+	// Handles.Record(split, resp.SelHnd)
+	// if err != nil {
+	// 	return nil, err
+	// }
 	err = sel.UpdateFrom(n).LastErr
 	return &pb.UpsertFromResponse{}, err
+}
+
+func (s *NodeService) NewNode(ctx context.Context, in *pb.NewNodeRequest) (*pb.NewNodeResponse, error) {
+	n := &gnode{client: s.Client}
+	n.nodeHnd = Handles.Put(n)
+	return &pb.NewNodeResponse{NodeHnd: n.nodeHnd}, nil
 }
 
 /**
  * gnode wraps the xlang's implementation of a node
  */
 type gnode struct {
-	client pb.XNodeClient
-	//xSelHnd uint64
-	xNodeHnd    uint64
-	xBrowserHnd uint64
+	client  pb.XNodeClient
+	nodeHnd uint64
 }
 
-type xSelHndKey int
+type selHndKey int
 
-const xSelHndContextKey = xSelHndKey(0)
+const selHndContextKey = selHndKey(0)
 
 func (n *gnode) Context(s node.Selection) context.Context {
 	req := pb.SelectRequest{
-		GSelHnd:   Handles.Put(s),
 		MetaIdent: s.Meta().Ident(),
-		XNodeHnd:  n.xNodeHnd,
+		NodeHnd:   n.nodeHnd,
 	}
-	if s.Parent == nil {
-		req.XBrowserHnd = n.xBrowserHnd
+	if s.Parent != nil {
+		req.ParentSelHnd = n.selHnd(s.Context)
 	} else {
-		req.XSelHnd = n.xSelHnd(s.Context)
+		req.BrowserHnd = Handles.Hnd(s.Browser)
 	}
-	fmt.Printf("adding client=%v, x_sel_hnd=%d, x_browser_hnd=%d\n", n.client, req.XSelHnd, req.XBrowserHnd)
 	resp, err := n.client.Select(s.Context, &req)
 	if err != nil {
 		panic(err)
 	}
-	ctx := context.WithValue(s.Context, xSelHndContextKey, resp.XSelHnd)
-	return ctx
+	s.Context = context.WithValue(s.Context, selHndContextKey, resp.SelHnd)
+	Handles.Record(s, resp.SelHnd)
+	return s.Context
 }
 
-func (n *gnode) xSelHnd(ctx context.Context) uint64 {
-	return ctx.Value(xSelHndContextKey).(uint64)
+func (n *gnode) selHnd(ctx context.Context) uint64 {
+	return ctx.Value(selHndContextKey).(uint64)
 }
 
 func (n *gnode) Child(r node.ChildRequest) (node.Node, error) {
 	req := pb.ChildRequest{
-		XSelHnd:   n.xSelHnd(r.Selection.Context),
+		SelHnd:    n.selHnd(r.Selection.Context),
 		MetaIdent: r.Meta.Ident(),
 		New:       r.New,
 		Delete:    r.Delete,
 	}
 	resp, err := n.client.Child(r.Selection.Context, &req)
-	if err != nil || resp.XNodeHnd == 0 {
+	if err != nil || resp.NodeHnd == 0 {
 		return nil, err
 	}
-	return &gnode{client: n.client, xNodeHnd: resp.XNodeHnd, xBrowserHnd: n.xBrowserHnd}, err
+	return Handles.Get(resp.NodeHnd).(node.Node), nil
 }
 
 func (n *gnode) Next(r node.ListRequest) (next node.Node, key []val.Value, err error) {
@@ -108,26 +119,23 @@ func (n *gnode) Next(r node.ListRequest) (next node.Node, key []val.Value, err e
 }
 
 func (n *gnode) Field(r node.FieldRequest, hnd *node.ValueHandle) error {
-	// c_sel, c_meta := n.new_select_and_meta(r.Meta)
+	req := pb.FieldRequest{
+		SelHnd:    n.selHnd(r.Selection.Context),
+		MetaIdent: r.Meta.Ident(),
+		Write:     r.Write,
+		Clear:     r.Clear,
+	}
+	if r.Write {
+		req.ToWrite = encodeVal(hnd.Val)
+	}
+	resp, err := n.client.Field(r.Selection.Context, &req)
+	if err != nil {
+		return err
+	}
+	if !r.Write {
+		hnd.Val = decodeVal(resp.FromRead)
+	}
 
-	// defer C.fc_select_delete(c_sel)
-	// c_r := C.fc_node_field_req{
-	// 	selection: c_sel,
-	// 	meta:      c_meta,
-	// 	write:     C.bool(r.Write),
-	// }
-	// var c_val C.fc_val
-	// if r.Write {
-	// 	c_val = cee_val(hnd.Val)
-	// }
-	// c_err := C.fc_select_field(c_r, &c_val)
-	// defer free_val(c_val)
-	// if !r.Write {
-	// 	hnd.Val = go_val(c_val)
-	// }
-	// if c_err != nil {
-	// 	return go_err(c_err)
-	// }
 	return nil
 }
 

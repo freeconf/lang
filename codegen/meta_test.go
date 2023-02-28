@@ -13,4 +13,5 @@ func TestParseMetaProto(t *testing.T) {
 	fc.AssertEqual(t, "ident", defs.Definitions[0].Fields[0].Name)
 	fc.AssertEqual(t, "string", defs.Definitions[0].Fields[0].Type)
 	fc.AssertEqual(t, "container", defs.DataDefs[0].Name)
+	fc.AssertEqual(t, "BINARY", defs.Enums["Format"].Entries[0].Ident)
 }

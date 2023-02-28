@@ -19,7 +19,7 @@ func (s *ParserService) LoadModule(ctx context.Context, in *pb.LoadModuleRequest
 		return nil, err
 	}
 	return &pb.LoadModuleResponse{
-		Handle: Handles.Put(m),
-		Module: new(MetaEncoder).Encode(m),
+		ModuleHnd: Handles.Put(m),
+		Module:    new(MetaEncoder).Encode(m),
 	}, nil
 }

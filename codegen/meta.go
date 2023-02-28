@@ -12,6 +12,7 @@ type MetaMeta struct {
 	Definitions []*structDef
 	ByName      map[string]*structDef
 	DataDefs    []*fieldDef
+	Enums       map[string]*enumDef
 }
 
 type structDef struct {
@@ -113,13 +114,29 @@ func ParseMetaDefs(homeDir string) (MetaMeta, error) {
 	return w.Meta, nil
 }
 
+type enumEntry struct {
+	Ident string
+	Value int
+}
+
+type enumDef struct {
+	Ident   string
+	Val     int
+	Entries []*enumEntry
+}
+
 type walker struct {
 	Meta    MetaMeta
 	current *structDef
+	curEnum *enumDef
 }
 
 func (w *walker) handle(v proto.Visitee) {
 	switch x := v.(type) {
+	case *proto.Enum:
+		w.enum(x)
+	case *proto.EnumField:
+		w.enumField(x)
 	case *proto.NormalField:
 		w.field(x)
 	case *proto.Message:
@@ -127,6 +144,19 @@ func (w *walker) handle(v proto.Visitee) {
 	case *proto.OneOfField:
 		w.oneOfField(x)
 	}
+}
+
+func (w *walker) enum(p *proto.Enum) {
+	w.curEnum = &enumDef{Ident: p.Name}
+	if w.Meta.Enums == nil {
+		w.Meta.Enums = make(map[string]*enumDef)
+	}
+	w.Meta.Enums[w.curEnum.Ident] = w.curEnum
+}
+
+func (w *walker) enumField(pf *proto.EnumField) {
+	e := &enumEntry{pf.Name, pf.Integer}
+	w.curEnum.Entries = append(w.curEnum.Entries, e)
 }
 
 func (w *walker) oneOfField(pf *proto.OneOfField) {

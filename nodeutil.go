@@ -18,5 +18,5 @@ func (*NodeUtilService) JSONRdr(ctx context.Context, req *pb.JSONRdrRequest) (*p
 		return nil, err
 	}
 	rdr := nodeutil.ReadJSONIO(f)
-	return &pb.JSONRdrResponse{GNodeHnd: Handles.Put(rdr)}, nil
+	return &pb.JSONRdrResponse{NodeHnd: Handles.Put(rdr)}, nil
 }

@@ -40,11 +40,14 @@ class Driver():
         self.wait_for_startup()
         self.channel = grpc.insecure_channel(f'unix://{self.sock_file}')
         self.stub = pb.fc_g_pb2_grpc.HandlesStub(self.channel)
+        self.x_node_service.node_service = fc.node.NodeService(self)
+
 
 
     def start_xclient_server(self):
         self.x_server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-        pb.fc_x_pb2_grpc.add_XNodeServicer_to_server(fc.node.XNodeServicer(), self.x_server)
+        self.x_node_service = fc.node.XNodeServicer()
+        pb.fc_x_pb2_grpc.add_XNodeServicer_to_server(self.x_node_service, self.x_server)
         self.x_server.add_insecure_port(f'unix://{self.x_sock_file}')
         self.x_server.start()
 
@@ -59,6 +62,7 @@ class Driver():
 
     def unload(self):
         self.fc_lang_proc.terminate()
+        self.fc_lang_proc.wait()
         self.fc_lang_proc = None
 
 

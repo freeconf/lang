@@ -33,7 +33,7 @@ message ExtensionDefArg {
     string ident = 1;
     string description = 2;
     string reference = 3;
-    bool yinElement = 5;    
+    bool yinElement = 5;
 }
 
 message ExtensionDef {
@@ -61,10 +61,63 @@ message Container {
       OptionalBool mandatory = 15;
 }
 
+enum Format {      
+      UNDEFINED = 0; // something must start w/zero in protoc apparently
+	BINARY = 1;
+	BITS = 2;
+	BOOL = 3;
+	DECIMAL64 = 4;
+	EMPTY = 5;
+	ENUM = 6;
+	IDENTITY_REF = 7;
+	INSTANCE_REF = 8;
+	INT8 = 9;
+	INT16 = 10;
+	INT32 = 11;
+	INT64 = 12;
+	LEAF_REF = 13;
+	STR = 14;
+	UINT8 = 15;
+	UINT16 = 16;
+	UINT32 = 17;
+	UINT64 = 18;
+	UNION = 19;
+	ANY = 20;
+
+	BINARY_LIST = 1025;
+	BITS_LIST = 1026;
+	BOOL_LIST = 1027;
+	DECIMAL64_LIST = 1028;
+	EMPTY_LIST = 1029;
+	ENUM_LIST = 1030;
+	IDENTITY_REF_LIST = 1031;
+	INSTANCE_REF_LIST = 1032;
+	INT8_LIST = 1033;
+	INT16_LIST = 1034;
+	INT32_LIST = 1035;
+	INT64_LIST = 1036;
+	LEAF_REF_LIST = 1037;
+	STR_LIST = 1038;
+	UINT8_LIST = 1039;
+	UINT16_LIST = 1040;
+	UINT32_LIST = 1041;
+	UINT64_LIST = 1042;
+	UNION_LIST = 1043;
+	ANY_LIST = 1044;
+}
+
+message Type {
+      string ident = 1;
+      string description = 2;
+      string reference = 3;
+      Format format = 4;
+}
+
 message Leaf {
       string ident = 1;
       string description = 2;
       repeated Extension extensions = 3;
+      Type type = 4;
       OptionalBool config = 14;
       OptionalBool mandatory = 15;
 }
@@ -75,7 +128,7 @@ message List {
     repeated Extension extensions = 3;
     repeated DataDef definitions = 4;
     OptionalBool config = 14;
-    OptionalBool mandatory = 15;    
+    OptionalBool mandatory = 15;
 }
 
 message LeafList {
@@ -83,7 +136,7 @@ message LeafList {
     string description = 2;
     repeated Extension extensions = 3;
     OptionalBool config = 14;
-    OptionalBool mandatory = 15;    
+    OptionalBool mandatory = 15;
 }
 
 message DataDef {

@@ -25,12 +25,12 @@ def proto_encode(val):
 def proto_decode(proto_val):
     if proto_val == None:
         return None
-    if hasattr(proto_val, 'str'):
-        return Val(proto_val.str, Format.STRING)
-    if hasattr(proto_val, 'i32'):
-        return Val(proto_val.i32, Format.INT32)
-    if hasattr(proto_val, 'i64'):
-        return Val(proto_val.i64, Format.INT64)
+    if proto_val.HasField('str'):
+        return Val(Format.STRING, proto_val.str)
+    if proto_val.HasField('i32'):
+        return Val(Format.INT32, proto_val.i32)
+    if proto_val.HasField('i64'):
+        return Val(Format.INT64, proto_val.i64)
     raise Exception(f'unimplemented value decoder {pprint(proto_val)}')
 
 

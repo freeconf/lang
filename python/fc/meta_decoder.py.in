@@ -20,12 +20,15 @@ class Decoder():
             return True
         return False
 
+    def decode_Format(self, parent, encoded):
+        return fc.meta.Format(encoded)
+
     def decode_DataDefList(self, parent, encoded_list):
         to = []
         for encoded in encoded_list:
 {{- $conditional := "if" }}
 {{- range .Meta.DataDefs }}
-            {{ $conditional }} hasattr(encoded, '{{.Name}}'):
+            {{ $conditional }} encoded.HasField('{{.Name}}'):
                 to.append(self.decode_{{.Type}}(parent, encoded.{{.Name}}))
     {{- $conditional = "elif" }}
 {{- end }}

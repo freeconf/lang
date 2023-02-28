@@ -7,8 +7,7 @@ package pb;
 message XVoid {}
 
 message ChildRequest {
-      uint64 xSelHnd = 1;
-      uint64 gSelHnd = 2;
+      uint64 selHnd = 1;
       string metaIdent = 3;
       bool new = 4;
       bool delete = 5;      
@@ -23,7 +22,7 @@ message Val {
 }
 
 message FieldRequest {
-      uint64 xSelHnd = 1;
+      uint64 selHnd = 1;
       string metaIdent = 2;
       bool write = 3;
       bool clear = 4;
@@ -35,52 +34,50 @@ message FieldResponse {
 }
 
 message ChildResponse {
-      uint64 xNodeHnd = 1;
+      uint64 nodeHnd = 1;
 }
 
 message NodeSourceRequest {
-      uint64 xBrowserHnd = 1;
+      uint64 browserHnd = 1;
 }
 
 message NodeSourceResponse {
-      uint64 xSelHnd = 1;
+      uint64 selHnd = 1;
 }
 
 message RootSelectionRequest {
-      uint64 xBrowserHnd = 1;
-      uint64 gSelHnd = 2;
+      uint64 browserHnd = 1;
+      uint64 selHnd = 2;
 }
 
 message RootSelectionResponse {
-      uint64 xSelHnd = 1;
+      uint64 selHnd = 1;
 }
 
 message SelectRequest {
-      uint64 gSelHnd = 1;
-      uint64 xSelHnd = 2;
-      uint64 xNodeHnd = 3;
-      uint64 xBrowserHnd = 4;
+      uint64 parentSelHnd = 1;
+      uint64 nodeHnd = 3;
+      uint64 browserHnd = 4;
       string metaIdent = 5;
 }
 
 message SelectResponse {
-      uint64 xSelHnd = 1;      
+      uint64 selHnd = 1;      
 }
 
 message SplitRequest {
-      uint64 gSelHnd = 1;
-      uint64 xNodeHnd = 2;
-      string moduleIdent = 3;
+      uint64 selHnd = 1;
+      uint64 nodeHnd = 2;
+      uint64 moduleHnd = 3;
       string metaPath = 4;
 }
 
 message SplitResponse {
-      uint64 xSelHnd = 1;
+      uint64 selHnd = 1;
 }
 
 service XNode {
       rpc RootSelection(RootSelectionRequest) returns (RootSelectionResponse) {}
-      // rpc NewSelection(NewSelectionRequest) returns (NewSelectionResponse) {}
       rpc NodeSource(NodeSourceRequest) returns (NodeSourceResponse) {}
       rpc Select(SelectRequest) returns (SelectResponse) {}
       rpc Child(ChildRequest) returns (ChildResponse) {}

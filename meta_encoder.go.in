@@ -3,9 +3,14 @@ package lang
 import (
 	"github.com/freeconf/lang/pb"
 	"github.com/freeconf/yang/meta"
+	"github.com/freeconf/yang/val"
 )
 
 type MetaEncoder struct {
+}
+
+func (e *MetaEncoder) encodeFormat(parent *pb.Type, from val.Format) pb.Format {
+    return pb.Format(from)
 }
 
 func (e *MetaEncoder) encodeOptionalBool(value bool, specified bool) pb.OptionalBool {

@@ -7,9 +7,9 @@ import fc.meta
 import fc.val
 
 class Node():
-    __stubs__ = [
-        "x_node_hnd"
-    ]
+
+    def __init__(self):
+        self.hnd = 0
 
     def select(self):
         pass
@@ -20,57 +20,54 @@ class Node():
     def field(self):
         pass
 
-
-class Path():
-
-    def __init__(self, parent, meta):
-        self.parent = parent
-        self.meta = meta
-
-
 class Selection():
 
-    def __init__(self, node_service, parent, browser, g_sel_hnd, meta, node):
+    def __init__(self, node_service, node, path, parent, browser):
         self.node_service = node_service
         self.parent = parent
-        self.browser = browser
-        self.g_sel_hnd = g_sel_hnd
-        if parent:
-            self.path = Path(parent.path, meta)
-        else:
-            self.path = Path(None, meta)
+        self.hnd = 0
         self.node = node
+        self.path = path
+        self.browser = browser
+
+    @classmethod
+    def new_split(cls, node_service, browser, path, node):
+        return Selection(node_service, node, path, None, browser)
 
 
-    def sel_child(self, g_sel_hnd, meta, node):
-        return Selection(self.node_service, self, self.browser, g_sel_hnd, meta, node)
+    @classmethod
+    def new_root(cls, node_service, browser):
+        path = fc.meta.Path(None, browser.module)
+        sel = Selection(node_service, browser.node, path, None, browser)
+        sel.hnd = fc.handles.put(sel)
+        return sel
 
+
+    def new_select(self, meta, node):
+        path = fc.meta.Path(self.path, meta)
+        sel = Selection(self.node_service, node, path, self, self.browser)
+        sel.hnd = fc.handles.put(sel)
+        return sel
 
     def upsert_from(self, n):
-        req = pb.fc_g_pb2.UpsertFromRequest(gSelHnd=self.g_sel_hnd)
-        if isinstance(n, int):
-            req.gNodeHnd = n
-        else:
-            req.xNodeHnd = n.x_node_hnd
+        req = pb.fc_g_pb2.UpsertFromRequest(selHnd=self.hnd)
+        req.nodeHnd = self.node_service.lazy_node_hnd(n)
         self.node_service.stub.UpsertFrom(req)
-        
+
 
 class Browser():
 
-    def __init__(self, node_service, module, node):
+    def __init__(self, node_service, module, node, browser_hnd):
         self.node_service = node_service
-        self.g_browser_hnd = None
-        self.x_browser_hnd = None
+        self.hnd = browser_hnd
         self.module = module
         self.node = node
 
 
     def root(self):
-        g_req = pb.fc_g_pb2.BrowserRootRequest(gBrowserHnd=self.g_browser_hnd, xBrowserHnd=self.x_browser_hnd)
-        g_resp = self.node_service.stub.BrowserRoot(g_req)
-        sel = Selection(self.node_service, None, self, g_resp.gSelHnd, self.module, self.node)
-        sel.handle = fc.handles.put(sel)
-        return sel
+        g_req = pb.fc_g_pb2.BrowserRootRequest(browserHnd=self.hnd)
+        resp = self.node_service.stub.BrowserRoot(g_req)
+        return fc.handles.get(resp.selHnd)
 
 
 class NodeService():
@@ -79,16 +76,22 @@ class NodeService():
         self.driver = driver
         self.stub = pb.fc_g_pb2_grpc.NodeStub(driver.channel)
 
-
     def new_browser(self, m, n):
-        x_node_hnd = fc.handles.put(n)
-        b = Browser(self, m, n)
-        b.x_browser_hnd = fc.handles.put(b)
-        req = pb.fc_g_pb2.NewBrowserRequest(gModuleHnd=m.handle, xNodeHnd=x_node_hnd, xBrowserHnd=b.x_browser_hnd)
+        node_hnd = self.lazy_node_hnd(n)
+        req = pb.fc_g_pb2.NewBrowserRequest(moduleHnd=m.hnd, nodeHnd=node_hnd)
         resp = self.stub.NewBrowser(req)
-        b.g_browser_hnd = resp.gBrowserHnd
+        b = Browser(self, m, n, resp.browserHnd)
+        b.hnd = fc.handles.put(b, resp.browserHnd)
         return b
 
+    def lazy_node_hnd(self, n):
+        if isinstance(n, int):
+            return n
+        if not n.hnd:
+            resp = self.stub.NewNode(pb.fc_g_pb2.NewNodeRequest())
+            n.hnd = resp.nodeHnd
+            fc.handles.put(n, n.hnd)
+        return n.hnd
 
 class ChildRequest():
 
@@ -111,32 +114,36 @@ class FieldRequest():
 class XNodeServicer(pb.fc_x_pb2_grpc.XNodeServicer):
     """Bridge between python node navigation and go node navigation"""
 
-    def __init__(self, *args, **kwargs):        
-        pass
+    def __init__(self):
+        self.node_service = None
 
     def Child(self, g_req, context):
-        sel = fc.handles.get(g_req.xSelHnd)
-        meta = fc.meta.get_def(sel.path.meta, g_req.metaIdent)
+        sel = fc.handles.get(g_req.selHnd)
+        meta = fc.meta.require_def(sel.path.meta, g_req.metaIdent)
         req = ChildRequest(sel, meta, g_req.new, g_req.delete)
         child = sel.node.child(req)
         g_resp = pb.fc_x_pb2.ChildResponse()
         if child:
-            child.x_node_hand = fc.handles.put(child)
-            g_resp.xNodeHnd = child.x_node_hand
+            child.hnd = self.node_service.lazy_node_hnd(child)
+            g_resp.nodeHnd = child.hnd
         return g_resp
 
 
     def Field(self, g_req, context):
-        sel = fc.handles.get(g_req.xSelHnd)
-        meta = fc.meta.get_def(sel.path.meta, req.meta)
-        req = FieldRequest(sel, meta, req.new, req.delete)
+        sel = fc.handles.get(g_req.selHnd)
+        meta = fc.meta.require_def(sel.path.meta, g_req.metaIdent)
+        req = FieldRequest(sel, meta, g_req.write, g_req.clear)
         write_val = None
-        if req.write:
-            write_val = fc.val.proto_decode(req.toWrite)
+        if g_req.write:
+            write_val = fc.val.proto_decode(g_req.toWrite)
         read_val = sel.node.field(req, write_val)
-        resp = pb.fc_x_pb2.FieldResponse()
-        if not req.write:
-            resp.fromRead = fc.val.proto_decode(read_val)
+
+        if not g_req.write:
+            fromRead = fc.val.proto_decode(read_val)
+            resp = pb.fc_x_pb2.FieldResponse(fromRead=fromRead)
+        else:
+            resp = pb.fc_x_pb2.FieldResponse()
+
         return resp
 
 
@@ -144,17 +151,25 @@ class XNodeServicer(pb.fc_x_pb2_grpc.XNodeServicer):
         parent = None
         meta = None
         browser = None
-        if g_req.xSelHnd > 0:
-            parent = fc.handles.get(g_req.xSelHnd)
+        if g_req.parentSelHnd > 0:
+            parent = fc.handles.get(g_req.parentSelHnd)
             browser = parent.browser
             meta = fc.meta.get_def(parent.path.meta, g_req.metaIdent)
-        elif g_req.xBrowserHnd > 0:
-            browser = fc.handles.get(g_req.xBrowserHnd)
-            meta = browser.module
+            node = fc.handles.get(g_req.nodeHnd)
+            sel = parent.new_select(meta, node)
+        elif g_req.browserHnd > 0:
+            browser = fc.handles.get(g_req.browserHnd)
+            sel = Selection.new_root(self.node_service, browser)
         else:
             raise Exception('no module or parent selection given')
-        node = fc.handles.get(g_req.xNodeHnd)
-        sel = Selection(self, parent, browser, g_req.gSelHnd, meta, node)
-        resp = pb.fc_x_pb2.SelectResponse(xSelHnd=fc.handles.put(sel))
+        resp = pb.fc_x_pb2.SelectResponse(selHnd=sel.hnd)
         return resp
 
+    def Split(self, g_req, context):
+        node = fc.handles.get(g_req.nodeHnd)
+        browser = None # TODO: could be local browser, could not be
+        module = fc.handles.get(g_req.moduleHnd)
+        path = fc.meta.new_path(module, g_req.metaPath)
+        sel = Selection.new_split(self.node_service, browser, path, node)
+        resp = pb.fc_x_pb2.SplitResponse(selHnd=sel.hnd)
+        return resp

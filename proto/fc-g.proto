@@ -17,7 +17,7 @@ message LoadModuleRequest {
 
 message LoadModuleResponse {
     Module module = 1;
-    uint64 handle = 2;
+    uint64 moduleHnd = 2;
 }
 
 service Parser {
@@ -37,9 +37,8 @@ service Handles {
 ////////////
 
 message NewBrowserRequest {
-      uint64 gModuleHnd = 1;
-      uint64 xBrowserHnd = 2;
-      uint64 xNodeHnd = 3;
+      uint64 moduleHnd = 1;
+      uint64 nodeHnd = 3;
 }
 
 message JSONRdrRequest {
@@ -47,40 +46,43 @@ message JSONRdrRequest {
 }
 
 message NewBrowserResponse {
-      uint64 gBrowserHnd = 1;
+      uint64 browserHnd = 1;
 }
 
 message UpsertFromRequest {
-      uint64 gSelHnd = 1;
-      uint64 xNodeHnd = 2;
-      uint64 gNodeHnd = 3;
+      uint64 selHnd = 1;
+      uint64 nodeHnd = 2;
 }
 
 message UpsertFromResponse {
-      // uint64 gSelHnd = 1;
-      // uint64 xNodeHnd = 2;
-      // uint64 gNodeHnd = 3;
 }
 
 message BrowserRootRequest {
-      uint64 gBrowserHnd = 1;
-      uint64 xBrowserHnd = 2;
+      uint64 browserHnd = 1;
 }
 
 message BrowserRootResponse {
-      uint64 gSelHnd = 1;
+      uint64 selHnd = 1;
+}
+
+message NewNodeRequest {      
+}
+
+message NewNodeResponse {
+      uint64 nodeHnd = 1;
 }
 
 service Node {
       rpc NewBrowser(NewBrowserRequest) returns (NewBrowserResponse) {}
       rpc BrowserRoot(BrowserRootRequest) returns (BrowserRootResponse) {}
       rpc UpsertFrom(UpsertFromRequest) returns (UpsertFromResponse) {}
+      rpc NewNode(NewNodeRequest) returns (NewNodeResponse) {}
 }
 
 ////////////
 
 message JSONRdrResponse {
-      uint64 gNodeHnd = 1;
+      uint64 nodeHnd = 1;
 }
 
 service NodeUtil {

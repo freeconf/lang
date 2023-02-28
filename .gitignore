@@ -13,3 +13,5 @@ python/fc/meta.py
 python/fc/unpack_meta.py
 python/fc/meta_decoder.py
 meta_encoder.go
+python/pb/
+python/venv/

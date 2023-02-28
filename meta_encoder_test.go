@@ -14,4 +14,6 @@ func TestMetaEncoder(t *testing.T) {
 	x := new(MetaEncoder).Encode(m)
 	fc.AssertEqual(t, "testme", x.Ident)
 	fc.AssertEqual(t, len(m.DataDefinitions()), len(x.Definitions))
+	fc.AssertEqual(t, "x", x.Definitions[0].GetLeaf().Ident)
+	fc.AssertEqual(t, "z", x.Definitions[1].GetContainer().Ident)
 }

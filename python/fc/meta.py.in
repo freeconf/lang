@@ -5,13 +5,19 @@ class Status(Enum):
     DEPRECATED = 1
     OBSOLETE = 2
 
+{{ $formats := index .Meta.Enums "Format" }}
+class Format(Enum):
+{{- range  $formats.Entries }}
+    {{.Ident}} = {{.Value}}
+{{- end }}
+
 {{ range .Meta.Definitions}}
 {{ if .IsMetaDef }}
 class {{ .Name }}():
     __slots__ = [
         "parent",
 {{- if eq .Name "Module" }}
-        "handle",
+        "hnd",
 {{- end }}
 {{- range .Fields }}
         "{{.PyName}}",
@@ -20,6 +26,28 @@ class {{ .Name }}():
 {{- end }}
 {{- end }}
 
+class Path():
+
+    def __init__(self, parent, meta):
+        self.parent = parent
+        self.meta = meta
+
+    def str(self):
+        if self.parent:
+            return self.parent().str() + '/' + self.meta.ident
+        return self.meta.ident
+
+def new_path(module, path_str):
+    """Construct a path object from a module and child-ident/grand-child-ident/..."""
+    segs = path_str.split('/')
+    path = Path(None, module)
+    for seg in segs:
+        found = get_def(path.meta, seg)
+        if not found:
+            return None
+        path = Path(path, found)
+    return path
+
 def get_def(meta, ident):
     if not hasattr(meta, 'definitions'):
         raise Exception(f'{type(meta)} does not have definitions')
@@ -27,3 +55,12 @@ def get_def(meta, ident):
         if ddef.ident == ident:
             return ddef
     return None
+
+def require_def(meta, ident):
+    ddef = get_def(meta, ident)
+    if ddef:
+        return ddef
+    raise Exception(f'definition {ident} not found in {meta.ident}')
+
+
+
