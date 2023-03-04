@@ -76,12 +76,23 @@ message SplitResponse {
       uint64 selHnd = 1;
 }
 
+message XActionRequest {
+      uint64 selHnd = 1;
+      uint64 inputSelHnd = 2;
+      string metaIdent = 3;
+}
+
+message XActionResponse {
+      uint64 outputNodeHnd = 1;
+}
+
 service XNode {
       rpc RootSelection(RootSelectionRequest) returns (RootSelectionResponse) {}
       rpc NodeSource(NodeSourceRequest) returns (NodeSourceResponse) {}
       rpc Select(SelectRequest) returns (SelectResponse) {}
       rpc Child(ChildRequest) returns (ChildResponse) {}
       rpc Field(FieldRequest) returns (FieldResponse) {}
+      rpc Action(XActionRequest) returns (XActionResponse) {}
       rpc Split(SplitRequest) returns (SplitResponse) {}
 }
 

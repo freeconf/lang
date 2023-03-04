@@ -100,3 +100,5 @@ fc_select_delete
 fc_json_rdr
 fc_json_wtr
 ```
+export GRPC_TRACE=all
+GRPC_VERBOSITY=DEBUG

@@ -5,35 +5,37 @@ import fc.parser
 import fc.node
 import fc.nodeutil
 import time
+import threading
 
 class Car():
-
 
     def __init__(self):
         self.speed = 0
         self.miles = 0
         self.running = False
-
+        self.thread = None
 
     def start(self, running):
-        self.running = running
-
+        if self.running != running:
+            self.running = running
+            if running:
+                self.thread = threading.Thread(target=self.run, name="Car")
+                self.thread.start()
+            if not running:
+                self.thread = None
 
     def reset(self):
         self.miles = 0
 
-
     def run(self):
-        while True:
+        while self.running:
             time.sleep(0.01)
-            if self.running:
-                self.miles = self.miles + self.speed
+            self.miles = self.miles + self.speed
 
 
 def manage_car(c):
 
-
-    def on_action(node, req):
+    def action(node, req):
         if req.meta.ident == 'stop':
             c.start(False)
         elif req.meta.ident == 'start':
@@ -42,10 +44,9 @@ def manage_car(c):
             return node.action(req)
         return None
 
-
     return fc.nodeutil.Extend(
         base = fc.nodeutil.Reflect(c),
-        on_action = on_action)
+        on_action = action)
 
 
 class TestDevice(unittest.TestCase):
@@ -58,12 +59,15 @@ class TestDevice(unittest.TestCase):
         node = fc.node.NodeService(d)
         p = fc.parser.Parser(d)
         m = p.load_module('../test/yang', 'car')
-        c = Car()    
-        b = node.new_browser(m, manage_car(c))
+        c = Car()  
+        n = manage_car(c)
+        b = node.new_browser(m, n)
         root = b.root()
-        root.upsert_from(fc.nodeutil.Reflect({'speed': 10}))
+        cfg = fc.nodeutil.Reflect({'speed': 10})
+        root.upsert_from(cfg)
+        print(f'cfg cfg.hnd={cfg.hnd}, manage.hnd={n.hnd}')
         root.find('start').action()
-        time.sleep(0.1)
+        time.sleep(1)
         self.assertGreater(c.miles, 0)
 
         d.unload()

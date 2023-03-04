@@ -5,7 +5,7 @@ import fc.parser
 
 class TestParser(unittest.TestCase):
 
-    def test_load(self):
+    def test_basic(self):
         d = fc.driver.Driver()
         d.load()
         
@@ -21,6 +21,20 @@ class TestParser(unittest.TestCase):
         p.release_module(m)
         
         d.unload()
+
+    def test_car(self):
+        d = fc.driver.Driver()
+        d.load()
+        
+        # load a module as test that driver is working
+        p = fc.parser.Parser(d)
+        m = p.load_module('../test/yang', 'car')
+        self.assertEqual('car', m.ident)
+        self.assertEqual(2, len(m.actions))
+        start = m.actions['start']
+        self.assertEqual('start', start.ident)
+        
+        d.unload()        
 
 if __name__ == '__main__':
     unittest.main()

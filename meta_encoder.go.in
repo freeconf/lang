@@ -9,6 +9,16 @@ import (
 type MetaEncoder struct {
 }
 
+func (e *MetaEncoder) encodeRpcList(parent any, from map[string]*meta.Rpc) []*pb.Rpc {
+    to := make([]*pb.Rpc, len(from))    
+    i := 0
+    for _, x := range from {
+        to[i] = e.encodeRpc(parent, x)
+        i++
+    }
+    return to
+}
+
 func (e *MetaEncoder) encodeFormat(parent *pb.Type, from val.Format) pb.Format {
     return pb.Format(from)
 }
@@ -61,6 +71,9 @@ func (e *MetaEncoder) encodeStatus(parent *pb.ExtensionDef, from meta.Status) pb
 {{ range .Meta.Definitions}}
 {{ if .IsMetaDef }}
 func (e *MetaEncoder) encode{{.Name}}(parent any, from *meta.{{.Name}}) *pb.{{.Name}} {
+    if from == nil {
+        return nil
+    }
     var def pb.{{.Name}}
     {{- range .Fields}}
         {{- if eq .Type "OptionalBool" }}

@@ -40,8 +40,7 @@ func newHandlePool() *HandlePool {
 func (p *HandlePool) Reserve() uint64 {
 	p.lock.Lock()
 	defer p.lock.Unlock()
-	p.counter = p.counter + 2
-	id := p.counter
+	id := p.nextHnd()
 	return id
 }
 
@@ -76,9 +75,9 @@ func (p *HandlePool) Hnd(obj any) uint64 {
 	defer p.lock.Unlock()
 	hnd, found := p.handles[obj]
 	if !found {
-		// start out being fail-fast as this could represent sloppy
-		// accounting that should be fixed
-		panic(fmt.Sprintf("attempting to reference obj %v that was not found", obj))
+		hnd = p.nextHnd()
+		p.handles[obj] = hnd
+		p.objects[hnd] = obj
 	}
 	return hnd
 }
@@ -86,11 +85,16 @@ func (p *HandlePool) Hnd(obj any) uint64 {
 func (p *HandlePool) Put(x any) uint64 {
 	p.lock.Lock()
 	defer p.lock.Unlock()
-	p.counter++
-	hnd := p.counter
+	hnd := p.nextHnd()
 	p.objects[hnd] = x
 	p.handles[x] = hnd
 	return hnd
+}
+
+func (p *HandlePool) nextHnd() uint64 {
+	next := p.counter
+	p.counter = p.counter + 1
+	return next
 }
 
 func (p *HandlePool) Record(x any, hnd uint64) {

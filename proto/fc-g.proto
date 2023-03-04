@@ -72,11 +72,61 @@ message NewNodeResponse {
       uint64 nodeHnd = 1;
 }
 
+message FindRequest {
+      uint64 selHnd = 1;
+      string path = 2;
+}
+
+message FindResponse {
+      uint64 selHnd = 1;
+}
+
+message GetSelectionRequest {
+      uint64 selHnd = 1;
+}
+
+message GetSelectionResponse {
+      uint64 parentHnd = 1;
+      uint64 browserHnd = 2;
+      string metaIdent = 3;
+      uint64 nodeHnd = 4;
+}
+
+message ActionRequest {
+      uint64 selHnd = 1;
+      uint64 inputNodeHnd = 2;      
+}
+
+message ActionResponse {
+      uint64 outputSelHnd = 1;
+}
+
+message GetBrowserRequest {
+      uint64 browserHnd = 1;
+}
+
+message GetBrowserResponse {
+      uint64 moduleHnd = 1;
+}
+
+message GetModuleRequest {
+      uint64 moduleHnd = 1;
+}
+
+message GetModuleResponse {
+      Module module = 1;
+}
+
 service Node {
       rpc NewBrowser(NewBrowserRequest) returns (NewBrowserResponse) {}
       rpc BrowserRoot(BrowserRootRequest) returns (BrowserRootResponse) {}
       rpc UpsertFrom(UpsertFromRequest) returns (UpsertFromResponse) {}
+      rpc Action(ActionRequest) returns (ActionResponse) {}
+      rpc Find(FindRequest) returns (FindResponse) {}
       rpc NewNode(NewNodeRequest) returns (NewNodeResponse) {}
+      rpc GetSelection(GetSelectionRequest) returns (GetSelectionResponse) {}
+      rpc GetBrowser(GetBrowserRequest) returns (GetBrowserResponse) {}
+      rpc GetModule(GetModuleRequest) returns (GetModuleResponse) {}
 }
 
 ////////////

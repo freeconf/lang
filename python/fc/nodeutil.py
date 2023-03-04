@@ -17,37 +17,27 @@ class NodeUtilService():
         return resp.nodeHnd
 
 
-class Basic(fc.node.Node):
+class Basic():
 
-    def __init__(self, on_child=None, on_field=None, on_action=None):
-        super(Basic, self).__init__()
-        self.on_child = on_child
-        self.on_field = on_field
-        self.on_action = on_action
-
+    def __init__(self):
+        self.hnd = 0
 
     def child(self, req):
-        if not self.on_child:
-            raise Exception(f'on_child not implemented in {req.path.str()}/{req.meta.ident}')
-        return self.on_child(self, req)
+        raise Exception(f'on_child not implemented in {req.path.str()}/{req.meta.ident}')
 
 
     def field(self, req, write_val):
-        if not self.on_field:
-            raise Exception(f'on_field not implemented in {req.path.str()}/{req.meta.ident}')
-        return self.on_field(self, req, write_val)
+        raise Exception(f'on_field not implemented in {req.path.str()}/{req.meta.ident}')
 
 
     def action(self, req):
-        if not self.on_action:
-            raise Exception(f'on_action not implemented in {req.path.str()}/{req.meta.ident}')
-        return self.self.on_action(self, req)
+        raise Exception(f'on_action not implemented in {req.path.str()}/{req.meta.ident}')
 
 
-class Reflect(fc.node.Node):
+class Reflect():
 
     def __init__(self, obj, object_hook=None):
-        super(Reflect, self).__init__()
+        self.hnd = 0
         self.obj = obj
         self.object_hook = object_hook
         self.is_dict = isinstance(obj, dict)
@@ -91,6 +81,7 @@ class Reflect(fc.node.Node):
             if v:
                 read_val = fc.val.Val(req.meta.type.format, v)
 
+        print(f'field obj={self.obj}, meta={req.meta.ident}, write={req.write}, read_val={read_val}')
         return read_val 
 
 
@@ -109,10 +100,10 @@ class Reflect(fc.node.Node):
         return Reflect(resp) if resp else None
 
 
-class Extend(fc.node.Node):
+class Extend():
 
     def __init__(self, base, on_child=None, on_field=None, on_action=None):
-        super(Extend, self).__init__()
+        self.hnd = 0
         self.base = base
         self.on_child = on_child
         self.on_field = on_field
@@ -133,5 +124,5 @@ class Extend(fc.node.Node):
 
     def action(self, req):
         if self.on_action:
-            return self.on_action(self, self.base, req)
+            return self.on_action(self.base, req)
         return self.base.action(req)

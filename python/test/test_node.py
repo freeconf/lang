@@ -5,7 +5,7 @@ import fc.parser
 import fc.node
 import fc.nodeutil
 
-class Dump(fc.node.Node):
+class Dump(fc.nodeutil.Basic):
 
     def __init__(self, store):
         super(Dump, self).__init__()

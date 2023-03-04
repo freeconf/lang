@@ -10,6 +10,13 @@ class Decoder():
     def decode_ExtensionList(self, parent, encoded):
         pass
 
+    def decode_RpcList(self, parent, encoded_list):
+        to = {}
+        for encoded in encoded_list:
+            rpc = self.decode_Rpc(parent, encoded)
+            to[rpc.ident] = rpc
+        return to        
+
     def decode_Status(self, parent, encoded):
         return fc.meta.Status(encoded)
 
@@ -48,7 +55,7 @@ class Decoder():
         {{- else }}
         to.{{.PyName}} = encoded.{{.PyName}}
         {{- end }}
-        {{- end}}
+        {{- end }}
         return to
 {{ end }}
 {{ end }}

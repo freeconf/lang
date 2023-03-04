@@ -27,6 +27,28 @@ message Module {
       string organization = 8;
       string reference = 9;
       string version = 10;
+      repeated Rpc actions = 11;
+}
+
+message RpcInput {
+      string reference = 1;
+      repeated Extension extensions = 2;
+      repeated DataDef definitions = 3;
+}
+
+message RpcOutput {
+      string reference = 1;
+      repeated Extension extensions = 2;
+      repeated DataDef definitions = 3;
+}
+
+message Rpc {
+      string ident = 1;
+      string description = 2;
+      repeated Extension extensions = 3;
+      string reference = 4;
+      RpcInput input = 5;
+      RpcOutput output = 6;
 }
 
 message ExtensionDefArg {
@@ -59,6 +81,7 @@ message Container {
       repeated DataDef definitions = 4;
       OptionalBool config = 14;
       OptionalBool mandatory = 15;
+      repeated Rpc actions = 16;
 }
 
 enum Format {      
@@ -129,6 +152,7 @@ message List {
     repeated DataDef definitions = 4;
     OptionalBool config = 14;
     OptionalBool mandatory = 15;
+    repeated Rpc actions = 16;
 }
 
 message LeafList {

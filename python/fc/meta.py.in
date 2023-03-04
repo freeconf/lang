@@ -49,11 +49,16 @@ def new_path(module, path_str):
     return path
 
 def get_def(meta, ident):
-    if not hasattr(meta, 'definitions'):
-        raise Exception(f'{type(meta)} does not have definitions')
-    for ddef in meta.definitions:
-        if ddef.ident == ident:
+    if hasattr(meta, 'definitions'):
+        for ddef in meta.definitions:
+            if ddef.ident == ident:
+                return ddef
+
+    if hasattr(meta, 'actions'):
+        ddef = meta.actions.get(ident, None)
+        if ddef:
             return ddef
+
     return None
 
 def require_def(meta, ident):
