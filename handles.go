@@ -8,8 +8,6 @@ import (
 	"github.com/freeconf/lang/pb"
 )
 
-var Handles = newHandlePool()
-
 // ObjectPool keeps track of golang objects and the destructor that is association with
 // the C counterpart that was passed to caller.
 type HandlePool struct {
@@ -21,19 +19,19 @@ type HandlePool struct {
 
 type HandleService struct {
 	pb.UnimplementedHandlesServer
+	d *Driver
 }
 
-func (s *HandleService) Release(ctx context.Context, in *pb.ReleaseRequest) (*pb.Void, error) {
-	Handles.Release(in.GHnd)
-	return &pb.Void{}, nil
+func (s *HandleService) Release(ctx context.Context, in *pb.ReleaseRequest) (*pb.ReleaseResponse, error) {
+	s.d.handles.Release(in.Hnd)
+	return &pb.ReleaseResponse{}, nil
 }
 
 func newHandlePool() *HandlePool {
 	return &HandlePool{
 		objects: make(map[uint64]any),
 		handles: make(map[any]uint64),
-		// Go get's even handles, X get's odd so they never collide
-		counter: 2,
+		counter: 100,
 	}
 }
 
@@ -42,16 +40,6 @@ func (p *HandlePool) Reserve() uint64 {
 	defer p.lock.Unlock()
 	id := p.nextHnd()
 	return id
-}
-
-func (p *HandlePool) CompleteReservation(reservation uint64, x any) {
-	p.lock.Lock()
-	defer p.lock.Unlock()
-	_, found := p.handles[reservation]
-	if found {
-		panic(fmt.Sprintf("reservation %d already fullfilled, cannot store %t", reservation, x))
-	}
-	p.objects[reservation] = x
 }
 
 func (p *HandlePool) Require(handle uint64) any {
@@ -105,14 +93,15 @@ func (p *HandlePool) Record(x any, hnd uint64) {
 }
 
 func (p *HandlePool) Release(handle uint64) {
+	fmt.Printf("releasing %d\n", handle)
 	p.lock.Lock()
 	defer p.lock.Unlock()
 	if obj, found := p.objects[handle]; found {
 		delete(p.objects, handle)
 		delete(p.handles, obj)
-	} else {
-		// start out being fail-fast as this could represent sloppy
-		// accounting that should be fixed
-		panic(fmt.Sprintf("attempting to release handle %d that was not found or already released", handle))
+		// } else {
+		// 	// start out being fail-fast as this could represent sloppy
+		// 	// accounting that should be fixed
+		// 	panic(fmt.Sprintf("attempting to release handle %d that was not found or already released", handle))
 	}
 }

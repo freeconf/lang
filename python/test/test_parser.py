@@ -18,8 +18,6 @@ class TestParser(unittest.TestCase):
         self.assertEqual('x', m.definitions[1].ident)
         z = m.definitions[0]
         self.assertEqual('q', z.definitions[0].ident)
-        p.release_module(m)
-        
         d.unload()
 
     def test_car(self):
@@ -33,7 +31,6 @@ class TestParser(unittest.TestCase):
         self.assertEqual(2, len(m.actions))
         start = m.actions['start']
         self.assertEqual('start', start.ident)
-        
         d.unload()        
 
 if __name__ == '__main__':

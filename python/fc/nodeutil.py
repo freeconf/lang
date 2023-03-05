@@ -4,18 +4,10 @@ import pb.fc_x_pb2
 import pb.fc_x_pb2_grpc
 import fc.node
 
-class NodeUtilService():
-
-    def __init__(self, driver):
-        self.driver = driver
-        self.stub = pb.fc_g_pb2_grpc.NodeUtilStub(driver.channel)
-
-
-    def json_rdr(self, fname):
-        req = pb.fc_g_pb2.JSONRdrRequest(fname=fname)
-        resp = self.stub.JSONRdr(req)
-        return resp.nodeHnd
-
+def json_rdr(driver, fname):
+    req = pb.fc_g_pb2.JSONRdrRequest(fname=fname)
+    resp = driver.g_nodeutil.JSONRdr(req)
+    return fc.handles.RemoteRef(driver, resp.nodeHnd)
 
 class Basic():
 
@@ -79,9 +71,9 @@ class Reflect():
             else:
                 v = getattr(self.obj, req.meta.ident)
             if v:
+                # TODO: coerse value
                 read_val = fc.val.Val(req.meta.type.format, v)
 
-        print(f'field obj={self.obj}, meta={req.meta.ident}, write={req.write}, read_val={read_val}')
         return read_val 
 
 

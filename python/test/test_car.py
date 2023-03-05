@@ -56,19 +56,19 @@ class TestDevice(unittest.TestCase):
         d = fc.driver.Driver()
         d.load()
 
-        node = fc.node.NodeService(d)
         p = fc.parser.Parser(d)
         m = p.load_module('../test/yang', 'car')
         c = Car()  
         n = manage_car(c)
-        b = node.new_browser(m, n)
+        b = fc.node.Browser(d, m, n)
         root = b.root()
         cfg = fc.nodeutil.Reflect({'speed': 10})
         root.upsert_from(cfg)
-        print(f'cfg cfg.hnd={cfg.hnd}, manage.hnd={n.hnd}')
         root.find('start').action()
-        time.sleep(1)
-        self.assertGreater(c.miles, 0)
+        time.sleep(0.1)
+        odometer = c.miles
+        self.assertGreater(odometer, 0)
+        print(f'odometer={odometer}')
 
         d.unload()
 

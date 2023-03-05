@@ -1,34 +1,40 @@
+import pb.fc_g_pb2
 
-handles = {}
-objects = {}
-# Go get's even handles, X get's odd so they never collide
-counter = 1
 
-def get(hnd):
-    global objects    
-    return objects[hnd]
+# a pointer to an object in Go that is being held for python
+# until this handle is no longer referenced.  
+class Handle():
 
-def put(obj, hnd=None):
-    global handles
-    global objects
-    global counter
-    if not hnd:
-        counter, hnd = counter + 2, counter
-    objects[hnd] = obj
-    handles[obj] = hnd
-    return hnd
+    def __init__(self, driver, id, obj):
+        self.id = id
+        self.driver = driver
+        driver.handles[id] = obj
 
-def hnd(obj):
-    return handles[obj]
+    def release(self):
+        # if driver is unloaded, no need to release anything as it would be killed
+        # with the fc-lang process
+        if self.driver.handles:
+            self.driver.g_handles.Release(pb.fc_g_pb2.ReleaseRequest(hnd=self.id))
 
-def release_hnd(hnd):
-    global handles
-    obj = objects.pop(hnd)
-    if obj:
-        del handles[obj]
+    # TODO Get's claimed to early
+    # def __del__(self):
+    #     self.release()
 
-def release_obj(obj):
-    global handles
-    hnd = handles.pop(obj)
-    if hnd:
-        del objects[hnd]
+    @classmethod
+    def lookup(cls, driver, id):
+        return driver.handles.get(id, None)
+
+    @classmethod
+    def require(cls, driver, id):
+        try:
+            return driver.handles[id]
+        except KeyError:
+            raise KeyError(f'could not resolve hnd {id}')
+
+# For handles that never are used in python except to be passed back to
+# go.  
+class RemoteRef():
+
+    def __init__(self, driver, id):
+        self.hnd = Handle(driver, id, self)
+

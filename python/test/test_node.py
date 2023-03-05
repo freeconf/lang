@@ -22,6 +22,7 @@ class Dump(fc.nodeutil.Basic):
 
 
 class TestNode(unittest.TestCase):
+    
     def test_load(self):
         d = fc.driver.Driver()
         d.load()
@@ -31,12 +32,9 @@ class TestNode(unittest.TestCase):
         m = p.load_module('../test/yang', 'testme-1')
         self.assertEqual(m.ident, 'testme-1')
 
-        node = fc.node.NodeService(d)
-        util = fc.nodeutil.NodeUtilService(d)
-
         dumper = Dump({})
-        b = node.new_browser(m, dumper)
-        rdr = util.json_rdr("../test/testdata/testme-sample-1.json")
+        b = fc.node.Browser(d, m, dumper)
+        rdr = fc.nodeutil.json_rdr(d, "../test/testdata/testme-sample-1.json")
         b.root().upsert_from(rdr)
         expected = {'x':'hello','z': {'q': 99}}
         self.assertEqual(expected, dumper.store)

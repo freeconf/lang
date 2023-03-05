@@ -10,6 +10,7 @@ import (
 
 type ParserService struct {
 	pb.UnimplementedParserServer
+	d *Driver
 }
 
 func (s *ParserService) LoadModule(ctx context.Context, in *pb.LoadModuleRequest) (*pb.LoadModuleResponse, error) {
@@ -19,7 +20,7 @@ func (s *ParserService) LoadModule(ctx context.Context, in *pb.LoadModuleRequest
 		return nil, err
 	}
 	return &pb.LoadModuleResponse{
-		ModuleHnd: Handles.Put(m),
+		ModuleHnd: s.d.handles.Put(m),
 		Module:    new(MetaEncoder).Encode(m),
 	}, nil
 }

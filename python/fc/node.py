@@ -5,142 +5,108 @@ import pb.fc_x_pb2_grpc
 import fc.handles
 import fc.meta
 import fc.val
+import fc.parser
+import traceback
 
 class Selection():
 
-    def __init__(self, node_service, node, path, parent, browser):
-        self.node_service = node_service
+    def __init__(self, driver, hnd_id, node, path, parent, browser):
+        self.driver = driver
+        self.hnd = fc.handles.Handle(driver, hnd_id, self)
         self.parent = parent
-        self.hnd = 0
         self.node = node
         self.path = path
         self.browser = browser
 
     @classmethod
-    def new_split(cls, node_service, browser, path, node):
-        return Selection(node_service, node, path, None, browser)
+    def resolve(cls, driver, hnd_id):
+        try:
+            return fc.handles.Handle.require(driver, hnd_id)
+        except KeyError:
+            req = pb.fc_g_pb2.GetSelectionRequest(selHnd=hnd_id)
+            resp = driver.g_nodes.GetSelection(req)
+            node = resolve_node(driver, resp.nodeHnd)
+            if resp.parentHnd:
+                parent = Selection.resolve(driver, resp.parentHnd)
+                meta = fc.meta.require_def(parent.path.meta, resp.metaIdent)
+                path = fc.meta.Path(parent.path, meta)
+                sel = Selection(driver, hnd_id, node, path, parent, parent.browser) 
+            else:
+                browser = fc.node.Browser.resolve(driver, resp.browserHnd)
+                path = fc.meta.Path(None, browser.module)
+                sel = Selection(driver, hnd_id, node, path, None, browser)
+            return sel
 
-
-    @classmethod
-    def new_root(cls, node_service, browser, hnd=None):
-        path = fc.meta.Path(None, browser.module)
-        sel = Selection(node_service, browser.node, path, None, browser)
-        sel.hnd = fc.handles.put(sel, hnd)
-        return sel
-
-
-    def new_select(self, meta, node, hnd=None):
-        path = fc.meta.Path(self.path, meta)
-        sel = Selection(self.node_service, node, path, self, self.browser)
-        sel.hnd = fc.handles.put(sel, hnd)
-        return sel
-
-
-    def action(self, n=0):
-        nodeHnd = self.node_service.lazy_node_hnd(n)
-        req = pb.fc_g_pb2.ActionRequest(selHnd=self.hnd, inputNodeHnd=nodeHnd)
-        resp = self.node_service.stub.Action(req)
+    def action(self, inputNode=0):
+        inputNodeHnd = 0        
+        if inputNode != 0:
+            inputNodeHnd = resolve_node(self.driver, inputNode).hnd.id
+        req = pb.fc_g_pb2.ActionRequest(selHnd=self.hnd.id, inputNodeHnd=inputNodeHnd)
+        resp = self.driver.g_nodes.Action(req)
         outputSel = None
         if resp.outputSelHnd:
-            outputNode = self.node_service.lazy_node_hnd(self, resp.outputHnd)
-            outputSel = self.new_select(self.path.meta.output, outputNode, resp.outputSelHnd)
+            outputSel = Selection.resolve(self.driver, resp.outputSelHnd)
         return outputSel
 
-
     def upsert_from(self, n):
-        req = pb.fc_g_pb2.UpsertFromRequest(selHnd=self.hnd)        
-        req.nodeHnd = self.node_service.lazy_node_hnd(n)
-        print(f'upsert_from sel_hnd={req.selHnd}, sel.node.hnd={self.node.hnd}, node_hnd={n.hnd}')
-        self.node_service.stub.UpsertFrom(req)
-
+        n = resolve_node(self.driver, n)
+        req = pb.fc_g_pb2.UpsertFromRequest(selHnd=self.hnd.id, nodeHnd=n.hnd.id)        
+        self.driver.g_nodes.UpsertFrom(req)
 
     def find(self, path):
-        req = pb.fc_g_pb2.FindRequest(selHnd=self.hnd, path=path)
-        resp = self.node_service.stub.Find(req)
-        found = self.node_service.resolve_sel(resp.selHnd)
-        return found
+        req = pb.fc_g_pb2.FindRequest(selHnd=self.hnd.id, path=path)
+        resp = self.driver.g_nodes.Find(req)
+        return Selection.resolve(self.driver, resp.selHnd)
 
 
+def resolve_node(driver, n):
+    if not n:
+        # nil node
+        return 0
+    if isinstance(n, int):
+        # cached node
+        return fc.handles.Handle.require(driver, n)
+    if not n.hnd:
+        # unregistered local node about to be registered with go
+        resp = driver.g_nodes.NewNode(pb.fc_g_pb2.NewNodeRequest())
+        n.hnd = fc.handles.Handle(driver, resp.nodeHnd, n)
+    return n
 
 
 class Browser():
 
-    def __init__(self, node_service, browser_hnd, module, node=None):
-        self.node_service = node_service
-        self.hnd = browser_hnd
+    def __init__(self, driver, module, node=None, node_src=None, hnd_id=None):
+        self.driver = driver
+        if not hnd_id:
+            req = pb.fc_g_pb2.NewBrowserRequest(moduleHnd=module.hnd.id)
+            resp = self.driver.g_nodes.NewBrowser(req)
+            self.hnd = fc.handles.Handle(driver, resp.browserHnd, self)
+        else:
+            self.hnd = fc.handles.Handle(driver, hnd_id, self)
         self.module = module
-        self.node = node
+        self.node_src = node_src
+        self.node_obj = node
 
+    def node(self):
+        if self.node_src:
+            return self.node_src()
+        return self.node_obj
 
     def root(self):
-        g_req = pb.fc_g_pb2.BrowserRootRequest(browserHnd=self.hnd)
-        resp = self.node_service.stub.BrowserRoot(g_req)
-        return self.node_service.resolve_sel(resp.selHnd)
+        g_req = pb.fc_g_pb2.BrowserRootRequest(browserHnd=self.hnd.id)
+        resp = self.driver.g_nodes.BrowserRoot(g_req)
+        return Selection.resolve(self.driver, resp.selHnd)
 
-
-class NodeService():
-
-    def __init__(self, driver):
-        self.driver = driver
-        self.stub = pb.fc_g_pb2_grpc.NodeStub(driver.channel)
-
-    def new_browser(self, m, n):
-        node_hnd = self.lazy_node_hnd(n)
-        req = pb.fc_g_pb2.NewBrowserRequest(moduleHnd=m.hnd, nodeHnd=node_hnd)
-        resp = self.stub.NewBrowser(req)
-        b = Browser(self, resp.browserHnd, m, n)
-        b.hnd = fc.handles.put(b, resp.browserHnd)
-        return b
-
-    def lazy_node_hnd(self, n):
-        if not n:
-            return 0
-        if isinstance(n, int):
-            return fc.handles.get(n)
-        if not n.hnd:
-            resp = self.stub.NewNode(pb.fc_g_pb2.NewNodeRequest())
-            n.hnd = resp.nodeHnd
-            fc.handles.put(n, n.hnd)
-        return n.hnd
-
-
-    def resolve_sel(self, sel_hnd):
+    @classmethod
+    def resolve(cls, driver, hnd_id):
         try:
-            return fc.handles.get(sel_hnd)
+            return fc.handles.Handle.require(driver, hnd_id)
         except KeyError:
-            req = pb.fc_g_pb2.GetSelectionRequest(selHnd=sel_hnd)
-            resp = self.stub.GetSelection(req)
-            if resp.parentHnd:
-                parent = self.resolve_sel(resp.parentHnd)
-                meta = fc.meta.require_def(parent.path.meta, resp.metaIdent)
-                node = self.lazy_node_hnd(resp.nodeHnd)
-                sel = parent.new_select(meta, node, sel_hnd)
-            else:
-                browser = self.resolve_browser(resp.browserHnd)
-                sel = Selection.new_root(self, browser, sel_hnd)
-            return sel
+            req = pb.fc_g_pb2.GetBrowserRequest(browserHnd=hnd_id)
+            resp = driver.g_nodes.GetBrowser(req)
+            module = fc.parser.Parser.resolve_module(driver, resp.moduleHnd)
+            return Browser(driver, module, hnd_id=hnd_id)
 
-
-    def resolve_browser(self, browser_hnd):
-        try:
-            return fc.handles.get(browser_hnd)
-        except KeyError:
-            req = pb.fc_g_pb2.GetBrowserRequest(browserHnd=browser_hnd)
-            resp = self.stub.GetBrowser(req)
-            module = self.resolve_module(resp.moduleHnd)
-            return Browser(self, browser_hnd, module)
-
-
-    def resolve_module(self, module_hnd):
-        try:
-            fc.handles.get(module_hnd)
-        except KeyError:
-            req = pb.fc_g_pb2.GetModuleRequest(moduleHnd=module_hnd)
-            resp = self.stub.GetModule(req)
-            m = fc.meta_decoder.Decoder().decode(resp.module)
-            m.hnd = module_hnd
-            fc.handles.put(m, module_hnd)
-            return m
 
 class ChildRequest():
 
@@ -170,70 +136,56 @@ class FieldRequest():
 class XNodeServicer(pb.fc_x_pb2_grpc.XNodeServicer):
     """Bridge between python node navigation and go node navigation"""
 
-    def __init__(self):
-        self.node_service = None
+    def __init__(self, driver):
+        self.driver = driver
 
     def Child(self, g_req, context):
-        sel = self.node_service.resolve_sel(g_req.selHnd)
+        sel = Selection.resolve(self.driver, g_req.selHnd)
         meta = fc.meta.require_def(sel.path.meta, g_req.metaIdent)
         req = ChildRequest(sel, meta, g_req.new, g_req.delete)
         child = sel.node.child(req)
-        childNodeHnd = self.node_service.lazy_node_hnd(child)
-        return pb.fc_x_pb2.ChildResponse(nodeHnd=childNodeHnd)
-
+        child = resolve_node(self.driver, child)
+        return pb.fc_x_pb2.ChildResponse(nodeHnd=child.hnd.id)
 
     def Field(self, g_req, context):
-        sel = self.node_service.resolve_sel(g_req.selHnd)
-        meta = fc.meta.require_def(sel.path.meta, g_req.metaIdent)
-        req = FieldRequest(sel, meta, g_req.write, g_req.clear)
-        write_val = None
-        if g_req.write:
-            write_val = fc.val.proto_decode(g_req.toWrite)
-        read_val = sel.node.field(req, write_val)
-        if not g_req.write:
-            fromRead = fc.val.proto_decode(read_val)
-            resp = pb.fc_x_pb2.FieldResponse(fromRead=fromRead)
-        else:
-            resp = pb.fc_x_pb2.FieldResponse()
-
-        return resp
-
+        try:
+            sel = Selection.resolve(self.driver, g_req.selHnd)
+            meta = fc.meta.require_def(sel.path.meta, g_req.metaIdent)
+            req = FieldRequest(sel, meta, g_req.write, g_req.clear)
+            write_val = None
+            if g_req.write:
+                write_val = fc.val.proto_decode(g_req.toWrite)
+            read_val = sel.node.field(req, write_val)
+            if not g_req.write:
+                fromRead = fc.val.proto_encode(read_val)
+                resp = pb.fc_x_pb2.FieldResponse(fromRead=fromRead)
+            else:
+                resp = pb.fc_x_pb2.FieldResponse()
+            return resp
+        except Exception as error:
+            print(traceback.format_exc())
+            raise error
 
     def Select(self, g_req, context):
-        parent = None
-        meta = None
-        browser = None
-        if g_req.parentSelHnd > 0:
-            parent = self.node_service.resolve_sel(g_req.parentSelHnd)
-            browser = parent.browser
-            meta = fc.meta.get_def(parent.path.meta, g_req.metaIdent)
-            node = fc.handles.get(g_req.nodeHnd)
-            sel = parent.new_select(meta, node)
-        elif g_req.browserHnd > 0:
-            browser = fc.handles.get(g_req.browserHnd)
-            sel = Selection.new_root(self.node_service, browser)
-        else:
-            raise Exception('no module or parent selection given')
-        resp = pb.fc_x_pb2.SelectResponse(selHnd=sel.hnd)
-        return resp
-
-    def Split(self, g_req, context):
-        node = fc.handles.get(g_req.nodeHnd)
-        browser = None # TODO: could be local browser, could not be
-        module = fc.handles.get(g_req.moduleHnd)
-        path = fc.meta.new_path(module, g_req.metaPath)
-        sel = Selection.new_split(self.node_service, browser, path, node)
-        resp = pb.fc_x_pb2.SplitResponse(selHnd=sel.hnd)
-        return resp
+        # TODO
+        pass
 
     def Action(self, g_req, context):
-        sel = self.node_service.resolve_sel(g_req.selHnd)
+        sel = Selection.resolve(self.driver, g_req.selHnd)
         # TODO: Id this inconsistent?
         # meta = fc.meta.require_def(sel.path.meta, g_req.metaIdent)
         meta = sel.path.meta
         input = None
         if g_req.inputSelHnd:
-            input = self.node_service.lazy_node_hnd(g_req.inputSelHnd)
+            input = resolve_node(self.driver, g_req.inputSelHnd)
         output = sel.node.action(ActionRequest(sel, meta, input))
-        outputNodeHnd = self.node_service.lazy_node_hnd(output)
+        outputNodeHnd = None
+        if output:
+            outputNodeHnd = resolve_node(self.driver, g_req.outputNodeHnd).hnd.id
         return pb.fc_x_pb2.XActionResponse(outputNodeHnd=outputNodeHnd)
+
+    def NodeSource(self, g_req, context):
+        browser = fc.node.Browser.resolve(self.driver, g_req.browserHnd)
+        n = resolve_node(self.driver, browser.node())
+        return pb.fc_x_pb2.NodeSourceResponse(nodeHnd=n.hnd.id)
+

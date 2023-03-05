@@ -8,16 +8,19 @@ import pb.fc_g_pb2
 import pb.fc_x_pb2_grpc
 import pb.fc_x_pb2
 import fc.node
+import weakref
 
 # for cleanup after exit.
 from concurrent import futures
 import signal
 import ctypes
 
+# Start up the Go executable and create a bi-directional gRPC API with a server in Go
+# and a server in python and each side creating clients to respective servers.
 class Driver():
 
     def __init__(self, sock_file=None):
-        self.fc_lang_proc = None
+        self.g_proc = None
         cwd = os.getcwd()
         self.sock_file = sock_file if sock_file else f'{cwd}/fc-lang.sock'
         self.x_sock_file = f'{cwd}/fc-x.sock'
@@ -26,49 +29,45 @@ class Driver():
         if os.path.exists(self.x_sock_file):
             os.remove(self.x_sock_file)
 
-
     def load(self):
-        if self.fc_lang_proc:
+        if self.g_proc:
             raise Exception("fc-lang already loaded")
 
-        self.start_xclient_server()
+        # TODO: at a minimum, nodes do not survive, they get claimed during the
+        # selection navigation
+        self.handles = {} #weakref.WeakValueDictionary()
+        self.start_x_server()
+        self.start_g_proc()
+        self.create_g_client()
 
-        # emits this warning, still looking at clean way to remove this
-        #  ResourceWarning: subprocess {pid} is still running
-        self.fc_lang_proc = subprocess.Popen(['fc-lang', self.sock_file, self.x_sock_file], preexec_fn=exit_with_parent)
-
-        self.wait_for_startup()
-        self.channel = grpc.insecure_channel(f'unix://{self.sock_file}')
-        self.stub = pb.fc_g_pb2_grpc.HandlesStub(self.channel)
-        self.x_node_service.node_service = fc.node.NodeService(self)
-
-
-
-    def start_xclient_server(self):
-        self.x_server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-        self.x_node_service = fc.node.XNodeServicer()
-        pb.fc_x_pb2_grpc.add_XNodeServicer_to_server(self.x_node_service, self.x_server)
-        self.x_server.add_insecure_port(f'unix://{self.x_sock_file}')
-        self.x_server.start()
-
-
-    def wait_for_startup(self):
+    def start_g_proc(self):
+        self.g_proc = subprocess.Popen(['fc-lang', self.sock_file, self.x_sock_file], preexec_fn=exit_with_parent)
         for i in range(0, 20):
             if os.path.exists(self.sock_file):
                 return
             time.sleep(0.01*(i*5))
         raise Exception("failure to start fc-yang")
 
+    def create_g_client(self):
+        self.g_channel = grpc.insecure_channel(f'unix://{self.sock_file}')
+        self.g_handles = pb.fc_g_pb2_grpc.HandlesStub(self.g_channel)
+        self.g_parser = pb.fc_g_pb2_grpc.ParserStub(self.g_channel)
+        self.g_nodes = pb.fc_g_pb2_grpc.NodeStub(self.g_channel)
+        self.g_nodeutil = pb.fc_g_pb2_grpc.NodeUtilStub(self.g_channel)
+
+    def start_x_server(self):
+        self.x_server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+        self.x_node_service = fc.node.XNodeServicer(self)
+        pb.fc_x_pb2_grpc.add_XNodeServicer_to_server(self.x_node_service, self.x_server)
+        self.x_server.add_insecure_port(f'unix://{self.x_sock_file}')
+        self.x_server.start()
 
     def unload(self):
-        self.fc_lang_proc.terminate()
-        self.fc_lang_proc.wait()
-        self.fc_lang_proc = None
+        self.handles = None
+        self.g_proc.terminate()
+        self.g_proc.wait()
+        self.g_proc = None
 
-
-    def release(self, handle):
-        req = pb.fc_g_pb2.ReleaseRequest(gHnd=handle)
-        self.stub.Release(req)
 
 # Ensure fc-lang is terminated when this python process is terminated
 # see
