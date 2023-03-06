@@ -54,6 +54,8 @@ class Driver():
         self.g_parser = pb.fc_g_pb2_grpc.ParserStub(self.g_channel)
         self.g_nodes = pb.fc_g_pb2_grpc.NodeStub(self.g_channel)
         self.g_nodeutil = pb.fc_g_pb2_grpc.NodeUtilStub(self.g_channel)
+        self.g_device = pb.fc_g_pb2_grpc.DeviceStub(self.g_channel)
+        self.g_restconf = pb.fc_g_pb2_grpc.RestconfStub(self.g_channel)
 
     def start_x_server(self):
         self.x_server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))

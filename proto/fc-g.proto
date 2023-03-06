@@ -131,6 +131,47 @@ service Node {
 }
 
 ////////////
+message NewDeviceRequest {
+      string yangPath = 1;
+}
+
+message NewDeviceResponse {
+      uint64 deviceHnd = 1;
+}
+
+message DeviceAddBrowserRequest {
+      uint64 deviceHnd = 1;
+      uint64 browserHnd = 2;
+}
+
+message DeviceAddBrowserResponse {      
+}
+
+message DeviceGetBrowserRequest {
+      uint64 deviceHnd = 1;
+      string moduleIdent = 2;
+}
+
+message DeviceGetBrowserResponse {
+      uint64 browserHnd = 1;
+}
+
+message ApplyStartupConfigRequest {
+      uint64 deviceHnd = 1;
+      string configFile = 2;
+}
+
+message ApplyStartupConfigResponse {
+}
+
+service Device {
+      rpc NewDevice(NewDeviceRequest) returns (NewDeviceResponse) {}
+      rpc DeviceAddBrowser(DeviceAddBrowserRequest) returns (DeviceAddBrowserResponse) {}
+      rpc DeviceGetBrowser(DeviceGetBrowserRequest) returns (DeviceGetBrowserResponse) {}
+      rpc ApplyStartupConfig(ApplyStartupConfigRequest) returns (ApplyStartupConfigResponse) {}
+}
+
+////////////
 
 message JSONRdrResponse {
       uint64 nodeHnd = 1;
@@ -138,4 +179,18 @@ message JSONRdrResponse {
 
 service NodeUtil {
       rpc JSONRdr(JSONRdrRequest) returns (JSONRdrResponse) {}
+}
+
+////////////
+
+message NewServerRequest {
+      uint64 deviceHnd = 1;
+}
+
+message NewServerResponse {
+      uint64 serverHnd = 1;
+}
+
+service Restconf {
+      rpc NewServer(NewServerRequest) returns (NewServerResponse) {}
 }

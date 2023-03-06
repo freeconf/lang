@@ -51,6 +51,8 @@ func (d *Driver) createGServer(addr string) error {
 	pb.RegisterHandlesServer(d.gserver, &HandleService{d: d})
 	pb.RegisterNodeServer(d.gserver, &NodeService{d: d})
 	pb.RegisterNodeUtilServer(d.gserver, &NodeUtilService{d: d})
+	pb.RegisterDeviceServer(d.gserver, &DeviceService{d: d})
+	pb.RegisterRestconfServer(d.gserver, &RestconfService{d: d})
 	return nil
 }
 
