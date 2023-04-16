@@ -60,6 +60,11 @@ def get_def(meta, ident):
         if ddef:
             return ddef
 
+    if hasattr(meta, 'notifications'):
+        ddef = meta.notifications.get(ident, None)
+        if ddef:
+            return ddef
+
     return None
 
 def require_def(meta, ident):

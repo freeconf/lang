@@ -75,6 +75,16 @@ message XActionResponse {
       uint64 outputNodeHnd = 1;
 }
 
+message XNotificationRequest {
+      uint64 selHnd = 1;
+      string metaIdent = 3;
+}
+
+message XNotificationResponse {
+      // time
+      uint64 nodeHnd = 1;
+}
+
 service XNode {
       rpc RootSelection(RootSelectionRequest) returns (RootSelectionResponse) {}
       rpc NodeSource(NodeSourceRequest) returns (NodeSourceResponse) {}
@@ -82,6 +92,7 @@ service XNode {
       rpc Child(ChildRequest) returns (ChildResponse) {}
       rpc Field(FieldRequest) returns (FieldResponse) {}
       rpc Action(XActionRequest) returns (XActionResponse) {}
+      rpc Notification(XNotificationRequest) returns (stream XNotificationResponse) {}
 }
 
 message XReleaseRequest {

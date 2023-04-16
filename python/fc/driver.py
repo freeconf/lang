@@ -41,11 +41,21 @@ class Driver():
         self.create_g_client()
 
     def start_g_proc(self):
-        self.g_proc = subprocess.Popen(['fc-lang', self.sock_file, self.x_sock_file], preexec_fn=exit_with_parent)
-        for i in range(0, 20):
+        exec_bin = os.environ.get('FC_LANG_EXEC', 'fc-lang')
+        cmd = [exec_bin, self.sock_file, self.x_sock_file]
+        dbg_addr = os.environ.get('FC_LANG_DBG_ADDR')
+        if dbg_addr:
+            dbg = ['dlv', f'--listen={dbg_addr}', '--headless=true', '--api-version=2', 'exec']
+            dbg.extend(cmd)
+            cmd = dbg
+        self.g_proc = subprocess.Popen(cmd, preexec_fn=exit_with_parent)
+
+        i = 0
+        while i < 20 or dbg_addr:
             if os.path.exists(self.sock_file):
                 return
-            time.sleep(0.01*(i*5))
+            time.sleep(0.05)
+            i = i + 1
         raise Exception("failure to start fc-yang")
 
     def create_g_client(self):

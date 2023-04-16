@@ -22,7 +22,7 @@ def proto_encode(val):
         return fc_x_pb2.Val(i32=val.v)
     if val.format.value == Format.INT64:
         return fc_x_pb2.Val(i64=val.v)
-    raise Exception(f'unimplemented value encoder {val.format} {Format.INT32.value == val.format.value}')
+    raise Exception(f'unimplemented value encoder {val.format}')
 
 def proto_decode(proto_val):
     if proto_val == None:
@@ -35,5 +35,3 @@ def proto_decode(proto_val):
     if which == 'i64':
         return Val(Format.INT64, proto_val.i64)
     raise Exception(f'unimplemented value decoder {pprint(proto_val)}')
-
-

@@ -1,3 +1,6 @@
+import queue
+import grpc
+import threading
 import pb.fc_g_pb2
 import pb.fc_g_pb2_grpc
 import pb.fc_x_pb2
@@ -28,8 +31,12 @@ class Selection():
             node = resolve_node(driver, resp.nodeHnd)
             if resp.parentHnd:
                 parent = Selection.resolve(driver, resp.parentHnd)
-                meta = fc.meta.require_def(parent.path.meta, resp.metaIdent)
-                path = fc.meta.Path(parent.path, meta)
+                if isinstance(parent.path.meta, fc.meta.Notification):
+                    meta = parent.path.meta
+                    path = fc.meta.Path(parent.path, meta)
+                else:
+                    meta = fc.meta.require_def(parent.path.meta, resp.metaIdent)
+                    path = fc.meta.Path(parent.path, meta)
                 sel = Selection(driver, hnd_id, node, path, parent, parent.browser) 
             else:
                 browser = fc.node.Browser.resolve(driver, resp.browserHnd)
@@ -47,6 +54,29 @@ class Selection():
         if resp.outputSelHnd:
             outputSel = Selection.resolve(self.driver, resp.outputSelHnd)
         return outputSel
+    
+    def notification(self, callback):
+        req = pb.fc_g_pb2.NotificationRequest(selHnd=self.hnd.id)
+        stream = self.driver.g_nodes.Notification(req)
+        def rdr():
+            try:
+                for resp in stream:
+                    if resp == None:
+                        return
+                    msg = Selection.resolve(self.driver, resp.selHnd)
+                    callback(msg)
+            except grpc.RpcError as gerr:
+                if not gerr.cancelled():
+                    print(f'grpc err. {gerr}')
+            except Exception as e:
+                print(f'got error in callback delivering msg: {type(e)} {e}')
+
+        t = threading.Thread(target=rdr)
+        t.start()
+        def closer():
+            stream.cancel()
+            t.join()
+        return closer
 
     def upsert_from(self, n):
         n = resolve_node(self.driver, n)
@@ -132,6 +162,27 @@ class FieldRequest():
         self.write = write
         self.clear = clear
 
+class NotificationRequest():
+
+    def __init__(self, sel, meta, queue):
+        self.sel = sel
+        self.meta = meta
+        self.queue = queue
+
+    def send(self, node):
+        self.queue.put(node)
+
+class NotificationSession():
+
+    def __init__(self, q, closer):
+        self.q = q
+        self.closer = closer
+        self.hnd = None
+
+    @classmethod
+    def resolve(cls, driver, hnd_id):
+        return fc.handles.Handle.require(driver, hnd_id)
+
 
 class XNodeServicer(pb.fc_x_pb2_grpc.XNodeServicer):
     """Bridge between python node navigation and go node navigation"""
@@ -184,8 +235,26 @@ class XNodeServicer(pb.fc_x_pb2_grpc.XNodeServicer):
             outputNodeHnd = resolve_node(self.driver, g_req.outputNodeHnd).hnd.id
         return pb.fc_x_pb2.XActionResponse(outputNodeHnd=outputNodeHnd)
 
+
     def NodeSource(self, g_req, context):
         browser = fc.node.Browser.resolve(self.driver, g_req.browserHnd)
         n = resolve_node(self.driver, browser.node())
         return pb.fc_x_pb2.NodeSourceResponse(nodeHnd=n.hnd.id)
 
+
+    def Notification(self, g_req, context):
+        q = queue.Queue()
+        sel = Selection.resolve(self.driver, g_req.selHnd)
+        meta = sel.path.meta
+        closer = sel.node.notification(NotificationRequest(sel, meta, q))
+        try:
+            while True:
+                node = q.get()
+                if node == None:
+                    break
+                n = resolve_node(self.driver, node)
+                yield pb.fc_x_pb2.XNotificationResponse(nodeHnd=n.hnd.id)
+                q.task_done()
+        finally:
+            closer()
+        return None

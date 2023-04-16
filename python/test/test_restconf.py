@@ -33,7 +33,7 @@ class TestRestconf(unittest.TestCase):
         resp = requests.get("http://localhost:9999/restconf/data/car:")
         self.assertEqual(200, resp.status_code)
         data = resp.json()
-        self.assertEqual(10, data['car:speed'])
+        self.assertEqual(10, data['speed'])
 
         drv.unload()
 

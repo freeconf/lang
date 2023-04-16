@@ -15,15 +15,19 @@ class Basic():
         self.hnd = 0
 
     def child(self, req):
-        raise Exception(f'on_child not implemented in {req.path.str()}/{req.meta.ident}')
+        raise Exception(f'child not implemented in {req.path.str()}/{req.meta.ident}')
 
 
     def field(self, req, write_val):
-        raise Exception(f'on_field not implemented in {req.path.str()}/{req.meta.ident}')
+        raise Exception(f'field not implemented in {req.path.str()}/{req.meta.ident}')
 
 
     def action(self, req):
-        raise Exception(f'on_action not implemented in {req.path.str()}/{req.meta.ident}')
+        raise Exception(f'action not implemented in {req.path.str()}/{req.meta.ident}')
+
+
+    def notification(self, req):
+        raise Exception(f'notification not implemented in {req.path.str()}/{req.meta.ident}')
 
 
 class Reflect():
@@ -94,12 +98,13 @@ class Reflect():
 
 class Extend():
 
-    def __init__(self, base, on_child=None, on_field=None, on_action=None):
+    def __init__(self, base, on_child=None, on_field=None, on_action=None, on_notification=None):
         self.hnd = 0
         self.base = base
         self.on_child = on_child
         self.on_field = on_field
         self.on_action = on_action
+        self.on_notification = on_notification
 
 
     def child(self, req):
@@ -118,3 +123,9 @@ class Extend():
         if self.on_action:
             return self.on_action(self.base, req)
         return self.base.action(req)
+
+
+    def notification(self, req):
+        if self.on_notification:
+            return self.on_notification(self.base, req)
+        return self.base.notification(req)

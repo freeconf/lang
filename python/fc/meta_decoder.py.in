@@ -17,6 +17,13 @@ class Decoder():
             to[rpc.ident] = rpc
         return to        
 
+    def decode_NotificationList(self, parent, encoded_list):
+        to = {}
+        for encoded in encoded_list:
+            notif = self.decode_Notification(parent, encoded)
+            to[notif.ident] = notif
+        return to
+
     def decode_Status(self, parent, encoded):
         return fc.meta.Status(encoded)
 

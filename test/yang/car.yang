@@ -28,4 +28,19 @@ module car {
     rpc stop {
         description "stop the car from accumulating miles";
     }
+
+    notification update {
+        description "Important state information about your car";
+        /*
+		leaf event {
+			type enumeration {
+				enum carStarted {
+					value 1;
+				}
+				enum carStopped;
+				enum flatTire;				
+			}
+		}
+        */
+    }
 }

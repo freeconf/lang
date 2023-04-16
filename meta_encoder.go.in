@@ -6,6 +6,14 @@ import (
 	"github.com/freeconf/yang/val"
 )
 
+// MetaEncoder takes a meta.Module and serializes it into protobuf objects
+// to they can be transfered into each language and decoded on the other end.
+// 
+// Workflow typically involved changing the proto file then the generated Go
+// file from the template will not compile if there is something to add.  There 
+// would also likely be files in each language that decodes that would need
+// updates as well.  Simple fields to proto files generally do not require 
+// changes to this template but do require the template be exercised.
 type MetaEncoder struct {
 }
 
@@ -14,6 +22,16 @@ func (e *MetaEncoder) encodeRpcList(parent any, from map[string]*meta.Rpc) []*pb
     i := 0
     for _, x := range from {
         to[i] = e.encodeRpc(parent, x)
+        i++
+    }
+    return to
+}
+
+func (e *MetaEncoder) encodeNotificationList(parent any, from map[string]*meta.Notification) []*pb.Notification {
+    to := make([]*pb.Notification, len(from))    
+    i := 0
+    for _, x := range from {
+        to[i] = e.encodeNotification(parent, x)
         i++
     }
     return to

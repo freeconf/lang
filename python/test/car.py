@@ -10,6 +10,7 @@ class Car():
         self.miles = 0
         self.running = False
         self.thread = None
+        self.listeners = []
 
     def start(self, running):
         if self.running != running:
@@ -24,9 +25,21 @@ class Car():
         self.miles = 0
 
     def run(self):
+        self.update_listeners("started")
         while self.running:
             time.sleep(0.01)
             self.miles = self.miles + self.speed
+        self.update_listeners("stopped")
+
+    def on_update(self, listener):
+        self.listeners.append(listener)
+        def closer():
+            self.listeners.remove(listener)
+        return closer
+
+    def update_listeners(self, event):
+        for l in self.listeners:
+            l(event)
 
 # Bridge car to FC management library
 def manage(c):
@@ -40,8 +53,19 @@ def manage(c):
             return node.action(req)
         return None
 
+    def notification(node, req):
+        if req.meta.ident == 'update':
+            def listener(event):
+                req.send(fc.nodeutil.Reflect({
+                    "event": event
+                }))
+            closer = c.on_update(listener)
+            return closer
+        
+        return node.notification(req)
+
     # because car's members and methods align with yang, we can use 
     # reflection for all of the CRUD
     return fc.nodeutil.Extend(
         base = fc.nodeutil.Reflect(c),
-        on_action = action)
+        on_action = action, on_notification=notification)

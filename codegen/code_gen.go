@@ -10,8 +10,6 @@ import (
 	"github.com/iancoleman/strcase"
 )
 
-//go:generate go run code_gen_main.go
-
 type Vars struct {
 	Meta MetaMeta
 }

@@ -118,11 +118,20 @@ message GetSelectionResponse {
       string metaIdent = 4;      
 }
 
+message NotificationRequest {
+      uint64 selHnd = 1;
+}
+
+message NotificationResponse {
+      uint64 selHnd = 1;
+}
+
 service Node {
       rpc NewBrowser(NewBrowserRequest) returns (NewBrowserResponse) {}
       rpc BrowserRoot(BrowserRootRequest) returns (BrowserRootResponse) {}
       rpc UpsertFrom(UpsertFromRequest) returns (UpsertFromResponse) {}
       rpc Action(ActionRequest) returns (ActionResponse) {}
+      rpc Notification(NotificationRequest) returns (stream NotificationResponse) {}
       rpc Find(FindRequest) returns (FindResponse) {}
       rpc NewNode(NewNodeRequest) returns (NewNodeResponse) {}
       rpc GetBrowser(GetBrowserRequest) returns (GetBrowserResponse) {}

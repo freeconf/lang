@@ -9,7 +9,6 @@ import test.car
 
 class TestCar(unittest.TestCase):
 
-
     def test_start_car(self):
         drv = fc.driver.Driver()
         drv.load()
@@ -20,13 +19,22 @@ class TestCar(unittest.TestCase):
         mgmt = test.car.manage(app)
         b = fc.node.Browser(drv, schema, mgmt)
         root = b.root()
+        update_called = False
+        def update_listener(_msg):
+            nonlocal update_called
+            print(f'update_called = {update_called}')
+            update_called = True
+        update_sel = root.find('update')
+        unsubscribe = update_sel.notification(update_listener)
         root.upsert_from(fc.nodeutil.Reflect({'speed': 10}))
         root.find('start').action()
+        print("waiting....")
         time.sleep(0.1)
+        self.assertTrue(update_called)
         odometer = app.miles
         self.assertGreater(odometer, 0)
         print(f'odometer={odometer}')
-
+        unsubscribe()
         drv.unload()
 
 

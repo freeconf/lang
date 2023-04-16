@@ -18,6 +18,8 @@ import (
 
 var homeDir = flag.String("home_dir", "./", "File path to directory containing _defs.go files")
 
+// parse proto buf files into Go objects and then call templates to take
+// Go objects and generate code based on the data defined in the proto file(s)
 func main() {
 	flag.Parse()
 	vars, err := codegen.ParseDefs(*homeDir)
@@ -36,6 +38,8 @@ func main() {
 		err = codegen.GenerateSource(vars, path, dest)
 		chkerr(err)
 		if strings.HasSuffix(destFname, ".go") {
+			// Go templates can be sloppy with formatting and
+			// we can clean it up here.
 			formatter := exec.Command("gofmt", "-w", destFname)
 			err = formatter.Run()
 			chkerr(err)

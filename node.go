@@ -112,6 +112,20 @@ func (s *NodeService) GetModule(ctx context.Context, in *pb.GetModuleRequest) (*
 	}, nil
 }
 
+func (s *NodeService) Notification(in *pb.NotificationRequest, srv pb.Node_NotificationServer) error {
+	sel := s.d.handles.Require(in.SelHnd).(*node.Selection)
+	sel.Notifications(func(n node.Notification) {
+		resp := pb.NotificationResponse{
+			SelHnd: resolveSelection(s.d, &n.Event),
+		}
+		if err := srv.Send(&resp); err != nil {
+			panic(err)
+		}
+	})
+	<-srv.Context().Done()
+	return nil
+}
+
 /**
  * gnode wraps the xlang's implementation of a node
  */
@@ -192,7 +206,37 @@ func (n *gnode) Action(r node.ActionRequest) (output node.Node, err error) {
 }
 
 func (n *gnode) Notify(r node.NotifyRequest) (node.NotifyCloser, error) {
-	return nil, nil
+	req := pb.XNotificationRequest{
+		SelHnd:    resolveSelection(n.d, &r.Selection),
+		MetaIdent: r.Meta.Ident(),
+	}
+	var recvErr error
+	client, err := n.d.xnodes.Notification(r.Selection.Context, &req)
+	if err != nil {
+		return nil, err
+	}
+	closer := func() error {
+		if client != nil {
+			if err := client.CloseSend(); err != nil && recvErr == nil {
+				return err
+			}
+			client = nil
+		}
+		return recvErr
+	}
+	go func() {
+		defer closer()
+		var resp *pb.XNotificationResponse
+		for {
+			resp, recvErr = client.Recv()
+			if resp == nil || recvErr != nil {
+				break
+			}
+			n := n.d.handles.Get(resp.NodeHnd).(node.Node)
+			r.Send(n)
+		}
+	}()
+	return closer, nil
 }
 
 func (n *gnode) Peek(sel node.Selection, consumer interface{}) interface{} {
