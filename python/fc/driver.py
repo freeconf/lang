@@ -76,6 +76,7 @@ class Driver():
 
     def unload(self):
         self.handles = None
+        self.x_server.stop(1).wait()
         self.g_proc.terminate()
         self.g_proc.wait()
         self.g_proc = None

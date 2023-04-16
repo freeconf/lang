@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import sys, traceback, threading
 import unittest 
 import fc.driver
 import fc.parser
@@ -6,6 +7,13 @@ import fc.node
 import fc.nodeutil
 import time
 import test.car
+
+def dump_threads():
+    thread_names = {t.ident: t.name for t in threading.enumerate()}
+    for thread_id, frame in sys._current_frames().items():
+        print("Thread %s:" % thread_names.get(thread_id, thread_id))
+        traceback.print_stack(frame)
+        print()
 
 class TestCar(unittest.TestCase):
 
@@ -36,7 +44,9 @@ class TestCar(unittest.TestCase):
         print(f'odometer={odometer}')
         unsubscribe()
         drv.unload()
-
+        
+        # useful if test won't exit
+        # dump_threads()
 
 if __name__ == '__main__':
     unittest.main()

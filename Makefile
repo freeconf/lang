@@ -19,14 +19,14 @@ PY_TESTS = \
 	test_val.py \
 	test_driver.py \
 	test_node.py \
-	test_car.py \
 	test_parser.py \
-	test_restconf.py
+	test_restconf.py \
+	test_car.py
 
 test-py:
 	cd python; \
 		. venv/bin/activate && \
-		$(foreach T,$(PY_TESTS),python test/$(T) || exit;)
+		$(foreach T,$(PY_TESTS),echo $(T) && python test/$(T) || exit;)
 
 
 .PHONY: bin

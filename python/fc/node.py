@@ -247,6 +247,9 @@ class XNodeServicer(pb.fc_x_pb2_grpc.XNodeServicer):
         sel = Selection.resolve(self.driver, g_req.selHnd)
         meta = sel.path.meta
         closer = sel.node.notification(NotificationRequest(sel, meta, q))
+        def stream_closed():
+            q.put(None)
+        context.add_callback(stream_closed)
         try:
             while True:
                 node = q.get()
