@@ -1,11 +1,11 @@
-import pb.fc_g_pb2
-import pb.fc_g_pb2_grpc
+import pb.fc_pb2
+import pb.fc_pb2_grpc
 import pb.fc_x_pb2
 import pb.fc_x_pb2_grpc
 import fc.node
 
 def json_rdr(driver, fname):
-    req = pb.fc_g_pb2.JSONRdrRequest(fname=fname)
+    req = pb.fc_pb2.JSONRdrRequest(fname=fname)
     resp = driver.g_nodeutil.JSONRdr(req)
     return fc.handles.RemoteRef(driver, resp.nodeHnd)
 
@@ -58,7 +58,7 @@ class Reflect():
             else:
                 child = getattr(self.obj, req.meta.ident)
 
-        return Reflect(child) if child else None
+        return None if child == None else Reflect(child)
 
 
     def field(self, req, write_val):

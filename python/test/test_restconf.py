@@ -10,7 +10,7 @@ import requests
 
 def new_car_app(drv):
     p = fc.parser.Parser(drv)
-    mod = p.load_module('../test/yang', 'car')
+    mod = p.load_module('./testdata', 'car')
     app = test.car.Car()
     mgmt = test.car.manage(app)
     b = fc.node.Browser(drv, mod, mgmt)
@@ -24,11 +24,11 @@ class TestRestconf(unittest.TestCase):
         drv.load()
 
         b, _ = new_car_app(drv)
-        dev = fc.device.Device(drv, "../test/yang:../../restconf/yang")
+        dev = fc.device.Device(drv, "./testdata:../yang")
         dev.add_browser(b)
 
         _ = fc.restconf.Server(drv, dev)
-        dev.apply_startup_config("test/server-startup.json")
+        dev.apply_startup_config("testdata/server-startup.json")
 
         resp = requests.get("http://localhost:9999/restconf/data/car:")
         self.assertEqual(200, resp.status_code)

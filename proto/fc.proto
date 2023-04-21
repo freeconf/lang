@@ -1,15 +1,19 @@
 syntax="proto3";
-
 option go_package = "./pb";
-
 package pb;
-
 import "meta.proto";
 
-message ReleaseResponse {
-}
+/*
+  FreeCONF full developer API made available thru gRPC.  Services are roughly broken
+  up by package.
+*/
 
 ////////////
+// Parser
+
+service Parser {
+      rpc LoadModule (LoadModuleRequest) returns (LoadModuleResponse) {}
+}
 
 message LoadModuleRequest {
       string dir = 1;
@@ -17,45 +21,68 @@ message LoadModuleRequest {
 }
 
 message LoadModuleResponse {
-    Module module = 1;
-    uint64 moduleHnd = 2;
+      Module module = 1;
+      uint64 moduleHnd = 2;
 }
 
-service Parser {
-      rpc LoadModule (LoadModuleRequest) returns (LoadModuleResponse) {}
-}
 
 ////////////
+// Handles
+service Handles {
+      rpc Release (ReleaseRequest) returns (ReleaseResponse) {}
+}
+
+message ReleaseResponse {
+}
 
 message ReleaseRequest {
       uint64 hnd = 1;
 }
 
-service Handles {
-      rpc Release (ReleaseRequest) returns (ReleaseResponse) {}
+////////////
+
+
+service Node {
+      rpc NewBrowser(NewBrowserRequest) returns (NewBrowserResponse) {}
+      rpc BrowserRoot(BrowserRootRequest) returns (BrowserRootResponse) {}
+      rpc SelectionEdit(SelectionEditRequest) returns (SelectionEditResponse) {}
+      rpc Action(ActionRequest) returns (ActionResponse) {}
+      rpc Notification(NotificationRequest) returns (stream NotificationResponse) {}
+      rpc Find(FindRequest) returns (FindResponse) {}
+      rpc NewNode(NewNodeRequest) returns (NewNodeResponse) {}
+      rpc GetBrowser(GetBrowserRequest) returns (GetBrowserResponse) {}
+      rpc GetModule(GetModuleRequest) returns (GetModuleResponse) {}
+      rpc GetSelection(GetSelectionRequest) returns (GetSelectionResponse) {}
 }
 
-////////////
+enum SelectionEditOp {
+      UPSERT_INTO = 0;
+      UPSERT_FROM = 1;
+      INSERT_INTO = 2;
+      INSERT_FROM = 3;
+      UPSERT_INTO_SET_DEFAULTS = 4;
+      UPSERT_FROM_SET_DEFAULTS = 5;
+      UPDATE_INTO = 6;
+      UPDATE_FROM = 7;
+      REPLACE_FROM = 8;
+}
 
 message NewBrowserRequest {
       uint64 moduleHnd = 1;
       uint64 nodeHnd = 3;
 }
 
-message JSONRdrRequest {
-      string fname = 1;
-}
-
 message NewBrowserResponse {
       uint64 browserHnd = 1;
 }
 
-message UpsertFromRequest {
-      uint64 selHnd = 1;
-      uint64 nodeHnd = 2;
+message SelectionEditRequest {
+      SelectionEditOp op = 1;
+      uint64 selHnd = 2;
+      uint64 nodeHnd = 3;
 }
 
-message UpsertFromResponse {
+message SelectionEditResponse {
 }
 
 message BrowserRootRequest {
@@ -126,20 +153,15 @@ message NotificationResponse {
       uint64 selHnd = 1;
 }
 
-service Node {
-      rpc NewBrowser(NewBrowserRequest) returns (NewBrowserResponse) {}
-      rpc BrowserRoot(BrowserRootRequest) returns (BrowserRootResponse) {}
-      rpc UpsertFrom(UpsertFromRequest) returns (UpsertFromResponse) {}
-      rpc Action(ActionRequest) returns (ActionResponse) {}
-      rpc Notification(NotificationRequest) returns (stream NotificationResponse) {}
-      rpc Find(FindRequest) returns (FindResponse) {}
-      rpc NewNode(NewNodeRequest) returns (NewNodeResponse) {}
-      rpc GetBrowser(GetBrowserRequest) returns (GetBrowserResponse) {}
-      rpc GetModule(GetModuleRequest) returns (GetModuleResponse) {}
-      rpc GetSelection(GetSelectionRequest) returns (GetSelectionResponse) {}
-}
 
 ////////////
+service Device {
+      rpc NewDevice(NewDeviceRequest) returns (NewDeviceResponse) {}
+      rpc DeviceAddBrowser(DeviceAddBrowserRequest) returns (DeviceAddBrowserResponse) {}
+      rpc DeviceGetBrowser(DeviceGetBrowserRequest) returns (DeviceGetBrowserResponse) {}
+      rpc ApplyStartupConfig(ApplyStartupConfigRequest) returns (ApplyStartupConfigResponse) {}
+}
+
 message NewDeviceRequest {
       string yangPath = 1;
 }
@@ -173,24 +195,24 @@ message ApplyStartupConfigRequest {
 message ApplyStartupConfigResponse {
 }
 
-service Device {
-      rpc NewDevice(NewDeviceRequest) returns (NewDeviceResponse) {}
-      rpc DeviceAddBrowser(DeviceAddBrowserRequest) returns (DeviceAddBrowserResponse) {}
-      rpc DeviceGetBrowser(DeviceGetBrowserRequest) returns (DeviceGetBrowserResponse) {}
-      rpc ApplyStartupConfig(ApplyStartupConfigRequest) returns (ApplyStartupConfigResponse) {}
+////////////
+service NodeUtil {
+      rpc JSONRdr(JSONRdrRequest) returns (JSONRdrResponse) {}
 }
 
-////////////
+message JSONRdrRequest {
+      string fname = 1;
+}
 
 message JSONRdrResponse {
       uint64 nodeHnd = 1;
 }
 
-service NodeUtil {
-      rpc JSONRdr(JSONRdrRequest) returns (JSONRdrResponse) {}
-}
 
 ////////////
+service Restconf {
+      rpc NewServer(NewServerRequest) returns (NewServerResponse) {}
+}
 
 message NewServerRequest {
       uint64 deviceHnd = 1;
@@ -200,6 +222,3 @@ message NewServerResponse {
       uint64 serverHnd = 1;
 }
 
-service Restconf {
-      rpc NewServer(NewServerRequest) returns (NewServerResponse) {}
-}

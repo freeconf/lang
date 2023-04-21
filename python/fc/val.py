@@ -17,11 +17,11 @@ def proto_encode(val):
     if not val:
         return None
     if val.format.value == Format.STRING:
-        return fc_x_pb2.Val(str=val.v)
+        return fc_x_pb2.XVal(str=val.v)
     if val.format.value == Format.INT32:
-        return fc_x_pb2.Val(i32=val.v)
+        return fc_x_pb2.XVal(i32=val.v)
     if val.format.value == Format.INT64:
-        return fc_x_pb2.Val(i64=val.v)
+        return fc_x_pb2.XVal(i64=val.v)
     raise Exception(f'unimplemented value encoder {val.format}')
 
 def proto_decode(proto_val):

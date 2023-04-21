@@ -18,8 +18,8 @@ func (s *NodeService) NewBrowser(ctx context.Context, in *pb.NewBrowserRequest) 
 	m := s.d.handles.Get(in.ModuleHnd).(*meta.Module)
 	browserHnd := s.d.handles.Reserve()
 	nodeSrc := func() node.Node {
-		req := pb.NodeSourceRequest{BrowserHnd: browserHnd}
-		resp, err := s.d.xnodes.NodeSource(context.Background(), &req)
+		req := pb.XNodeSourceRequest{BrowserHnd: browserHnd}
+		resp, err := s.d.xnodes.XNodeSource(context.Background(), &req)
 		if err != nil {
 			panic(err)
 		}
@@ -48,11 +48,31 @@ func (s NodeService) Find(ctx context.Context, in *pb.FindRequest) (*pb.FindResp
 	return &resp, nil
 }
 
-func (s *NodeService) UpsertFrom(ctx context.Context, in *pb.UpsertFromRequest) (*pb.UpsertFromResponse, error) {
+func (s *NodeService) SelectionEdit(ctx context.Context, in *pb.SelectionEditRequest) (*pb.SelectionEditResponse, error) {
 	sel := s.d.handles.Get(in.SelHnd).(*node.Selection)
 	n := s.d.handles.Get(in.NodeHnd).(node.Node)
-	err := sel.UpsertFrom(n).LastErr
-	return &pb.UpsertFromResponse{}, err
+	var err error
+	switch in.Op {
+	case pb.SelectionEditOp_UPSERT_INTO:
+		err = sel.UpsertInto(n).LastErr
+	case pb.SelectionEditOp_UPSERT_FROM:
+		err = sel.UpsertFrom(n).LastErr
+	case pb.SelectionEditOp_INSERT_INTO:
+		err = sel.InsertInto(n).LastErr
+	case pb.SelectionEditOp_INSERT_FROM:
+		err = sel.InsertFrom(n).LastErr
+	case pb.SelectionEditOp_UPSERT_INTO_SET_DEFAULTS:
+		err = sel.UpsertIntoSetDefaults(n).LastErr
+	case pb.SelectionEditOp_UPSERT_FROM_SET_DEFAULTS:
+		err = sel.UpsertFromSetDefaults(n).LastErr
+	case pb.SelectionEditOp_UPDATE_INTO:
+		err = sel.UpdateInto(n).LastErr
+	case pb.SelectionEditOp_UPDATE_FROM:
+		err = sel.UpdateFrom(n).LastErr
+	case pb.SelectionEditOp_REPLACE_FROM:
+		err = sel.ReplaceFrom(n)
+	}
+	return &pb.SelectionEditResponse{}, err
 }
 
 func (s *NodeService) NewNode(ctx context.Context, in *pb.NewNodeRequest) (*pb.NewNodeResponse, error) {
@@ -144,13 +164,13 @@ func (n *gnode) Context(s node.Selection) context.Context {
 }
 
 func (n *gnode) Child(r node.ChildRequest) (node.Node, error) {
-	req := pb.ChildRequest{
+	req := pb.XChildRequest{
 		SelHnd:    resolveSelection(n.d, &r.Selection),
 		MetaIdent: r.Meta.Ident(),
 		New:       r.New,
 		Delete:    r.Delete,
 	}
-	resp, err := n.d.xnodes.Child(r.Selection.Context, &req)
+	resp, err := n.d.xnodes.XChild(r.Selection.Context, &req)
 	if err != nil || resp.NodeHnd == 0 {
 		return nil, err
 	}
@@ -162,7 +182,7 @@ func (n *gnode) Next(r node.ListRequest) (next node.Node, key []val.Value, err e
 }
 
 func (n *gnode) Field(r node.FieldRequest, hnd *node.ValueHandle) error {
-	req := pb.FieldRequest{
+	req := pb.XFieldRequest{
 		SelHnd:    resolveSelection(n.d, &r.Selection),
 		MetaIdent: r.Meta.Ident(),
 		Write:     r.Write,
@@ -171,7 +191,7 @@ func (n *gnode) Field(r node.FieldRequest, hnd *node.ValueHandle) error {
 	if r.Write {
 		req.ToWrite = encodeVal(hnd.Val)
 	}
-	resp, err := n.d.xnodes.Field(r.Selection.Context, &req)
+	resp, err := n.d.xnodes.XField(r.Selection.Context, &req)
 	if err != nil {
 		return err
 	}
@@ -202,7 +222,7 @@ func (n *gnode) Action(r node.ActionRequest) (output node.Node, err error) {
 	if !r.Input.IsNil() {
 		req.InputSelHnd = r.Input.Hnd
 	}
-	resp, err := n.d.xnodes.Action(r.Selection.Context, &req)
+	resp, err := n.d.xnodes.XAction(r.Selection.Context, &req)
 	if err != nil || resp.OutputNodeHnd == 0 {
 		return nil, err
 	}
@@ -215,7 +235,7 @@ func (n *gnode) Notify(r node.NotifyRequest) (node.NotifyCloser, error) {
 		MetaIdent: r.Meta.Ident(),
 	}
 	var recvErr error
-	client, err := n.d.xnodes.Notification(r.Selection.Context, &req)
+	client, err := n.d.xnodes.XNotification(r.Selection.Context, &req)
 	if err != nil {
 		return nil, err
 	}

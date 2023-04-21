@@ -68,6 +68,8 @@ def get_def(meta, ident):
     return None
 
 def require_def(meta, ident):
+    if not meta:
+        raise Exception(f'no meta given to find {ident}')
     ddef = get_def(meta, ident)
     if ddef:
         return ddef

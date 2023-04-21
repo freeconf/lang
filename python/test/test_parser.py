@@ -11,7 +11,7 @@ class TestParser(unittest.TestCase):
         
         # load a module as test that driver is working
         p = fc.parser.Parser(d)
-        m = p.load_module('../test/yang', 'testme-1')
+        m = p.load_module('testdata', 'testme-1')
         self.assertEqual('testme-1', m.ident)
         self.assertEqual(2, len(m.definitions))
         self.assertEqual('z', m.definitions[0].ident)
@@ -26,7 +26,7 @@ class TestParser(unittest.TestCase):
         
         # load a module as test that driver is working
         p = fc.parser.Parser(d)
-        m = p.load_module('../test/yang', 'car')
+        m = p.load_module('testdata', 'car')
         self.assertEqual('car', m.ident)
         self.assertEqual(2, len(m.actions))
         start = m.actions['start']

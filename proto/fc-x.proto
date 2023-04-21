@@ -1,19 +1,31 @@
 syntax="proto3";
-
 option go_package = "./pb";
-
 package pb;
 
-message XVoid {}
+/*
+ This is used when Go calls into whatever language it is talking to which we
+ refer to as "X" here. It is predominately around the node API then Go needs 
+ navigate management APIs in the "X" language.
+*/
 
-message ChildRequest {
+service XNode {
+      rpc XRootSelection(XRootSelectionRequest) returns (XRootSelectionResponse) {}
+      rpc XNodeSource(XNodeSourceRequest) returns (XNodeSourceResponse) {}
+      rpc XSelect(XSelectRequest) returns (XSelectResponse) {}
+      rpc XChild(XChildRequest) returns (XChildResponse) {}
+      rpc XField(XFieldRequest) returns (XFieldResponse) {}
+      rpc XAction(XActionRequest) returns (XActionResponse) {}
+      rpc XNotification(XNotificationRequest) returns (stream XNotificationResponse) {}
+}
+
+message XChildRequest {
       uint64 selHnd = 1;
       string metaIdent = 3;
       bool new = 4;
       bool delete = 5;      
 }
 
-message Val {
+message XVal {
       oneof value {
             string str = 1;
             int32 i32 = 2;
@@ -21,47 +33,47 @@ message Val {
       }
 }
 
-message FieldRequest {
+message XFieldRequest {
       uint64 selHnd = 1;
       string metaIdent = 2;
       bool write = 3;
       bool clear = 4;
-      Val toWrite = 5;
+      XVal toWrite = 5;
 }
 
-message FieldResponse {
-      Val fromRead = 1;
+message XFieldResponse {
+      XVal fromRead = 1;
 }
 
-message ChildResponse {
+message XChildResponse {
       uint64 nodeHnd = 1;
 }
 
-message NodeSourceRequest {
+message XNodeSourceRequest {
       uint64 browserHnd = 1;
 }
 
-message NodeSourceResponse {
+message XNodeSourceResponse {
       uint64 nodeHnd = 1;
 }
 
-message RootSelectionRequest {
+message XRootSelectionRequest {
       uint64 browserHnd = 1;
       uint64 selHnd = 2;
 }
 
-message RootSelectionResponse {
+message XRootSelectionResponse {
       uint64 selHnd = 1;
 }
 
-message SelectRequest {
+message XSelectRequest {
       uint64 parentSelHnd = 1;
       uint64 nodeHnd = 3;
       uint64 browserHnd = 4;
       string metaIdent = 5;
 }
 
-message SelectResponse {
+message XSelectResponse {
       uint64 selHnd = 1;      
 }
 
@@ -85,20 +97,13 @@ message XNotificationResponse {
       uint64 nodeHnd = 1;
 }
 
-service XNode {
-      rpc RootSelection(RootSelectionRequest) returns (RootSelectionResponse) {}
-      rpc NodeSource(NodeSourceRequest) returns (NodeSourceResponse) {}
-      rpc Select(SelectRequest) returns (SelectResponse) {}
-      rpc Child(ChildRequest) returns (ChildResponse) {}
-      rpc Field(FieldRequest) returns (FieldResponse) {}
-      rpc Action(XActionRequest) returns (XActionResponse) {}
-      rpc Notification(XNotificationRequest) returns (stream XNotificationResponse) {}
-}
-
 message XReleaseRequest {
       uint64 xHnd = 1;
 }
 
+message XReleaseResponse {      
+}
+
 service XHandles {
-      rpc Release (XReleaseRequest) returns (XVoid) {}
+      rpc Release (XReleaseRequest) returns (XReleaseResponse) {}
 }

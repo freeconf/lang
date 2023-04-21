@@ -1,0 +1,19 @@
+syntax="proto3";
+option go_package = "./pb";
+package pb;
+
+// Each language implements this to drive compatiblity tests from Go
+service TestHarness {
+
+    // Dump a selection to a file
+    rpc DumpBrowser(DumpRequest) returns (DumpResponse) {}
+
+}
+
+// Dump a selection to a file using the node Dump utility implemented in your language.
+// Dump should follow a very specific format.
+message DumpRequest {
+    uint64 selHnd = 1;
+    string outputFile = 4;
+}
+message DumpResponse {}

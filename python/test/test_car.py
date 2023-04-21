@@ -22,7 +22,7 @@ class TestCar(unittest.TestCase):
         drv.load()
 
         p = fc.parser.Parser(drv)
-        schema = p.load_module('../test/yang', 'car')
+        schema = p.load_module('testdata', 'car')
         app = test.car.Car()
         mgmt = test.car.manage(app)
         b = fc.node.Browser(drv, schema, mgmt)

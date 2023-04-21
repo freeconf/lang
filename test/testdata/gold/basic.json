@@ -1,0 +1,7 @@
+BeginEdit, new=false, src=m
+x, !found
+x, new, found
+ BeginEdit, new=true, src=m/x
+ ->l=int32(99)
+ EndEdit, new=true, src=m/x
+EndEdit, new=false, src=m

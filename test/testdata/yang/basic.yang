@@ -1,0 +1,7 @@
+module m {
+    container x {
+        leaf l {
+            type int32;
+        }
+    }
+}

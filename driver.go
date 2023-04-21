@@ -16,18 +16,18 @@ type Driver struct {
 	listener net.Listener
 	gserver  *grpc.Server
 	pb.UnimplementedNodeServer
-	xnodes  pb.XNodeClient
-	handles *HandlePool
+	xnodes      pb.XNodeClient
+	handles     *HandlePool
+	xclientAddr string
 }
 
 func NewDriver(gServerAddr string, xClientAddr string) (*Driver, error) {
 	d := &Driver{
-		handles: newHandlePool(),
+		handles:     newHandlePool(),
+		xclientAddr: xClientAddr,
 	}
-	if xClientAddr != "" {
-		if err := d.createXClient(xClientAddr); err != nil {
-			return nil, err
-		}
+	if err := d.createXClient(xClientAddr); err != nil {
+		return nil, err
 	}
 	if err := d.createGServer(gServerAddr); err != nil {
 		return nil, err
@@ -83,4 +83,8 @@ func (s *Driver) Serve() error {
 		return fmt.Errorf("grpc server error. %w", err)
 	}
 	return nil
+}
+
+func (s *Driver) Stop() {
+	s.gserver.Stop()
 }

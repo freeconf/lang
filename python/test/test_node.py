@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import io
 import unittest 
 import fc.driver
 import fc.parser
@@ -7,17 +8,17 @@ import fc.nodeutil
 
 class Dump(fc.nodeutil.Basic):
 
-    def __init__(self, store):
+    def __init__(self, out, indent=''):
         super(Dump, self).__init__()
-        self.store = store
+        self.out = out
+        self.indent = indent
 
     def child(self, req):
-        new_store = {}
-        self.store[req.meta.ident] = new_store
-        return Dump(new_store)
+        self.out.write(f'{self.indent}{req.meta.ident}:\n')
+        return Dump(self.out, self.indent + '  ')
 
     def field(self, req, write_val):
-        self.store[req.meta.ident] = write_val.v
+        self.out.write(f'{self.indent}{req.meta.ident}:{write_val.v}\n')
         return None
 
 
@@ -29,15 +30,21 @@ class TestNode(unittest.TestCase):
         
         # load a module as test that driver is working
         p = fc.parser.Parser(d)
-        m = p.load_module('../test/yang', 'testme-1')
+        m = p.load_module('./testdata', 'testme-1')
         self.assertEqual(m.ident, 'testme-1')
 
-        dumper = Dump({})
+        actual = io.StringIO()
+        actual.write('\n')
+        dumper = Dump(actual)
         b = fc.node.Browser(d, m, dumper)
-        rdr = fc.nodeutil.json_rdr(d, "../test/testdata/testme-sample-1.json")
+        rdr = fc.nodeutil.json_rdr(d, "testdata/testme-sample-1.json")
         b.root().upsert_from(rdr)
-        expected = {'x':'hello','z': {'q': 99}}
-        self.assertEqual(expected, dumper.store)
+        expected = """
+z:
+  q:99
+x:hello
+"""
+        self.assertMultiLineEqual(expected, actual.getvalue())
         d.unload()
 
 if __name__ == '__main__':

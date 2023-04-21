@@ -1,5 +1,5 @@
-import pb.fc_g_pb2
-import pb.fc_g_pb2_grpc
+import pb.fc_pb2
+import pb.fc_pb2_grpc
 import fc.meta_decoder
 import fc.handles
 
@@ -9,7 +9,7 @@ class Parser():
         self.driver = driver
 
     def load_module(self, dir, name):
-        req = pb.fc_g_pb2.LoadModuleRequest(dir=dir, name=name)
+        req = pb.fc_pb2.LoadModuleRequest(dir=dir, name=name)
         resp = self.driver.g_parser.LoadModule(req)
         m = fc.meta_decoder.Decoder().decode(resp.module)
         m.hnd = fc.handles.Handle(self.driver, resp.moduleHnd, m)
@@ -18,9 +18,10 @@ class Parser():
     @classmethod
     def resolve_module(cls, driver, module_hnd_id):
         try:
-            return fc.handles.Handle.lookup(driver, module_hnd_id)
+            return fc.handles.Handle.require(driver, module_hnd_id)
         except KeyError:
-            req = pb.fc_g_pb2.GetModuleRequest(moduleHnd=module_hnd_id)
+            print(f'resolving module {module_hnd_id}')
+            req = pb.fc_pb2.GetModuleRequest(moduleHnd=module_hnd_id)
             resp = driver.g_nodes.GetModule(req)
             m = fc.meta_decoder.Decoder().decode(resp.module)
             m.hnd = fc.handles.Handle(driver, module_hnd_id, m)

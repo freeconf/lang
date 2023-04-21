@@ -1,0 +1,46 @@
+/* 
+  Interface definition for your service in YANG format described in IETF RFC 7950. 
+
+  Here we define the management for our car application
+ */
+module car {
+    prefix "car";
+    namespace "freeconf.org/examples/basics/car";
+    description "Vehicle of sorts";
+    revision 0000-00-00;
+
+    leaf speed {
+        description "number of millisecs it takes to travel one mile";
+        type int32;
+        default 1000;
+        units ms;
+    }
+
+    leaf miles {
+        type int64;
+        config false;
+    }
+
+    rpc start {
+        description "start the car accumulating miles";
+    }
+
+    rpc stop {
+        description "stop the car from accumulating miles";
+    }
+
+    notification update {
+        description "Important state information about your car";
+        /*
+		leaf event {
+			type enumeration {
+				enum carStarted {
+					value 1;
+				}
+				enum carStopped;
+				enum flatTire;				
+			}
+		}
+        */
+    }
+}

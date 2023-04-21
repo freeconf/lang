@@ -45,8 +45,8 @@ func TestDriverClient(t *testing.T) {
 	defer c.Close()
 	xc := pb.NewXNodeClient(c)
 	ctx := context.Background()
-	req := &pb.ChildRequest{}
-	resp, err := xc.Child(ctx, req)
+	req := &pb.XChildRequest{}
+	resp, err := xc.XChild(ctx, req)
 	fc.AssertEqual(t, nil, err)
 	fc.AssertEqual(t, uint64(1000), resp.NodeHnd)
 }
@@ -55,8 +55,8 @@ type dummyXNode struct {
 	pb.UnimplementedXNodeServer
 }
 
-func (*dummyXNode) Child(context.Context, *pb.ChildRequest) (*pb.ChildResponse, error) {
-	return &pb.ChildResponse{NodeHnd: 1000}, nil
+func (*dummyXNode) XChild(context.Context, *pb.XChildRequest) (*pb.XChildResponse, error) {
+	return &pb.XChildResponse{NodeHnd: 1000}, nil
 }
 
 func createGrpcClient(t *testing.T, addr string) *grpc.ClientConn {

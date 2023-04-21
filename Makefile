@@ -2,7 +2,7 @@ export YANGPATH = $(abspath test/yang)
 export PATH := $(PATH):./bin
 export PYTHONPATH := $(abspath python):$(abspath python)/pb
 
-all : generate bin proto test test-py
+all : generate proto bin test test-py
 
 generate:
 	go run codegen/main.go \
@@ -24,10 +24,9 @@ PY_TESTS = \
 	test_car.py
 
 test-py:
-	cd python; \
-		. venv/bin/activate && \
-		$(foreach T,$(PY_TESTS),echo $(T) && python test/$(T) || exit;)
-
+	cd python/test; \
+		. ../venv/bin/activate && \
+		$(foreach T,$(PY_TESTS),echo $(T) && python $(T) || exit;)
 
 .PHONY: bin
 bin : bin/fc-lang bin/fc-lang-dbg
@@ -38,7 +37,6 @@ bin/fc-lang-dbg : BUILD_OPTS=-gcflags="all=-N -l"
 bin/fc-lang-dbg bin/fc-lang :
 	test -d $(dir $@) || mkdir -p $(dir $@)
 	go build $(BUILD_OPTS) -o $@ cmd/fc-lang/main.go
-
 
 proto: proto-go proto-py
 
