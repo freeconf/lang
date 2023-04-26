@@ -26,8 +26,12 @@ func NewDriver(gServerAddr string, xClientAddr string) (*Driver, error) {
 		handles:     newHandlePool(),
 		xclientAddr: xClientAddr,
 	}
-	if err := d.createXClient(xClientAddr); err != nil {
-		return nil, err
+	// "" only useful for testing
+	if xClientAddr != "" {
+
+		if err := d.createXClient(xClientAddr); err != nil {
+			return nil, err
+		}
 	}
 	if err := d.createGServer(gServerAddr); err != nil {
 		return nil, err

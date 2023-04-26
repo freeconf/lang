@@ -1,0 +1,141 @@
+package lang
+
+import (
+	"fmt"
+
+	"github.com/freeconf/lang/pb"
+	"github.com/freeconf/yang/val"
+)
+
+func encodeVal(v val.Value) *pb.XVal {
+	if v == nil {
+		return nil
+	}
+    f := pb.Format(v.Format())
+	switch v.Format() {
+{{- range .Meta.ValEnums }}
+  {{- if .IsList }}
+	case val.{{.GoFmtId }}:
+        xVals := v.Value().({{.GoType}})
+        vals := make([]*pb.XValUnion, len(xVals))
+        for i, xVal := range xVals {
+    {{- if .GoToProtoNonListConversionRequired }}
+            x := newPb{{.ProtoType}}(xVal)
+    {{- else }}
+            x := {{"xVal" | .GoToProtoCast }}
+    {{- end }}
+            vals[i] = &pb.XValUnion{Value: &pb.XValUnion_{{.ProtoType}}Val{ {{.ProtoType}}Val: x} }
+        }
+		return &pb.XVal{Format:f, ListValue:vals}
+  {{- else }}
+	case val.{{.GoFmtId }}:
+        xVal := v.Value().({{.GoType}})
+    {{- if .GoToProtoNonListConversionRequired }}
+        x := newPb{{.ProtoType}}(xVal)
+    {{- else }}
+        x := {{"xVal" | .GoToProtoCast}}
+    {{- end }}
+		return &pb.XVal{Format:f, Value:&pb.XValUnion{Value: &pb.XValUnion_{{.ProtoType }}Val{ {{.ProtoType}}Val: x} } }
+  {{- end }}
+{{- end }}
+    }
+	panic(fmt.Sprintf("not implemented type %T", v))
+}
+
+func decodeVal(v *pb.XVal) val.Value {
+	if v == nil {
+		return nil
+	}
+    f := val.Format(v.Format)
+    switch f {
+{{- range .Meta.ValEnums }}
+  {{- if not .IsList }}
+    case val.{{.GoFmtId }}:
+        pval := v.Value.Value.(*pb.XValUnion_{{.ProtoType}}Val).{{.ProtoType}}Val
+    {{- if .ProtoToGoNonListConversionRequired }}
+        return new{{.ValType}}(pval)
+    {{- else }}
+        return val.{{.ValType}}({{"pval" | .ProtoToGoCast}})
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- range .Meta.ValEnums }}
+  {{- if .IsList }}
+    case val.{{.GoFmtId }}:
+        xVals := make([]{{.GoNonListType}}, len(v.ListValue))
+        for i, next := range v.ListValue {      
+            pval := next.Value.(*pb.XValUnion_{{.ProtoType}}Val).{{.ProtoType}}Val
+    {{- if .ProtoToGoNonListConversionRequired }}
+            xVals[i] = new{{.ValNonListType}}(pval)
+    {{- else }}
+            xVals[i] = {{"pval" | .ProtoToGoCast}}
+    {{- end }}
+                }
+    {{- if .ProtoToGoConversionRequired }}
+        return new{{.ValType}}(xVals)
+    {{- else }}
+        return val.{{.ValType}}(xVals)
+    {{- end }}
+  {{- end }}
+{{- end }}
+        default:
+            panic(fmt.Sprintf("proto decoder not implemented type %s", v))
+    }
+}
+
+
+func newEmpty(_ any) val.Value {
+    return val.NotEmpty
+}
+
+func newEmptyList(_ any) val.Value {
+    return val.NotEmpty
+}
+
+func newIdentRef(ref *pb.IdentRef) val.IdentRef {
+    return val.IdentRef{
+        Base: ref.Base,
+        Label: ref.Label,
+    }
+}
+
+func newEnum(v *pb.EnumVal) val.Enum {
+    return val.Enum{
+        Id: int(v.Id),
+        Label: v.Label,
+    }
+}
+
+func newInt8(v int32) val.Int8 {    
+    return val.Int8(int8(v))
+}
+
+func newInt16(v int32) val.Int16 {
+    return val.Int16(int16(v))
+}
+
+func newUInt8(v uint32) val.UInt8 {
+    return val.UInt8(uint8(v))
+}
+
+func newUInt16(v uint32) val.UInt16 {
+    return val.UInt16(uint16(v))
+}
+
+func newPbEnum(e val.Enum) *pb.EnumVal {
+    return &pb.EnumVal{
+        Id: int32(e.Id),
+        Label: e.Label,
+    }
+}
+
+func newPbIdentRef(ref val.IdentRef) *pb.IdentRef {
+    return &pb.IdentRef{
+        Base: ref.Base,
+        Label: ref.Label,
+    }
+}
+
+func newPbEmpty(v val.Value) string {
+    return v.String()
+}

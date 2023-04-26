@@ -5,12 +5,6 @@ class Status(Enum):
     DEPRECATED = 1
     OBSOLETE = 2
 
-{{ $formats := index .Meta.Enums "Format" }}
-class Format(Enum):
-{{- range  $formats.Entries }}
-    {{.Ident}} = {{.Value}}
-{{- end }}
-
 {{ range .Meta.Definitions}}
 {{ if .IsMetaDef }}
 class {{ .Name }}():

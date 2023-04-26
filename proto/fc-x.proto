@@ -1,36 +1,115 @@
 syntax="proto3";
 option go_package = "./pb";
 package pb;
+import "meta.proto";
 
 /*
  This is used when Go calls into whatever language it is talking to which we
- refer to as "X" here. It is predominately around the node API then Go needs 
+ refer to as "X" here. It is predominately around the node API then Go needs
  navigate management APIs in the "X" language.
 */
 
 service XNode {
       rpc XRootSelection(XRootSelectionRequest) returns (XRootSelectionResponse) {}
       rpc XNodeSource(XNodeSourceRequest) returns (XNodeSourceResponse) {}
+
       rpc XSelect(XSelectRequest) returns (XSelectResponse) {}
       rpc XChild(XChildRequest) returns (XChildResponse) {}
       rpc XField(XFieldRequest) returns (XFieldResponse) {}
       rpc XAction(XActionRequest) returns (XActionResponse) {}
       rpc XNotification(XNotificationRequest) returns (stream XNotificationResponse) {}
+
+      rpc XNext(XNextRequest) returns (XNextResponse) {}
+      rpc XChoose(XChooseRequest) returns (XChooseResponse) {}
+      rpc XBeginEdit(XBeginEditRequest) returns (XBeginEditResponse) {}
+      rpc XEndEdit(XEndEditRequest) returns (XEndEditResponse) {}
 }
+
+message XNextRequest {
+      uint64 selHnd = 1;
+      string metaIdent = 3;
+      bool new = 4;
+      bool delete = 5;
+      int64 row = 6;
+      bool first = 7;
+      repeated XVal key = 8;
+}
+
+message XNextResponse {
+      uint64 nodeHnd = 1;
+      repeated XVal key = 2;
+}
+
+message XChooseRequest {
+}
+
+message XChooseResponse {
+}
+
+message XBeginEditRequest {
+      uint64 selHnd = 1;
+      bool new = 2;
+      bool delete = 3;
+      bool editRoot = 4;
+}
+
+message XBeginEditResponse {}
+
+message XEndEditRequest {
+      uint64 selHnd = 1;
+      bool new = 2;
+      bool delete = 3;
+      bool editRoot = 4;
+}
+
+message XEndEditResponse {}
 
 message XChildRequest {
       uint64 selHnd = 1;
       string metaIdent = 3;
       bool new = 4;
-      bool delete = 5;      
+      bool delete = 5;
 }
 
-message XVal {
+message EnumVal {
+      int32 id = 1;
+      string label = 2;
+}
+
+message IdentRef {
+      string base = 1;
+      string label = 2;
+}
+
+message XValUnion {
       oneof value {
-            string str = 1;
-            int32 i32 = 2;
-            int64 i64 = 3;
+            bytes binary_val = 1;
+            bytes bits_val = 2;
+            bool bool_val = 3;
+            double decimal64_val = 4;
+            string empty_val = 5;
+            EnumVal enum_val = 6;
+            IdentRef ident_ref_val = 7;
+            string instance_ref_val = 8;
+            int32 int8_val = 9;
+            int32 int16_val = 10;
+            int32 int32_val = 11;
+            int64 int64_val = 12;
+            string leaf_ref_val = 13;
+            string string_val = 14;
+            uint32 uint8_val = 15;
+            uint32 uint16_val = 16;
+            uint32 uint32_val = 17;
+            uint64 uint64_val = 18;
+            bytes union_val = 19;
+            bytes any_val = 20;
+            // cannot have repeated in 'oneof'
       }
+}
+message XVal {
+      Format format = 1;
+      XValUnion value = 2;
+      repeated XValUnion list_value = 3;
 }
 
 message XFieldRequest {
@@ -74,7 +153,7 @@ message XSelectRequest {
 }
 
 message XSelectResponse {
-      uint64 selHnd = 1;      
+      uint64 selHnd = 1;
 }
 
 message XActionRequest {
@@ -101,7 +180,7 @@ message XReleaseRequest {
       uint64 xHnd = 1;
 }
 
-message XReleaseResponse {      
+message XReleaseResponse {
 }
 
 service XHandles {

@@ -4,23 +4,7 @@ import unittest
 import fc.driver
 import fc.parser
 import fc.node
-import fc.nodeutil
-
-class Dump(fc.nodeutil.Basic):
-
-    def __init__(self, out, indent=''):
-        super(Dump, self).__init__()
-        self.out = out
-        self.indent = indent
-
-    def child(self, req):
-        self.out.write(f'{self.indent}{req.meta.ident}:\n')
-        return Dump(self.out, self.indent + '  ')
-
-    def field(self, req, write_val):
-        self.out.write(f'{self.indent}{req.meta.ident}:{write_val.v}\n')
-        return None
-
+from fc.nodeutil import reflect, dump, json
 
 class TestNode(unittest.TestCase):
     
@@ -34,15 +18,18 @@ class TestNode(unittest.TestCase):
         self.assertEqual(m.ident, 'testme-1')
 
         actual = io.StringIO()
-        actual.write('\n')
-        dumper = Dump(actual)
+        actual.write('\n')        
+        dumper = dump.Dump(reflect.Reflect({}), actual)
         b = fc.node.Browser(d, m, dumper)
-        rdr = fc.nodeutil.json_rdr(d, "testdata/testme-sample-1.json")
+        rdr = json.rdr(d, "testdata/testme-sample-1.json")
         b.root().upsert_from(rdr)
         expected = """
 z:
-  q:99
-x:hello
+found=false
+z:
+found=true
+  ->q=(int32.99)
+->x=(string.hello)
 """
         self.assertMultiLineEqual(expected, actual.getvalue())
         d.unload()

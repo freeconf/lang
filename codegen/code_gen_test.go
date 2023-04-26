@@ -27,3 +27,7 @@ func TestCodeGen(t *testing.T) {
 	fc.AssertEqual(t, nil, err)
 	fc.Gold(t, *update, buf.Bytes(), "./testdata/gold/testme.txt")
 }
+
+func TestFuncs(t *testing.T) {
+	fc.AssertEqual(t, "SomeCase", camel("SOME_CASE"))
+}

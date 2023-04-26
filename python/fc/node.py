@@ -10,6 +10,7 @@ import fc.meta
 import fc.val
 import fc.parser
 import traceback
+import logging
 
 class Selection():
 
@@ -26,12 +27,10 @@ class Selection():
         try:
             return fc.handles.Handle.require(driver, hnd_id)
         except KeyError:
-            print(f'resolving selection {hnd_id}')
             req = pb.fc_pb2.GetSelectionRequest(selHnd=hnd_id)
             resp = driver.g_nodes.GetSelection(req)
             node = resolve_node(driver, resp.nodeHnd)
             if resp.parentHnd:
-                print(f'Selection: resolving parentHnd {resp.parentHnd}')
                 parent = Selection.resolve(driver, resp.parentHnd)
                 if isinstance(parent.path.meta, fc.meta.Notification):
                     meta = parent.path.meta
@@ -41,7 +40,6 @@ class Selection():
                     path = fc.meta.Path(parent.path, meta)
                 sel = Selection(driver, hnd_id, node, path, parent, parent.browser) 
             else:
-                print(f'Selection: resolving browser {resp.browserHnd}')
                 browser = fc.node.Browser.resolve(driver, resp.browserHnd)
                 path = fc.meta.Path(None, browser.module)
                 sel = Selection(driver, hnd_id, node, path, None, browser)
@@ -178,11 +176,9 @@ class Browser():
         try:
             return fc.handles.Handle.require(driver, hnd_id)
         except KeyError:
-            print(f'resolving browser {hnd_id}')
             req = pb.fc_pb2.GetBrowserRequest(browserHnd=hnd_id)
             resp = driver.g_nodes.GetBrowser(req)
             module = fc.parser.Parser.resolve_module(driver, resp.moduleHnd)
-            print(f'resolved module {module.ident}')
             return Browser(driver, module, hnd_id=hnd_id)
 
 
@@ -201,6 +197,16 @@ class ActionRequest():
         self.meta = meta
         self.input = input        
 
+class ListRequest():
+
+    def __init__(self, sel, meta, new, delete, row, first, key):
+        self.sel = sel
+        self.meta = meta
+        self.new = new
+        self.delete = delete
+        self.row = row
+        self.first = first
+        self.key = key
 
 class FieldRequest():
 
@@ -220,11 +226,41 @@ class NotificationRequest():
     def send(self, node):
         self.queue.put(node)
 
+logging.basicConfig(filename='std.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')
+
 class XNodeServicer(pb.fc_x_pb2_grpc.XNodeServicer):
     """Bridge between python node navigation and go node navigation"""
 
     def __init__(self, driver):
         self.driver = driver
+
+    def XNext(self, g_req, context):
+        try:
+            sel = Selection.resolve(self.driver, g_req.selHnd)
+            meta = sel.path.meta
+            key_in = None
+            if g_req.key != None:
+                key_in = []
+                for g_key_val in g_req.key:
+                    key_in.append(fc.val.proto_decode(g_key_val))
+
+
+            req = ListRequest(sel, meta, g_req.new, g_req.delete, g_req.row, g_req.first, key_in)
+            logging.warning("GOOOOOOOOOAL!\n")
+            child, key_out = sel.node.next(req)
+            if child:
+                child = resolve_node(self.driver, child)
+                g_key_out = None
+                if key_out != None:
+                    for v in key_out:
+                        g_key_out.append(fc.val.proto_encode(v))
+                return pb.fc_x_pb2.XNextResponse(nodeHnd=child.hnd.id, key=g_key_out)
+            else:
+                return pb.fc_x_pb2.XNextResponse()
+        except Exception as error:
+            print(traceback.format_exc())
+            raise error
+        
 
     def XChild(self, g_req, context):
         try:

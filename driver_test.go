@@ -29,9 +29,9 @@ func TestDriverServer(t *testing.T) {
 	client := pb.NewParserClient(c)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
-	resp, err := client.LoadModule(ctx, &pb.LoadModuleRequest{Dir: "./test/yang", Name: "testme-1"})
+	resp, err := client.LoadModule(ctx, &pb.LoadModuleRequest{Dir: "./test/testdata/yang", Name: "basic"})
 	fc.AssertEqual(t, nil, err)
-	fc.AssertEqual(t, "testme-1", resp.Module.Ident)
+	fc.AssertEqual(t, "basic", resp.Module.Ident)
 }
 
 func TestDriverClient(t *testing.T) {

@@ -29,6 +29,10 @@ func whisperingSnake(s string) string {
 	return strings.ToLower(strcase.ToSnake(s))
 }
 
+func camel(s string) string {
+	return title(strcase.ToLowerCamel(strings.ToLower(s)))
+}
+
 func GenerateSource(vars Vars, tmpl string, out io.Writer) error {
 	tmplFile, err := os.Open(tmpl)
 	if err != nil {
@@ -42,6 +46,7 @@ func GenerateSource(vars Vars, tmpl string, out io.Writer) error {
 		"lc":    strings.ToLower,
 		"uc":    strings.ToUpper,
 		"snake": strcase.ToSnake,
+		"camel": camel,
 	}
 	t, err := template.New("code_gen").Funcs(funcs).Parse(string(tmplSrc))
 	if err != nil {

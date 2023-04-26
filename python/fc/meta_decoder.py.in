@@ -1,5 +1,6 @@
 import fc.meta
 import pb.meta_pb2
+import fc.val
 
 class Decoder():
     """Convert the protobuf Module to a meta Module """
@@ -35,7 +36,7 @@ class Decoder():
         return False
 
     def decode_Format(self, parent, encoded):
-        return fc.meta.Format(encoded)
+        return fc.val.Format(encoded)
 
     def decode_DataDefList(self, parent, encoded_list):
         to = []

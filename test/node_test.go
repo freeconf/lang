@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/freeconf/yang/fc"
@@ -37,23 +38,20 @@ func TestNode(t *testing.T) {
 	defer x.stop()
 	for _, test := range tests {
 		m := parser.RequireModule(ypath, test.Yang)
-		n := readSeed(test.Seed)
+		n := loadSeedData(test.Seed)
 		b := node.NewBrowser(m, n)
+
 		dumpFile, err := ioutil.TempFile("", "node-test")
 		fc.RequireEqual(t, nil, err)
 		fc.RequireEqual(t, nil, h.dump(b.Root(), dumpFile.Name()))
 		actual, err := ioutil.ReadFile(dumpFile.Name())
 		fc.RequireEqual(t, nil, err)
 		fc.Gold(t, *update, actual, test.Expect)
-		//os.Remove(dumpFile.Name())
+		os.Remove(dumpFile.Name())
 	}
 }
 
-type nodeTester interface {
-	dump(sel node.Selection, fname string) error
-}
-
-func readSeed(fname string) node.Node {
+func loadSeedData(fname string) node.Node {
 	raw, err := ioutil.ReadFile(fname)
 	if err != nil {
 		panic(err)
@@ -63,10 +61,4 @@ func readSeed(fname string) node.Node {
 		panic(err)
 	}
 	return nodeutil.ReflectChild(data)
-}
-
-func harnesses() []x {
-	return []x{
-		&python{},
-	}
 }

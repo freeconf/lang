@@ -9,7 +9,7 @@ import (
 )
 
 func TestMetaEncoder(t *testing.T) {
-	ypath := source.Dir("./test/yang")
+	ypath := source.Dir("./test/testdata/yang")
 	m := parser.RequireModule(ypath, "testme")
 	x := new(MetaEncoder).Encode(m)
 	fc.AssertEqual(t, "testme", x.Ident)

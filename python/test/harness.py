@@ -3,8 +3,7 @@ import sys
 import fc.node
 import signal
 import fc.driver
-import fc.dump
-import fc.nodeutil
+from fc.nodeutil import dump, reflect
 import pb.fc_test_pb2
 import pb.fc_test_pb2_grpc
 
@@ -22,11 +21,6 @@ if len(sys.argv) < 3:
     print(usage)
     exit(1)
 
-# NOTE To self
-# Create a testharness.proto file that python implements server side and Go unit tests
-# call to run orchestrate a test operation
-
-
 class TestHarnessServicer(pb.fc_test_pb2_grpc.TestHarnessServicer):
 
     def __init__(self, driver):
@@ -35,8 +29,8 @@ class TestHarnessServicer(pb.fc_test_pb2_grpc.TestHarnessServicer):
     def DumpBrowser(self, req, context):
         sel = fc.node.Selection.resolve(self.driver, req.selHnd)
         out = open(req.outputFile, "w")
-        dump = fc.dump.Dump(fc.nodeutil.Reflect({}), out)
-        sel.upsert_into(dump)
+        n = dump.Dump(reflect.Reflect({}), out)
+        sel.upsert_into(n)
         out.close()
         return pb.fc_test_pb2.DumpResponse()
 

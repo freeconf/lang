@@ -1,7 +1,13 @@
-module m {
+module basic {
     container x {
         leaf l {
             type int32;
+        }
+    }
+    list z {
+        key p;
+        leaf p {
+            type string;
         }
     }
 }

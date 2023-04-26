@@ -34,7 +34,7 @@ class TestCar(unittest.TestCase):
             update_called = True
         update_sel = root.find('update')
         unsubscribe = update_sel.notification(update_listener)
-        root.upsert_from(fc.nodeutil.Reflect({'speed': 10}))
+        root.upsert_from(fc.nodeutil.reflect.Reflect({'speed': 10}))
         root.find('start').action()
         print("waiting....")
         time.sleep(0.1)

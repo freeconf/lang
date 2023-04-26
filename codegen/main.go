@@ -41,7 +41,10 @@ func main() {
 			// Go templates can be sloppy with formatting and
 			// we can clean it up here.
 			formatter := exec.Command("gofmt", "-w", destFname)
+			formatter.Stdout = os.Stdout
+			formatter.Stderr = os.Stderr
 			err = formatter.Run()
+
 			chkerr(err)
 		}
 	}
