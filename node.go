@@ -105,8 +105,12 @@ func resolveSelection(d *Driver, sel *node.Selection) uint64 {
 func (s *NodeService) GetSelection(ctx context.Context, in *pb.GetSelectionRequest) (*pb.GetSelectionResponse, error) {
 	sel := s.d.handles.Require(in.SelHnd).(*node.Selection)
 	resp := pb.GetSelectionResponse{
-		MetaIdent: sel.Path.Meta.Ident(),
-		NodeHnd:   s.d.handles.Hnd(sel.Node),
+		NodeHnd: s.d.handles.Hnd(sel.Node),
+	}
+	if sel.Path.Key != nil {
+		resp.Path = &pb.PathSegment{Key: encodeVals(sel.Path.Key)}
+	} else {
+		resp.Path = &pb.PathSegment{MetaIdent: sel.Path.Meta.Ident()}
 	}
 	if sel.Parent == nil {
 		resp.BrowserHnd = s.d.handles.Hnd(sel.Browser)

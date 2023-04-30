@@ -1,0 +1,47 @@
+from enum import IntEnum
+from pb import val_pb2
+from pprint import pprint
+
+class Format(IntEnum):
+{{- range .ValEnums }}
+    {{.Ident}} = {{.Value}}
+{{- end }}
+
+class Val():
+
+    def __init__(self, format, v):
+        self.format = format
+        self.v = v
+
+def proto_encode(val):
+    if val == None:
+        return None
+{{- range .ValEnums }}
+    if val.format == Format.{{.Ident}}:
+  {{- if .IsList }}
+        vals = []
+        for x_val in val.v:
+            vals.append(val_pb2.ValUnion({{.PyNonListIdent}}_val=x_val))
+        return val_pb2.Val(format=val_pb2.{{.Ident}}, list_value=vals)
+  {{- else }}
+        return val_pb2.Val(format=val_pb2.{{.Ident}}, value=val_pb2.ValUnion({{.PyNonListIdent}}_val=val.v))
+  {{- end }}
+{{- end }}
+    raise Exception(f'unimplemented value encoder {val.format}')
+
+
+def proto_decode(proto_val):
+    if proto_val == None:
+        return None
+{{- range .ValEnums }}
+    if proto_val.format == val_pb2.{{.Ident}}:
+  {{- if .IsList }}
+        vals = []
+        for p_val in proto_val.list_value:
+            vals.append(p_val.{{.PyNonListIdent}}_val)
+        return Val(Format.{{.Ident}}, vals)
+  {{- else }}
+        return Val(Format.{{.Ident}}, proto_val.value.{{.PyNonListIdent}}_val)
+  {{- end }}
+{{- end }}
+    raise Exception(f'unimplemented list value decoder {pprint(proto_val)}')

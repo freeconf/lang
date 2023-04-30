@@ -7,11 +7,11 @@ import (
 )
 
 func TestParseMetaProto(t *testing.T) {
-	defs, err := ParseMetaDefs("..")
+	defs, err := ParseProtos("..")
 	fc.AssertEqual(t, nil, err)
-	fc.AssertEqual(t, "Module", defs.Definitions[0].Name)
-	fc.AssertEqual(t, "ident", defs.Definitions[0].Fields[0].Name)
-	fc.AssertEqual(t, "string", defs.Definitions[0].Fields[0].Type)
-	fc.AssertEqual(t, "container", defs.DataDefs[0].Name)
-	fc.AssertEqual(t, "BINARY", defs.Enums["Format"].Entries[0].Ident)
+	fc.AssertEqual(t, "Module", defs.AllMessages[0].Name)
+	fc.AssertEqual(t, "ident", defs.AllMessages[0].Fields[0].Name)
+	fc.AssertEqual(t, "string", defs.AllMessages[0].Fields[0].Type)
+	fc.AssertEqual(t, "container", defs.MessagesByName["DataDef"].OneOfs["def_oneof"][0].Name)
+	fc.AssertEqual(t, "BINARY", defs.ValEnums[0].Ident)
 }

@@ -46,7 +46,7 @@ func (n *xnode) Next(r node.ListRequest) (node.Node, []val.Value, error) {
 		Delete:    r.Delete,
 	}
 	if len(r.Key) > 0 {
-		req.Key = make([]*pb.XVal, len(r.Key))
+		req.Key = make([]*pb.Val, len(r.Key))
 		for i, v := range r.Key {
 			req.Key[i] = encodeVal(v)
 		}
@@ -57,10 +57,7 @@ func (n *xnode) Next(r node.ListRequest) (node.Node, []val.Value, error) {
 	}
 	var key []val.Value
 	if len(resp.Key) > 0 {
-		key = make([]val.Value, len(resp.Key))
-		for i, xval := range resp.Key {
-			key[i] = decodeVal(xval)
-		}
+		key = decodeVals(resp.Key)
 	}
 	return n.d.handles.Get(resp.NodeHnd).(node.Node), key, nil
 }

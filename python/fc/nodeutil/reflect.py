@@ -1,7 +1,3 @@
-# import pb.fc_pb2_grpc
-# import pb.fc_x_pb2
-# import pb.fc_x_pb2_grpc
-# import fc.node
 import fc.meta
 import fc.val
 
@@ -28,7 +24,7 @@ class Reflect():
                 child = []
             else:
                 child = {}
-            Reflect.write_field(self.obj, r.meta, child)            
+            Reflect.write_field(self.obj, r.meta, child)
         else:
             child = Reflect.read_field(self.obj, r.meta)
 
@@ -61,13 +57,12 @@ class Reflect():
             setattr(obj, meta.ident, v)
 
     def field(self, r, write_val):
-        read_val = None
         if r.write:
             Reflect.write_field(self.obj, r.meta, write_val.v)
         else:
             v = Reflect.read_field(self.obj, r.meta)
             if v != None:
-                # TODO: coerse value
+                # TODO: coerse value...or let Go coerse it?
                 return fc.val.Val(r.meta.type.format, v)
 
         return None
@@ -95,98 +90,88 @@ class ReflectList():
         self.object_hook = object_hook
         self.is_dict = isinstance(objs, dict)
         self.is_list = isinstance(objs, list)
-        
-    def get_single_key(self, key):
-        l = len(key) 
-        if l == 0:
-            return None
-        if l == 1:
-            return key[0].v
-        raise Exception(f'do not know how to use compound keys to add to list')
+        if (not self.is_list) and (not self.is_dict):
+            raise Exception(f'do not know how to manage list items in {type(self.objs)}')
 
-    def require_single_key(self, key):
-        l = len(key) 
-        if l == 0:
-            return None
-        if l == 1:
-            return key[0].v
-        raise Exception(f'do not know how to use compound keys to add to list')
     
     def new_object(self, r):
         if self.object_hook:
             return self.object_hook(r)
         return {}
 
-    def meta_key_to_item_key(self, key):
-        if self.is_key_empty(key):
+    @classmethod
+    def vals_to_key(cls, vals):
+        if is_empty_list(vals):
             return None
-        if len(key) == 1:
-            return key[0].v
+        if len(vals) == 1:
+            return vals[0].v
         v = []
-        for k in key:
+        for k in vals:
             v.append(k.v)
         return tuple(v)
     
-    def read_fields_by_metas(self, obj, metas):
+    @classmethod
+    def read_fields(cls, obj, metas):
         if not is_empty_list(meta):
             vals = []
             for meta in metas:
-                vals.append(self.read_field(obj, meta))
+                vals.append(Reflect.read_field(obj, meta))
         return vals
 
-    def item_vals_to_meta_vals(self, vals, meta):
-        meta_vals = []
-        for v in vals:
-            meta_vals.append(fc.val.Val(meta.type.format, v))
-        return meta_vals
+    @classmethod
+    def write_fields(cls, obj, metas, vals):
+        for i, val in enumerate(vals):
+            Reflect.write_field(obj, metas[i], val)
 
-    
     def next(self, r):
         found = None
         key = None
-        if (not self.is_list) and (not self.is_dict):
-            raise Exception(f'do not know how to manage list items in {type(self.objs)}')
-        
+
         if r.new:
-            found = self.new_object()            
+            found = self.new_object(r)            
             if self.is_list:
                 self.objs.append(found)
             else:
                 if is_empty_list(r.key):
                     raise Exception(f'no key and do not know how to add to {type(self.objs)}')
-                self.objs[self.meta_key_to_item_key(r.key)] = found
+                self.objs[self.vals_to_key(r.key)] = found
 
-            if not self.is_key_empty(key):
-                for k in r.key:
-                    # while this will happen anyway, setting them on init means
-                    # subsequent sets will have these key values already set
-                    self.write_field(found, k)
+            if not is_empty_list(key):
+                # while this will happen anyway, setting them on init means
+                # subsequent sets will have these key values already set
+                Reflect.write_fields(found, r.meta.keyMeta(), key)
 
         elif not is_empty_list(r.key):
-            item_key = self.meta_key_to_item_key(r.key)
+            item_key = ReflectList.vals_to_key(r.key)
             if self.is_dict:
                 if r.delete:
                     del self.objs[item_key]
                     return
                 found = self.objs.get(item_key)
             else:
-                # brute force iterate list until val matches then remove it
-                for item in self.objs:
-                    if item_key == self.read_key(item, r.meta.key):
-                        found = item
+                # brute force iterate list until val matches
+                for i, candidate in enumerate(self.objs):
+                    candidate_vals = ReflectList.read_fields(candidate, r.meta.key)
+                    candidate_key = ReflectList.vals_to_key(candidate_vals)
+                    if item_key == candidate_key:
+                        if r.delete:
+                            del self.objs[i]
+                            return
+                        found = candidate
                         break
+
         elif r.row < len(self.objs):            
             if self.is_list:
                 found = self.objs[r.row]
             else:
-                # TODO: test if this is efficient when run w/large map
+                # TODO: test if this is efficient when run w/large dict
                 found = self.objs.keys()[r.row]
-            key = self.read_key(found, r.meta.key)
+            key = ReflectList.read_fields(found, r.meta.key)
 
-        if found:
-            return self.new_copy(found), key
+        if found != None:
+            return Reflect(found, object_hook=self.object_hook), key
         return None, None
 
 
-def is_empty_list(self, list):
+def is_empty_list(list):
     return list == None or len(list) == 0

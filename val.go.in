@@ -1,5 +1,8 @@
 package lang
 
+
+// This file is generated from val.go.in
+
 import (
 	"fmt"
 
@@ -7,26 +10,26 @@ import (
 	"github.com/freeconf/yang/val"
 )
 
-func encodeVal(v val.Value) *pb.XVal {
+func encodeVal(v val.Value) *pb.Val {
 	if v == nil {
 		return nil
 	}
     f := pb.Format(v.Format())
 	switch v.Format() {
-{{- range .Meta.ValEnums }}
+{{- range .ValEnums }}
   {{- if .IsList }}
 	case val.{{.GoFmtId }}:
         xVals := v.Value().({{.GoType}})
-        vals := make([]*pb.XValUnion, len(xVals))
+        vals := make([]*pb.ValUnion, len(xVals))
         for i, xVal := range xVals {
     {{- if .GoToProtoNonListConversionRequired }}
             x := newPb{{.ProtoType}}(xVal)
     {{- else }}
             x := {{"xVal" | .GoToProtoCast }}
     {{- end }}
-            vals[i] = &pb.XValUnion{Value: &pb.XValUnion_{{.ProtoType}}Val{ {{.ProtoType}}Val: x} }
+            vals[i] = &pb.ValUnion{Value: &pb.ValUnion_{{.ProtoType}}Val{ {{.ProtoType}}Val: x} }
         }
-		return &pb.XVal{Format:f, ListValue:vals}
+		return &pb.Val{Format:f, ListValue:vals}
   {{- else }}
 	case val.{{.GoFmtId }}:
         xVal := v.Value().({{.GoType}})
@@ -35,23 +38,23 @@ func encodeVal(v val.Value) *pb.XVal {
     {{- else }}
         x := {{"xVal" | .GoToProtoCast}}
     {{- end }}
-		return &pb.XVal{Format:f, Value:&pb.XValUnion{Value: &pb.XValUnion_{{.ProtoType }}Val{ {{.ProtoType}}Val: x} } }
+		return &pb.Val{Format:f, Value:&pb.ValUnion{Value: &pb.ValUnion_{{.ProtoType }}Val{ {{.ProtoType}}Val: x} } }
   {{- end }}
 {{- end }}
     }
 	panic(fmt.Sprintf("not implemented type %T", v))
 }
 
-func decodeVal(v *pb.XVal) val.Value {
+func decodeVal(v *pb.Val) val.Value {
 	if v == nil {
 		return nil
 	}
     f := val.Format(v.Format)
     switch f {
-{{- range .Meta.ValEnums }}
+{{- range .ValEnums }}
   {{- if not .IsList }}
     case val.{{.GoFmtId }}:
-        pval := v.Value.Value.(*pb.XValUnion_{{.ProtoType}}Val).{{.ProtoType}}Val
+        pval := v.Value.Value.(*pb.ValUnion_{{.ProtoType}}Val).{{.ProtoType}}Val
     {{- if .ProtoToGoNonListConversionRequired }}
         return new{{.ValType}}(pval)
     {{- else }}
@@ -59,12 +62,12 @@ func decodeVal(v *pb.XVal) val.Value {
     {{- end }}
   {{- end }}
 {{- end }}
-{{- range .Meta.ValEnums }}
+{{- range .ValEnums }}
   {{- if .IsList }}
     case val.{{.GoFmtId }}:
         xVals := make([]{{.GoNonListType}}, len(v.ListValue))
         for i, next := range v.ListValue {      
-            pval := next.Value.(*pb.XValUnion_{{.ProtoType}}Val).{{.ProtoType}}Val
+            pval := next.Value.(*pb.ValUnion_{{.ProtoType}}Val).{{.ProtoType}}Val
     {{- if .ProtoToGoNonListConversionRequired }}
             xVals[i] = new{{.ValNonListType}}(pval)
     {{- else }}
@@ -138,4 +141,20 @@ func newPbIdentRef(ref val.IdentRef) *pb.IdentRef {
 
 func newPbEmpty(v val.Value) string {
     return v.String()
+}
+
+func encodeVals(vals []val.Value) []*pb.Val {
+    resp := make([]*pb.Val, len(vals))
+    for i, v := range vals {
+         resp[i] = encodeVal(v)
+    }
+    return resp
+}
+
+func decodeVals(vals []*pb.Val) []val.Value {
+	resp := make([]val.Value, len(vals))
+	for i, v := range vals {
+		resp[i] = decodeVal(v)
+	}
+	return resp
 }

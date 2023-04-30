@@ -11,11 +11,21 @@ import (
 )
 
 type Vars struct {
-	Meta MetaMeta
+
+	// raw data from parsing proto files
+	AllMessages    []*messageDef
+	MessagesByName map[string]*messageDef
+	AllEnums       map[string]*enumDef
+
+	// defs in meta.proto that make up YANG AST
+	MetaDefs []*metaDef
+
+	// everything related to val.Value and val.Format
+	ValEnums []*valEnumEntry
 }
 
 func ParseDefs(homeDir string) (vars Vars, err error) {
-	if vars.Meta, err = ParseMetaDefs(homeDir); err != nil {
+	if vars, err = ParseProtos(homeDir); err != nil {
 		return
 	}
 	return

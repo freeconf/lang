@@ -2,6 +2,8 @@ import fc.meta
 import pb.meta_pb2
 import fc.val
 
+# generated file
+
 class Decoder():
     """Convert the protobuf Module to a meta Module """
 
@@ -42,17 +44,19 @@ class Decoder():
         to = []
         for encoded in encoded_list:
 {{- $conditional := "if" }}
-{{- range .Meta.DataDefs }}
+{{- $ddef := index .MessagesByName "DataDef" }}
+{{- $fields := index $ddef.OneOfs "def_oneof" }}
+{{- range $fields }}
             {{ $conditional }} encoded.HasField('{{.Name}}'):
-                to.append(self.decode_{{.Type}}(parent, encoded.{{.Name}}))
-    {{- $conditional = "elif" }}
+                to.append(self.decode_{{.Type }}(parent, encoded.{{.Name}}))
+    {{- $conditional = "elif" }}    
 {{- end }}
             else:
-                raise Exception(f'no recognized data definition types {dir(encoded)}')
+                raise Exception(f'no recognized data definition types {type(encoded)}')
 
         return to        
 
-{{ range .Meta.Definitions }}
+{{ range .MetaDefs }}
 {{- if .IsMetaDef }}
     def decode_{{.Name}}(self, parent, encoded):
         to = fc.meta.{{.Name}}()

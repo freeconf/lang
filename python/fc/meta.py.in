@@ -1,36 +1,51 @@
 from enum import Enum
 
+# This file is generated from meta.py.in
+
 class Status(Enum):
     CURRENT = 0
     DEPRECATED = 1
     OBSOLETE = 2
 
-{{ range .Meta.Definitions}}
-{{ if .IsMetaDef }}
+{{ range $index, $def := .MetaDefs}}
+{{ if $def.IsMetaDef }}
 class {{ .Name }}():
     __slots__ = [
         "parent",
-{{- if eq .Name "Module" }}
+{{- if eq $def.Name "Module" }}
         "hnd",
         '__weakref__',
 {{- end }}
-{{- range .Fields }}
+{{- range $def.Fields }}
         "{{.PyName}}",
 {{- end }}
     ]
 {{- end }}
+
+    {{- if eq $def.Name "List" }}
+    def keyMeta(self):
+        keyMeta = []
+        for keyName in self.keys:
+            keyMeta.append(require_def(self, keyName))
+        return keyMeta
+    {{- end }}
+
 {{- end }}
 
 class Path():
 
-    def __init__(self, parent, meta):
+    def __init__(self, parent, meta, key=None):
         self.parent = parent
         self.meta = meta
+        self.key = key
 
     def str(self):
+        s = self.meta.ident
+        if self.key != None:
+            s = f'{s}({",".join(self.key)})'
         if self.parent:
-            return self.parent().str() + '/' + self.meta.ident
-        return self.meta.ident
+            return self.parent.str() + '/' + s
+        return s
 
 def new_path(module, path_str):
     """Construct a path object from a module and child-ident/grand-child-ident/..."""

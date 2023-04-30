@@ -24,26 +24,30 @@ class Selection():
 
     @classmethod
     def resolve(cls, driver, hnd_id):
-        try:
-            return fc.handles.Handle.require(driver, hnd_id)
-        except KeyError:
+        sel = fc.handles.Handle.lookup(driver, hnd_id)
+        if sel == None:
             req = pb.fc_pb2.GetSelectionRequest(selHnd=hnd_id)
             resp = driver.g_nodes.GetSelection(req)
             node = resolve_node(driver, resp.nodeHnd)
             if resp.parentHnd:
+                # recursive
                 parent = Selection.resolve(driver, resp.parentHnd)
                 if isinstance(parent.path.meta, fc.meta.Notification):
                     meta = parent.path.meta
                     path = fc.meta.Path(parent.path, meta)
+                elif resp.path.key != None and len(resp.path.key) > 0:
+                    meta = parent.path.meta
+                    key = [fc.val.proto_decode(v) for v in resp.path.key]
+                    path = fc.meta.Path(parent.path, meta, key=key)
                 else:
-                    meta = fc.meta.require_def(parent.path.meta, resp.metaIdent)
+                    meta = fc.meta.require_def(parent.path.meta, resp.path.metaIdent)
                     path = fc.meta.Path(parent.path, meta)
                 sel = Selection(driver, hnd_id, node, path, parent, parent.browser) 
             else:
                 browser = fc.node.Browser.resolve(driver, resp.browserHnd)
                 path = fc.meta.Path(None, browser.module)
                 sel = Selection(driver, hnd_id, node, path, None, browser)
-            return sel
+        return sel
 
     def action(self, inputNode=0):
         inputNodeHnd = 0        
@@ -226,7 +230,6 @@ class NotificationRequest():
     def send(self, node):
         self.queue.put(node)
 
-logging.basicConfig(filename='std.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')
 
 class XNodeServicer(pb.fc_x_pb2_grpc.XNodeServicer):
     """Bridge between python node navigation and go node navigation"""
@@ -244,11 +247,9 @@ class XNodeServicer(pb.fc_x_pb2_grpc.XNodeServicer):
                 for g_key_val in g_req.key:
                     key_in.append(fc.val.proto_decode(g_key_val))
 
-
             req = ListRequest(sel, meta, g_req.new, g_req.delete, g_req.row, g_req.first, key_in)
-            logging.warning("GOOOOOOOOOAL!\n")
             child, key_out = sel.node.next(req)
-            if child:
+            if child != None:
                 child = resolve_node(self.driver, child)
                 g_key_out = None
                 if key_out != None:
@@ -258,6 +259,7 @@ class XNodeServicer(pb.fc_x_pb2_grpc.XNodeServicer):
             else:
                 return pb.fc_x_pb2.XNextResponse()
         except Exception as error:
+            logging.debug(f'XNext error')
             print(traceback.format_exc())
             raise error
         
@@ -268,7 +270,7 @@ class XNodeServicer(pb.fc_x_pb2_grpc.XNodeServicer):
             meta = fc.meta.require_def(sel.path.meta, g_req.metaIdent)
             req = ChildRequest(sel, meta, g_req.new, g_req.delete)
             child = sel.node.child(req)
-            if child:
+            if child != None:
                 child = resolve_node(self.driver, child)
                 return pb.fc_x_pb2.XChildResponse(nodeHnd=child.hnd.id)
             else:

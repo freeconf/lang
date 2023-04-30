@@ -13,7 +13,7 @@ generate:
 test: test-go test-py
 
 test-go:
-	go test .
+	go test . ./...
 
 PY_TESTS = \
 	test_val.py \

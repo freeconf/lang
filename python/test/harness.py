@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 import sys
-import fc.node
 import signal
+import logging
+import fc.node
 import fc.driver
 from fc.nodeutil import dump, reflect
 import pb.fc_test_pb2
@@ -20,6 +21,12 @@ Go unit tests.
 if len(sys.argv) < 3:
     print(usage)
     exit(1)
+
+logging.basicConfig(
+    filename='harness.log',
+    filemode='w',
+    level=logging.DEBUG,
+    format='%(name)s - %(levelname)s - %(message)s')
 
 class TestHarnessServicer(pb.fc_test_pb2_grpc.TestHarnessServicer):
 

@@ -1,164 +1,204 @@
 
-meta fc_meta_extension_def_arg {
-    fc_meta_id meta_id;
-    char* ident;
-    char* description;
-    char* ref;
-    bool yin_element;
+meta Module {
+    ident string, ident string;
+    description string, description string;
+    extensions Extension, extensions Extension[];
+    definitions DataDef, definitions DataDef[];
+    namespace string, namespace string;
+    prefix string, prefix string;
+    contact string, contact string;
+    organization string, organization string;
+    reference string, reference string;
+    version string, version string;
+    actions Rpc, actions Rpc[];
+    notifications Notification, notifications Notification[];
 }
 
-meta fc_meta_extension_def {
-    fc_meta_id meta_id;
-    char* ident;
-    char* description;
-    char* ref;
-    int status;
-    fc_meta_ext_def_arg_array args;
+meta RpcInput {
+    reference string, reference string;
+    extensions Extension, extensions Extension[];
+    definitions DataDef, definitions DataDef[];
 }
 
-meta fc_meta_extension {
-    fc_meta_id meta_id;
-    char* ident;
-    char* prefix;
-    char* keyword;
-    char* ext_def;
-    char** args;
+meta RpcOutput {
+    reference string, reference string;
+    extensions Extension, extensions Extension[];
+    definitions DataDef, definitions DataDef[];
 }
 
-meta fc_meta_module {
-    fc_meta_id meta_id;
-    char* ident;
-    char* description;
-    fc_meta_ext_array extensions;
-    fc_meta_array definitions;
-    long mem_id;
-    char* ns;
-    char* prefix;
-    char* contact;
-    char* org;
-    char* ref;
-    char* ver;
+meta Rpc {
+    ident string, ident string;
+    description string, description string;
+    extensions Extension, extensions Extension[];
+    reference string, reference string;
+    input RpcInput, input RpcInput;
+    output RpcOutput, output RpcOutput;
 }
 
-meta fc_meta_leaf {
-    fc_meta_id meta_id;
-    char* ident;
-    char* description;
-    fc_meta_ext_array extensions;
-    fc_meta_optional_bool config;
-    fc_meta_optional_bool mandatory;
+meta Notification {
+    ident string, ident string;
+    description string, description string;
+    extensions Extension, extensions Extension[];
+    reference string, reference string;
+    definitions DataDef, definitions DataDef[];
 }
 
-meta fc_meta_leaf_list {
-    fc_meta_id meta_id;
-    char* ident;
-    char* description;
-    fc_meta_ext_array extensions;
-    fc_meta_optional_bool config;
-    fc_meta_optional_bool mandatory;
+meta ExtensionDefArg {
+    ident string, ident string;
+    description string, description string;
+    reference string, reference string;
+    yinElement bool, yin_element bool;
 }
 
-meta fc_meta_container {
-    fc_meta_id meta_id;
-    char* ident;
-    char* description;
-    fc_meta_ext_array extensions;
-    fc_meta_array definitions;
-    fc_meta_optional_bool config;
-    fc_meta_optional_bool mandatory;
+meta ExtensionDef {
+    ident string, ident string;
+    description string, description string;
+    reference string, reference string;
+    status Status, status Status;
+    arguments ExtensionDefArg, arguments ExtensionDefArg[];
 }
 
-meta fc_meta_list {
-    fc_meta_id meta_id;
-    char* ident;
-    char* description;
-    fc_meta_ext_array extensions;
-    fc_meta_array definitions;
-    fc_meta_optional_bool config;
-    fc_meta_optional_bool mandatory;
+meta Extension {
+    ident string, ident string;
+    prefix string, prefix string;
+    keyword string, keyword string;
+    def string, ext_def string;
+    arguments string, arguments string[];
+}
+
+meta Container {
+    ident string, ident string;
+    description string, description string;
+    extensions Extension, extensions Extension[];
+    definitions DataDef, definitions DataDef[];
+    config OptionalBool, config OptionalBool;
+    mandatory OptionalBool, mandatory OptionalBool;
+    actions Rpc, actions Rpc[];
+    notifications Notification, notifications Notification[];
+}
+
+meta Type {
+    ident string, ident string;
+    description string, description string;
+    reference string, reference string;
+    format Format, format Format;
+}
+
+meta Leaf {
+    ident string, ident string;
+    description string, description string;
+    extensions Extension, extensions Extension[];
+    type Type, type Type;
+    config OptionalBool, config OptionalBool;
+    mandatory OptionalBool, mandatory OptionalBool;
+}
+
+meta List {
+    ident string, ident string;
+    description string, description string;
+    extensions Extension, extensions Extension[];
+    definitions DataDef, definitions DataDef[];
+    config OptionalBool, config OptionalBool;
+    mandatory OptionalBool, mandatory OptionalBool;
+    actions Rpc, actions Rpc[];
+    notifications Notification, notifications Notification[];
+    key string, key string[];
+}
+
+meta LeafList {
+    ident string, ident string;
+    description string, description string;
+    extensions Extension, extensions Extension[];
+    config OptionalBool, config OptionalBool;
+    mandatory OptionalBool, mandatory OptionalBool;
+}
+
+meta DataDef {
+}
+
+meta EnumVal {
+    id int32, id int32;
+    label string, label string;
+}
+
+meta IdentRef {
+    base string, base string;
+    label string, label string;
+}
+
+meta ValUnion {
+}
+
+meta Val {
+    format Format, format Format;
+    value ValUnion, value ValUnion;
+    list_value ValUnion, list_value ValUnion[];
 }
 
 
-val {
+val { 
+ BINARY, Binary
 
-    Binary = 0, List ?= false;
+ BITS, Bits
 
-    Bits = 1, List ?= false;
+ BOOL, Bool
 
-    Bool = 2, List ?= false;
+ DECIMAL64, Decimal64
 
-    Decimal64 = 3, List ?= false;
+ EMPTY, Empty
 
-    Empty = 4, List ?= false;
+ ENUM, Enum
 
-    Enum = 5, List ?= false;
+ IDENTITY_REF, IdentRef
 
-    IdentityRef = 6, List ?= false;
+ INT8, Int8
 
-    InstanceRef = 7, List ?= false;
+ INT16, Int16
 
-    Int8 = 8, List ?= false;
+ INT32, Int32
 
-    Int16 = 9, List ?= false;
+ INT64, Int64
 
-    Int32 = 10, List ?= false;
+ STRING, String
 
-    Int64 = 11, List ?= false;
+ UINT8, Uint8
 
-    LeafRef = 12, List ?= false;
+ UINT16, Uint16
 
-    String = 13, List ?= false;
+ UINT32, Uint32
 
-    UInt8 = 14, List ?= false;
+ UINT64, Uint64
 
-    UInt16 = 15, List ?= false;
+ BINARY_LIST, Binary
 
-    UInt32 = 16, List ?= false;
+ BITS_LIST, Bits
 
-    UInt64 = 17, List ?= false;
+ BOOL_LIST, Bool
 
-    Union = 18, List ?= false;
+ DECIMAL64_LIST, Decimal64
 
-    Any = 19, List ?= false;
+ EMPTY_LIST, Empty
 
-    BinaryList = 20, List ?= true;
+ ENUM_LIST, Enum
 
-    BitsList = 21, List ?= true;
+ IDENTITY_REF_LIST, IdentRef
 
-    BoolList = 22, List ?= true;
+ INT8_LIST, Int8
 
-    Decimal64List = 23, List ?= true;
+ INT16_LIST, Int16
 
-    EmptyList = 24, List ?= true;
+ INT32_LIST, Int32
 
-    EnumList = 25, List ?= true;
+ INT64_LIST, Int64
 
-    IdentityRefList = 26, List ?= true;
+ STRING_LIST, String
 
-    InstanceRefList = 27, List ?= true;
+ UINT8_LIST, Uint8
 
-    Int8List = 28, List ?= true;
+ UINT16_LIST, Uint16
 
-    Int16List = 29, List ?= true;
+ UINT32_LIST, Uint32
 
-    Int32List = 30, List ?= true;
-
-    Int64List = 31, List ?= true;
-
-    LeafRefList = 32, List ?= true;
-
-    StringList = 33, List ?= true;
-
-    UInt8List = 34, List ?= true;
-
-    UInt16List = 35, List ?= true;
-
-    UInt32List = 36, List ?= true;
-
-    UInt64List = 37, List ?= true;
-
-    UnionList = 38, List ?= true;
-
-    AnyList = 39, List ?= true;
+ UINT64_LIST, Uint64
 
 }

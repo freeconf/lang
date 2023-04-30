@@ -14,7 +14,7 @@ class Dump(basic.Basic):
         next, key = self.target.next(r)
         if next == None:
             return None, key
-        return Dump(next, self.out, self.padding)
+        return Dump(next, self.out, self.padding), key
 
     def child(self, r):
         self.write(f'{self.padding}{r.meta.ident}:\n')

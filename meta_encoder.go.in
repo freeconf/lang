@@ -63,7 +63,7 @@ func (e *MetaEncoder) encodeDataDefList(parent any, from []meta.Definition) []*p
     to := make([]*pb.DataDef, len(from))    
     for i, d := range from {
         switch x := d.(type) {
-{{- range .Meta.Definitions}}
+{{- range .MetaDefs}}
 {{- if .IsDataDef }}
             case *meta.{{.Name}}:
                 to[i] = &pb.DataDef{DefOneof:&pb.DataDef_{{.Name}}{ {{.Name}}:e.encode{{.Name}}(parent, x)}}
@@ -86,7 +86,7 @@ func (e *MetaEncoder) encodeStatus(parent *pb.ExtensionDef, from meta.Status) pb
     return pb.Status(from)
 }
 
-{{ range .Meta.Definitions}}
+{{ range .MetaDefs}}
 {{ if .IsMetaDef }}
 func (e *MetaEncoder) encode{{.Name}}(parent any, from *meta.{{.Name}}) *pb.{{.Name}} {
     if from == nil {
@@ -102,6 +102,8 @@ func (e *MetaEncoder) encode{{.Name}}(parent any, from *meta.{{.Name}}) *pb.{{.N
         def.{{.GoName}} = from.Def().Ident()
         {{- else if .CustomEncoder }}
         def.{{.GoName}} = e.encode{{.CustomEncoder}}(&def, from.{{.GoName}}())
+        {{- else if eq .GoName "Key" }}
+        def.Key = e.encodeListKeys(from)
         {{- else }}
         def.{{.GoName}} = from.{{.GoName}}()
         {{- end }}
@@ -110,6 +112,14 @@ func (e *MetaEncoder) encode{{.Name}}(parent any, from *meta.{{.Name}}) *pb.{{.N
 }
 {{- end }}
 {{- end }}
+
+func (e *MetaEncoder) encodeListKeys(l *meta.List) []string {
+    idents := make([]string, len(l.KeyMeta()))
+    for i, k := range l.KeyMeta() {
+        idents[i] = k.Ident()
+    }
+    return idents
+}
 
 func (e *MetaEncoder) Encode(from *meta.Module) *pb.Module {
     return e.encodeModule(nil, from)

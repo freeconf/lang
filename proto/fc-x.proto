@@ -1,7 +1,7 @@
 syntax="proto3";
 option go_package = "./pb";
 package pb;
-import "meta.proto";
+import "val.proto";
 
 /*
  This is used when Go calls into whatever language it is talking to which we
@@ -32,12 +32,12 @@ message XNextRequest {
       bool delete = 5;
       int64 row = 6;
       bool first = 7;
-      repeated XVal key = 8;
+      repeated Val key = 8;
 }
 
 message XNextResponse {
       uint64 nodeHnd = 1;
-      repeated XVal key = 2;
+      repeated Val key = 2;
 }
 
 message XChooseRequest {
@@ -71,57 +71,16 @@ message XChildRequest {
       bool delete = 5;
 }
 
-message EnumVal {
-      int32 id = 1;
-      string label = 2;
-}
-
-message IdentRef {
-      string base = 1;
-      string label = 2;
-}
-
-message XValUnion {
-      oneof value {
-            bytes binary_val = 1;
-            bytes bits_val = 2;
-            bool bool_val = 3;
-            double decimal64_val = 4;
-            string empty_val = 5;
-            EnumVal enum_val = 6;
-            IdentRef ident_ref_val = 7;
-            string instance_ref_val = 8;
-            int32 int8_val = 9;
-            int32 int16_val = 10;
-            int32 int32_val = 11;
-            int64 int64_val = 12;
-            string leaf_ref_val = 13;
-            string string_val = 14;
-            uint32 uint8_val = 15;
-            uint32 uint16_val = 16;
-            uint32 uint32_val = 17;
-            uint64 uint64_val = 18;
-            bytes union_val = 19;
-            bytes any_val = 20;
-            // cannot have repeated in 'oneof'
-      }
-}
-message XVal {
-      Format format = 1;
-      XValUnion value = 2;
-      repeated XValUnion list_value = 3;
-}
-
 message XFieldRequest {
       uint64 selHnd = 1;
       string metaIdent = 2;
       bool write = 3;
       bool clear = 4;
-      XVal toWrite = 5;
+      Val toWrite = 5;
 }
 
 message XFieldResponse {
-      XVal fromRead = 1;
+      Val fromRead = 1;
 }
 
 message XChildResponse {

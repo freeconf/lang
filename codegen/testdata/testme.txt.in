@@ -1,8 +1,12 @@
-{{ range .Meta.Definitions}}
-meta {{. | cDefType }} {
+{{ range .AllMessages}}
+meta {{.Name }} {
 {{- range .Fields }}
-    {{. | cFieldType}} {{. | cName}};
+    {{.Name}} {{.Type}}, {{.PyName}} {{.PyType}};
 {{- end }}
 }
 {{ end}}
 
+val { {{ range .ValEnums }}
+ {{ .Ident }}, {{ .ProtoType }}
+{{ end }}
+}

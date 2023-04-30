@@ -2,6 +2,7 @@ syntax="proto3";
 option go_package = "./pb";
 package pb;
 import "meta.proto";
+import "val.proto";
 
 /*
   FreeCONF full developer API made available thru gRPC.  Services are roughly broken
@@ -138,11 +139,16 @@ message GetSelectionRequest {
       uint64 selHnd = 1;
 }
 
+message PathSegment {
+      string metaIdent = 1;
+      repeated Val key = 2;
+}
+
 message GetSelectionResponse {      
       uint64 nodeHnd = 1;
       uint64 parentHnd = 2;
-      uint64 browserHnd = 3;
-      string metaIdent = 4;      
+      uint64 browserHnd = 3;      
+      PathSegment path = 4; // to be combined with parent's PathSegment to construct full path
 }
 
 message NotificationRequest {
@@ -152,7 +158,6 @@ message NotificationRequest {
 message NotificationResponse {
       uint64 selHnd = 1;
 }
-
 
 ////////////
 service Device {
