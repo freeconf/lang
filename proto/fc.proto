@@ -148,7 +148,8 @@ message GetSelectionResponse {
       uint64 nodeHnd = 1;
       uint64 parentHnd = 2;
       uint64 browserHnd = 3;      
-      PathSegment path = 4; // to be combined with parent's PathSegment to construct full path
+      bool insideList = 4;
+      PathSegment path = 5; // to be combined with parent's PathSegment to construct full path
 }
 
 message NotificationRequest {

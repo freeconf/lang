@@ -15,6 +15,7 @@ func (d *golang) dump(sel node.Selection, fname string) error {
 	if err != nil {
 		return err
 	}
+	defer out.Close()
 	null := nodeutil.ReflectChild(make(map[string]any))
-	return sel.UpsertInto(nodeutil.Dump(null, out)).LastErr
+	return sel.UpsertInto(nodeutil.Trace(null, out)).LastErr
 }

@@ -107,8 +107,9 @@ func (s *NodeService) GetSelection(ctx context.Context, in *pb.GetSelectionReque
 	resp := pb.GetSelectionResponse{
 		NodeHnd: s.d.handles.Hnd(sel.Node),
 	}
-	if sel.Path.Key != nil {
+	if sel.InsideList {
 		resp.Path = &pb.PathSegment{Key: encodeVals(sel.Path.Key)}
+		resp.InsideList = true
 	} else {
 		resp.Path = &pb.PathSegment{MetaIdent: sel.Path.Meta.Ident()}
 	}

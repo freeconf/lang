@@ -14,13 +14,14 @@ import logging
 
 class Selection():
 
-    def __init__(self, driver, hnd_id, node, path, parent, browser):
+    def __init__(self, driver, hnd_id, node, path, parent, browser, inside_list=False):
         self.driver = driver
         self.hnd = fc.handles.Handle(driver, hnd_id, self)
         self.parent = parent
         self.node = node
         self.path = path
         self.browser = browser
+        self.inside_list = inside_list
 
     @classmethod
     def resolve(cls, driver, hnd_id):
@@ -35,14 +36,16 @@ class Selection():
                 if isinstance(parent.path.meta, fc.meta.Notification):
                     meta = parent.path.meta
                     path = fc.meta.Path(parent.path, meta)
-                elif resp.path.key != None and len(resp.path.key) > 0:
+                elif resp.insideList:
+                    key = None
+                    if resp.path.key != None and len(resp.path.key) > 0:
+                        key = [fc.val.proto_decode(v) for v in resp.path.key]
                     meta = parent.path.meta
-                    key = [fc.val.proto_decode(v) for v in resp.path.key]
                     path = fc.meta.Path(parent.path, meta, key=key)
                 else:
                     meta = fc.meta.require_def(parent.path.meta, resp.path.metaIdent)
                     path = fc.meta.Path(parent.path, meta)
-                sel = Selection(driver, hnd_id, node, path, parent, parent.browser) 
+                sel = Selection(driver, hnd_id, node, path, parent, parent.browser, inside_list=resp.insideList) 
             else:
                 browser = fc.node.Browser.resolve(driver, resp.browserHnd)
                 path = fc.meta.Path(None, browser.module)

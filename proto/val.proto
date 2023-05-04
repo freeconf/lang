@@ -1,0 +1,90 @@
+syntax="proto3";
+option go_package = "./pb";
+package pb;
+
+enum Format {      
+    UNDEFINED = 0; // something must start w/zero in protoc apparently
+  BINARY = 1;
+  BITS = 2;
+  BOOL = 3;
+  DECIMAL64 = 4;
+  EMPTY = 5;
+  ENUM = 6;
+  IDENTITY_REF = 7;
+  // INSTANCE_REF = 8;
+  INT8 = 9;
+  INT16 = 10;
+  INT32 = 11;
+  INT64 = 12;
+  // LEAF_REF = 13;
+  STRING = 14;
+  UINT8 = 15;
+  UINT16 = 16;
+  UINT32 = 17;
+  UINT64 = 18;
+  // UNION = 19;
+  // ANY = 20;
+
+  BINARY_LIST = 1025;
+  BITS_LIST = 1026;
+  BOOL_LIST = 1027;
+  DECIMAL64_LIST = 1028;
+  EMPTY_LIST = 1029;
+  ENUM_LIST = 1030;
+  IDENTITY_REF_LIST = 1031;
+  // INSTANCE_REF_LIST = 1032;
+  INT8_LIST = 1033;
+  INT16_LIST = 1034;
+  INT32_LIST = 1035;
+  INT64_LIST = 1036;
+  // LEAF_REF_LIST = 1037;
+  STRING_LIST = 1038;
+  UINT8_LIST = 1039;
+  UINT16_LIST = 1040;
+  UINT32_LIST = 1041;
+  UINT64_LIST = 1042;
+  // UNION_LIST = 1043;
+  // ANY_LIST = 1044;
+}
+
+message EnumVal {
+    int32 id = 1;
+    string label = 2;
+}
+
+message IdentRef {
+    string base = 1;
+    string label = 2;
+}
+
+message ValUnion {
+    oneof value {
+          bytes binary_val = 1;
+          bytes bits_val = 2;
+          bool bool_val = 3;
+          double decimal64_val = 4;
+          string empty_val = 5;
+          EnumVal enum_val = 6;
+          IdentRef ident_ref_val = 7;
+          string instance_ref_val = 8;
+          int32 int8_val = 9;
+          int32 int16_val = 10;
+          int32 int32_val = 11;
+          int64 int64_val = 12;
+          string leaf_ref_val = 13;
+          string string_val = 14;
+          uint32 uint8_val = 15;
+          uint32 uint16_val = 16;
+          uint32 uint32_val = 17;
+          uint64 uint64_val = 18;
+          bytes union_val = 19;
+          bytes any_val = 20;
+          // cannot have repeated in 'oneof'
+    }
+}
+
+message Val {
+    Format format = 1;
+    ValUnion value = 2;
+    repeated ValUnion list_value = 3;
+}

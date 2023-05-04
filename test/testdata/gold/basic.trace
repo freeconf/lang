@@ -1,0 +1,44 @@
+edit.begin: basic
+child.read: x
+    found: false
+child.new: x
+    found: true
+    edit.begin: x
+        new: true
+    field.write: l
+        val: int32(99)
+    edit.end: x
+        new: true
+child.read: z
+    found: false
+child.new: z
+    found: true
+    edit.begin: z
+        new: true
+    next.read[0]: z=aa
+        request.key[0]: string(aa)
+        found: false
+    next.new[0]: z=aa
+        request.key[0]: string(aa)
+        found: true
+        edit.begin: z=aa
+            new: true
+        field.write: p
+            val: string(aa)
+        edit.end: z=aa
+            new: true
+    next.read[1]: z=bb
+        request.key[0]: string(bb)
+        found: false
+    next.new[1]: z=bb
+        request.key[0]: string(bb)
+        found: true
+        edit.begin: z=bb
+            new: true
+        field.write: p
+            val: string(bb)
+        edit.end: z=bb
+            new: true
+    edit.end: z
+        new: true
+edit.end: basic

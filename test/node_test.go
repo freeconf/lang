@@ -17,7 +17,23 @@ import (
 var update = flag.Bool("update", false, "update gold files instead of testing against them")
 
 func TestNode(t *testing.T) {
+	t.Run("go", func(t *testing.T) {
+		runNodeTest(t, &golang{})
+	})
+	t.Run("python", func(t *testing.T) {
+		x := &python{}
+		h := NewHarness()
+		fc.RequireEqual(t, nil, h.Connect(x))
+		defer x.stop()
+		runNodeTest(t, h)
+	})
+}
 
+type nodeTestHarness interface {
+	dump(sel node.Selection, fname string) error
+}
+
+func runNodeTest(t *testing.T, h nodeTestHarness) {
 	fc.DebugLog(true)
 
 	tests := []struct {
@@ -28,14 +44,10 @@ func TestNode(t *testing.T) {
 		{
 			Yang:   "basic",
 			Seed:   "testdata/seed/basic.json",
-			Expect: "testdata/gold/basic.json",
+			Expect: "testdata/gold/basic.trace",
 		},
 	}
 	ypath := source.Dir("testdata/yang")
-	h := NewHarness()
-	x := &python{}
-	fc.RequireEqual(t, nil, h.Connect(x))
-	defer x.stop()
 	for _, test := range tests {
 		m := parser.RequireModule(ypath, test.Yang)
 		n := loadSeedData(test.Seed)

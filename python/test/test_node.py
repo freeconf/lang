@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 import io
+import sys
 import unittest 
 import fc.driver
 import fc.parser
 import fc.node
-from fc.nodeutil import reflect, dump, json
+from fc.nodeutil import reflect, json, trace
+from test import gold
 
 class TestNode(unittest.TestCase):
     
@@ -19,20 +21,13 @@ class TestNode(unittest.TestCase):
 
         actual = io.StringIO()
         actual.write('\n')        
-        dumper = dump.Dump(reflect.Reflect({}), actual)
+        dumper = trace.Trace(reflect.Reflect({}), actual)
         b = fc.node.Browser(d, m, dumper)
         rdr = json.rdr(d, "testdata/testme-sample-1.json")
         b.root().upsert_from(rdr)
-        expected = """
-z:
-found=false
-z:
-found=true
-  ->q=(int32.99)
-->x=(string.hello)
-"""
-        self.assertMultiLineEqual(expected, actual.getvalue())
+        gold.assert_equal(self, actual.getvalue(), "testdata/gold/node.trace")
         d.unload()
 
 if __name__ == '__main__':
+    gold.parse_flags()
     unittest.main()

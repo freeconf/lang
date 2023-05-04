@@ -1,0 +1,9 @@
+
+child.read: testme-1
+    found: false
+child.new: testme-1
+    found: true
+    field.write: q
+        val: int32(99)
+field.write: x
+    val: string(hello)

@@ -4,7 +4,7 @@ import signal
 import logging
 import fc.node
 import fc.driver
-from fc.nodeutil import dump, reflect
+from fc.nodeutil import reflect, trace
 import pb.fc_test_pb2
 import pb.fc_test_pb2_grpc
 
@@ -36,7 +36,7 @@ class TestHarnessServicer(pb.fc_test_pb2_grpc.TestHarnessServicer):
     def DumpBrowser(self, req, context):
         sel = fc.node.Selection.resolve(self.driver, req.selHnd)
         out = open(req.outputFile, "w")
-        n = dump.Dump(reflect.Reflect({}), out)
+        n = trace.Trace(reflect.Reflect({}), out)
         sel.upsert_into(n)
         out.close()
         return pb.fc_test_pb2.DumpResponse()
