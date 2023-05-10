@@ -81,6 +81,11 @@ class Reflect():
         resp = f(input_data)
         return Reflect(resp) if resp else None
 
+    def begin_edit(self, r):
+        pass
+
+    def end_edit(self, r):
+        pass
 
 class ReflectList():
 
@@ -172,6 +177,11 @@ class ReflectList():
             return Reflect(found, object_hook=self.object_hook), key
         return None, None
 
+    def begin_edit(self, r):
+        pass
+
+    def end_edit(self, r):
+        pass
 
 def is_empty_list(list):
     return list == None or len(list) == 0

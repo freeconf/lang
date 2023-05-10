@@ -4,7 +4,7 @@ import signal
 import logging
 import fc.node
 import fc.driver
-from fc.nodeutil import reflect, trace
+from fc.nodeutil import reflect, trace, extend
 import pb.fc_test_pb2
 import pb.fc_test_pb2_grpc
 
@@ -32,6 +32,7 @@ class TestHarnessServicer(pb.fc_test_pb2_grpc.TestHarnessServicer):
 
     def __init__(self, driver):
         self.driver = driver
+        self.trace_file = None
 
     def DumpBrowser(self, req, context):
         sel = fc.node.Selection.resolve(self.driver, req.selHnd)
@@ -40,6 +41,33 @@ class TestHarnessServicer(pb.fc_test_pb2_grpc.TestHarnessServicer):
         sel.upsert_into(n)
         out.close()
         return pb.fc_test_pb2.DumpResponse()
+
+
+    def CreateTestCase(self, req, context):
+        out = open(req.traceFile, "w")
+        if req.testCase == pb.fc_test_pb2.ECHO:
+            n = echo_node()
+        elif req.testCase == pb.fc_test_pb2.BASIC:
+            n = reflect.Reflect({})
+        else:
+            raise Exception("unimplemented test case")
+        n = trace.Trace(n, out)
+        fc.node.resolve_node(self.driver, n)
+        self.trace_file = out
+        return pb.fc_test_pb2.CreateTestCaseResponse(nodeHnd=n.hnd.id)
+    
+
+    def FinalizeTestCase(self, req, context):
+        self.trace_file.close()
+        return pb.fc_test_pb2.FinalizeTestCaseResponse()
+
+
+def echo_node():
+    base = reflect.Reflect({})
+    def on_action(parent, r):
+        return r.input
+    return extend.Extend(base, on_action=on_action)
+
 
 g_addr = sys.argv[1]
 x_addr = sys.argv[2]

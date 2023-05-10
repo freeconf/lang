@@ -16,10 +16,9 @@ child.new: z
     edit.begin: z
         new: true
     next.read[0]: z=aa
-        request.key[0]: string(aa)
         found: false
+        response.key: nil
     next.new[0]: z=aa
-        request.key[0]: string(aa)
         found: true
         edit.begin: z=aa
             new: true
@@ -28,10 +27,9 @@ child.new: z
         edit.end: z=aa
             new: true
     next.read[1]: z=bb
-        request.key[0]: string(bb)
         found: false
+        response.key: nil
     next.new[1]: z=bb
-        request.key[0]: string(bb)
         found: true
         edit.begin: z=bb
             new: true

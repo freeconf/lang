@@ -18,3 +18,9 @@ class Basic():
     def notification(self, r):
         raise Exception(f'notification not implemented in {r.path.str()}/{r.meta.ident}')
 
+
+    def begin_edit(self, r):
+        pass
+
+    def end_edit(self, r):
+        pass

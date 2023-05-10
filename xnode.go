@@ -17,6 +17,10 @@ type xnode struct {
 	nodeHnd uint64
 }
 
+func (n *xnode) GetRemoteHandle() uint64 {
+	return n.nodeHnd
+}
+
 func (n *xnode) Context(s node.Selection) context.Context {
 	// TODO
 	return s.Context
@@ -88,11 +92,23 @@ func (n *xnode) Choose(sel node.Selection, choice *meta.Choice) (m *meta.ChoiceC
 }
 
 func (n *xnode) BeginEdit(r node.NodeRequest) error {
-	return nil
+	req := pb.XBeginEditRequest{
+		SelHnd: resolveSelection(n.d, &r.Selection),
+		New:    r.New,
+		Delete: r.Delete,
+	}
+	_, err := n.d.xnodes.XBeginEdit(r.Selection.Context, &req)
+	return err
 }
 
 func (n *xnode) EndEdit(r node.NodeRequest) error {
-	return nil
+	req := pb.XEndEditRequest{
+		SelHnd: resolveSelection(n.d, &r.Selection),
+		New:    r.New,
+		Delete: r.Delete,
+	}
+	_, err := n.d.xnodes.XEndEdit(r.Selection.Context, &req)
+	return err
 }
 
 func (n *xnode) Action(r node.ActionRequest) (output node.Node, err error) {

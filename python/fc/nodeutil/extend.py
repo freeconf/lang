@@ -1,13 +1,14 @@
 class Extend():
 
-    def __init__(self, base, on_child=None, on_field=None, on_action=None, on_notification=None):
+    def __init__(self, base, on_child=None, on_field=None, on_action=None, on_notification=None, on_begin_edit=None, on_end_edit=None):
         self.hnd = 0
         self.base = base
         self.on_child = on_child
         self.on_field = on_field
         self.on_action = on_action
         self.on_notification = on_notification
-
+        self.on_begin_edit = on_begin_edit
+        self.on_end_edit = on_end_edit
 
     def child(self, r):
         if self.on_child:
@@ -31,3 +32,13 @@ class Extend():
         if self.on_notification:
             return self.on_notification(self.base, r)
         return self.base.notification(r)
+
+
+    def begin_edit(self, r):
+        if self.on_begin_edit:
+            return self.on_begin_edit(self.base, r)
+
+
+    def end_edit(self, r):
+        if self.on_end_edit:
+            return self.on_end_edit(self.base, r)

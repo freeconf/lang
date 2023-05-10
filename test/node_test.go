@@ -12,58 +12,90 @@ import (
 	"github.com/freeconf/yang/nodeutil"
 	"github.com/freeconf/yang/parser"
 	"github.com/freeconf/yang/source"
+
+	"github.com/freeconf/lang/pb"
 )
 
 var update = flag.Bool("update", false, "update gold files instead of testing against them")
 
-func TestNode(t *testing.T) {
-	t.Run("go", func(t *testing.T) {
-		runNodeTest(t, &golang{})
-	})
-	t.Run("python", func(t *testing.T) {
-		x := &python{}
-		h := NewHarness()
-		fc.RequireEqual(t, nil, h.Connect(x))
-		defer x.stop()
-		runNodeTest(t, h)
-	})
-}
-
 type nodeTestHarness interface {
-	dump(sel node.Selection, fname string) error
+	createTestCase(tc pb.TestCase, tracefile string) (node.Node, error)
+	finalizeTestCase() error
+	Close() error
+	Connect() error
 }
 
-func runNodeTest(t *testing.T, h nodeTestHarness) {
-	fc.DebugLog(true)
+// if you are just running a specific langauge AND remember you change the test data or
+// the go implementation, you have to rerun the go and accept the new trace results
+// before verify other languages match
+var langs = []nodeTestHarness{
+	//&golang{},
+	NewHarness(&python{}),
+}
 
-	tests := []struct {
-		Yang   string
-		Seed   string
-		Expect string
-	}{
-		{
-			Yang:   "basic",
-			Seed:   "testdata/seed/basic.json",
-			Expect: "testdata/gold/basic.trace",
-		},
-	}
+func TestBasic(t *testing.T) {
 	ypath := source.Dir("testdata/yang")
-	for _, test := range tests {
-		m := parser.RequireModule(ypath, test.Yang)
-		n := loadSeedData(test.Seed)
+	for _, h := range langs {
+		// setup
+		fc.RequireEqual(t, nil, h.Connect())
+		traceFile := tempFileName()
+		n, err := h.createTestCase(pb.TestCase_BASIC, traceFile)
+		fc.RequireEqual(t, nil, err)
+		m := parser.RequireModule(ypath, "basic")
 		b := node.NewBrowser(m, n)
 
-		dumpFile, err := ioutil.TempFile("", "node-test")
-		fc.RequireEqual(t, nil, err)
-		fc.RequireEqual(t, nil, h.dump(b.Root(), dumpFile.Name()))
-		actual, err := ioutil.ReadFile(dumpFile.Name())
-		fc.RequireEqual(t, nil, err)
-		fc.Gold(t, *update, actual, test.Expect)
-		os.Remove(dumpFile.Name())
+		// test
+		err = b.Root().UpsertFrom(readJSON("testdata/seed/basic.json")).LastErr
+		fc.AssertEqual(t, nil, err)
+		fc.AssertEqual(t, nil, h.finalizeTestCase())
+		fc.GoldFile(t, *update, traceFile, "testdata/gold/basic.trace")
+
+		// teardown
+		os.Remove(traceFile)
+		fc.RequireEqual(t, nil, h.Close())
 	}
 }
 
-func loadSeedData(fname string) node.Node {
+func tempFileName() string {
+	dumpFile, err := ioutil.TempFile("", "node-test")
+	if err != nil {
+		panic(err)
+	}
+	dumpFile.Close()
+	return dumpFile.Name()
+}
+
+func TestEcho(t *testing.T) {
+	ypath := source.Dir("testdata/yang")
+	for _, h := range langs {
+		// setup
+		fc.RequireEqual(t, nil, h.Connect())
+		traceFile := tempFileName()
+		n, err := h.createTestCase(pb.TestCase_ECHO, traceFile)
+		fc.RequireEqual(t, nil, err)
+		m := parser.RequireModule(ypath, "echo")
+		b := node.NewBrowser(m, n)
+
+		// test
+		sel := b.Root().Find("echo")
+		input := nodeutil.ReadJSON(`{
+			"f" : 99,
+			"g" : {
+				"s": "coffee"
+			}
+		}`)
+		output := sel.Action(input)
+		fc.AssertEqual(t, nil, output.LastErr)
+		fc.AssertEqual(t, nil, h.finalizeTestCase())
+		fc.GoldFile(t, *update, traceFile, "testdata/gold/echo.trace")
+
+		// teardown
+		os.Remove(traceFile)
+		fc.RequireEqual(t, nil, h.Close())
+	}
+}
+
+func readJSON(fname string) node.Node {
 	raw, err := ioutil.ReadFile(fname)
 	if err != nil {
 		panic(err)

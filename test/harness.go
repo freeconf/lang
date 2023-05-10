@@ -29,18 +29,22 @@ type Harness struct {
 	gAddr  string
 }
 
-func NewHarness() *Harness {
+func NewHarness(x x) *Harness {
 	cwd, _ := os.Getwd()
 	return &Harness{
+		x:     x,
 		xAddr: cwd + "/fc-test-x.sock",
 		gAddr: cwd + "/fc-test.sock",
 	}
 }
 
-func (h *Harness) Connect(x x) error {
-	h.x = x
+func (h *Harness) Close() error {
+	return h.x.stop()
+}
+
+func (h *Harness) Connect() error {
 	fc.Debug.Println("starting x server")
-	if err := x.connect(h.gAddr, h.xAddr); err != nil {
+	if err := h.x.connect(h.gAddr, h.xAddr); err != nil {
 		return err
 	}
 
@@ -97,9 +101,17 @@ func (h *Harness) Stop() error {
 	return h.x.stop()
 }
 
-func (h *Harness) dump(sel node.Selection, fname string) error {
-	hnd := h.access.ResolveSelection(sel)
-	req := pb.DumpRequest{SelHnd: hnd, OutputFile: fname}
-	_, err := h.client.DumpBrowser(sel.Context, &req)
+func (h *Harness) createTestCase(tc pb.TestCase, traceFile string) (node.Node, error) {
+	req := pb.CreateTestCaseRequest{TestCase: tc, TraceFile: traceFile}
+	resp, err := h.client.CreateTestCase(context.Background(), &req)
+	if err != nil {
+		return nil, err
+	}
+	return h.access.CreateNode(resp.NodeHnd), nil
+}
+
+func (h *Harness) finalizeTestCase() error {
+	req := pb.FinalizeTestCaseRequest{}
+	_, err := h.client.FinalizeTestCase(context.Background(), &req)
 	return err
 }

@@ -17,6 +17,10 @@ type HandlePool struct {
 	lock    sync.RWMutex
 }
 
+type RemoteObject interface {
+	GetRemoteHandle() uint64
+}
+
 type HandleService struct {
 	pb.UnimplementedHandlesServer
 	d *Driver
@@ -61,6 +65,13 @@ func (p *HandlePool) Get(handle uint64) any {
 func (p *HandlePool) Hnd(obj any) uint64 {
 	p.lock.Lock()
 	defer p.lock.Unlock()
+
+	// The go object is really just a handle to an object in x lang then return
+	// that handle
+	if rhnd, isRemote := obj.(RemoteObject); isRemote {
+		return rhnd.GetRemoteHandle()
+	}
+
 	hnd, found := p.handles[obj]
 	if !found {
 		hnd = p.nextHnd()

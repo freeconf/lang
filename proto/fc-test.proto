@@ -6,14 +6,26 @@ package pb;
 service TestHarness {
 
     // Dump a selection to a file
-    rpc DumpBrowser(DumpRequest) returns (DumpResponse) {}
+    rpc CreateTestCase(CreateTestCaseRequest) returns (CreateTestCaseResponse) {}
+    rpc FinalizeTestCase(FinalizeTestCaseRequest) returns (FinalizeTestCaseResponse) {}
 
 }
 
-// Dump a selection to a file using the node Dump utility implemented in your language.
-// Dump should follow a very specific format.
-message DumpRequest {
-    uint64 selHnd = 1;
-    string outputFile = 4;
+enum TestCase {
+    BASIC = 0;
+    ECHO = 1;
 }
-message DumpResponse {}
+
+message FinalizeTestCaseRequest {
+}
+
+message FinalizeTestCaseResponse {}
+
+message CreateTestCaseRequest {
+    TestCase testCase = 2;
+    string traceFile = 3;
+}
+
+message CreateTestCaseResponse {
+    uint64 nodeHnd = 1;
+}

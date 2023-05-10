@@ -19,3 +19,7 @@ func NewTestHarnessClient(d *Driver) *TestHarnessAccess {
 func (c *TestHarnessAccess) ResolveSelection(sel node.Selection) uint64 {
 	return resolveSelection(c.d, &sel)
 }
+
+func (c *TestHarnessAccess) CreateNode(nodeHnd uint64) node.Node {
+	return &xnode{d: c.d, nodeHnd: nodeHnd}
+}

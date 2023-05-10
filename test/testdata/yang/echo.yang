@@ -1,0 +1,20 @@
+module echo {
+    grouping x {
+        leaf f {
+            type int32;
+        }
+        container g {
+            leaf s {
+                type string;
+            }
+        }
+    }
+    rpc echo {
+        input {
+            uses x;
+        }
+        output {
+            uses x;
+        }
+    }
+}

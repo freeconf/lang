@@ -234,6 +234,14 @@ class NotificationRequest():
         self.queue.put(node)
 
 
+class NodeRequest():
+
+    def __init__(self, sel, new=False, delete=False):
+        self.sel = sel
+        self.new = new
+        self.delete = delete
+
+
 class XNodeServicer(pb.fc_x_pb2_grpc.XNodeServicer):
     """Bridge between python node navigation and go node navigation"""
 
@@ -345,3 +353,13 @@ class XNodeServicer(pb.fc_x_pb2_grpc.XNodeServicer):
         finally:
             closer()
         return None
+    
+    def XBeginEdit(self, g_req, context):
+        sel = Selection.resolve(self.driver, g_req.selHnd)
+        sel.node.begin_edit(NodeRequest(sel, new=g_req.new, delete=g_req.delete))
+        return pb.fc_x_pb2.XBeginEditResponse()
+
+    def XEndEdit(self, g_req, context):
+        sel = Selection.resolve(self.driver, g_req.selHnd)
+        sel.node.end_edit(NodeRequest(sel, new=g_req.new, delete=g_req.delete))
+        return pb.fc_x_pb2.XEndEditResponse()

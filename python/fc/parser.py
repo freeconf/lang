@@ -20,7 +20,6 @@ class Parser():
         try:
             return fc.handles.Handle.require(driver, module_hnd_id)
         except KeyError:
-            print(f'resolving module {module_hnd_id}')
             req = pb.fc_pb2.GetModuleRequest(moduleHnd=module_hnd_id)
             resp = driver.g_nodes.GetModule(req)
             m = fc.meta_decoder.Decoder().decode(resp.module)
