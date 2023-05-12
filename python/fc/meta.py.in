@@ -26,7 +26,7 @@ class {{ .Name }}():
     def keyMeta(self):
         keyMeta = []
         for keyName in self.keys:
-            keyMeta.append(require_def(self, keyName))
+            keyMeta.append(get_def(self, keyName))
         return keyMeta
     {{- end }}
 
@@ -47,42 +47,33 @@ class Path():
             return self.parent.str() + '/' + s
         return s
 
-def new_path(module, path_str):
-    """Construct a path object from a module and child-ident/grand-child-ident/..."""
-    segs = path_str.split('/')
-    path = Path(None, module)
-    for seg in segs:
-        found = get_def(path.meta, seg)
-        if not found:
-            return None
-        path = Path(path, found)
-    return path
+
+class InvalidPathException(Exception):
+    pass
+
 
 def get_def(meta, ident):
-    if hasattr(meta, 'definitions'):
-        for ddef in meta.definitions:
-            if ddef.ident == ident:
-                return ddef
-
-    if hasattr(meta, 'actions'):
-        ddef = meta.actions.get(ident, None)
-        if ddef:
-            return ddef
-
-    if hasattr(meta, 'notifications'):
-        ddef = meta.notifications.get(ident, None)
-        if ddef:
-            return ddef
-
-    return None
-
-def require_def(meta, ident):
     if not meta:
         raise Exception(f'no meta given to find {ident}')
-    ddef = get_def(meta, ident)
+    for ddef in meta.definitions:
+        if ddef.ident == ident:
+            return ddef
+    raise InvalidPathException(f'definition {ident} not found in {meta.ident}')
+
+
+def get_rpc(meta, ident):
+    if not meta:
+        raise Exception(f'no meta given to find {ident}')
+    ddef = meta.actions.get(ident, None)
     if ddef:
         return ddef
-    raise Exception(f'definition {ident} not found in {meta.ident}')
+    raise InvalidPathException(f'rpc {ident} not found in {meta.ident}')
 
 
-
+def get_notification(meta, ident):
+    if not meta:
+        raise Exception(f'no meta given to find {ident}')
+    ddef = meta.notifications.get(ident, None)
+    if ddef:
+        return ddef
+    raise InvalidPathException(f'notification {ident} not found in {meta.ident}')

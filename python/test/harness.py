@@ -34,14 +34,6 @@ class TestHarnessServicer(pb.fc_test_pb2_grpc.TestHarnessServicer):
         self.driver = driver
         self.trace_file = None
 
-    def DumpBrowser(self, req, context):
-        sel = fc.node.Selection.resolve(self.driver, req.selHnd)
-        out = open(req.outputFile, "w")
-        n = trace.Trace(reflect.Reflect({}), out)
-        sel.upsert_into(n)
-        out.close()
-        return pb.fc_test_pb2.DumpResponse()
-
 
     def CreateTestCase(self, req, context):
         out = open(req.traceFile, "w")
@@ -65,7 +57,9 @@ class TestHarnessServicer(pb.fc_test_pb2_grpc.TestHarnessServicer):
 def echo_node():
     base = reflect.Reflect({})
     def on_action(parent, r):
-        return r.input
+        n = reflect.Reflect({})
+        r.input.insert_into(n)
+        return n
     return extend.Extend(base, on_action=on_action)
 
 
@@ -73,9 +67,7 @@ g_addr = sys.argv[1]
 x_addr = sys.argv[2]
 d = fc.driver.Driver(g_addr, x_addr)
 test_harness = TestHarnessServicer(d)
-print("loading driver...")
 d.load(test_harness)
-print("driver loaded.")
 
 def signal_handler(sig, frame):
     sys.exit(0)

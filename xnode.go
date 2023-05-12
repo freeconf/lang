@@ -117,7 +117,7 @@ func (n *xnode) Action(r node.ActionRequest) (output node.Node, err error) {
 		MetaIdent: r.Meta.Ident(),
 	}
 	if !r.Input.IsNil() {
-		req.InputSelHnd = r.Input.Hnd
+		req.InputSelHnd = resolveSelection(n.d, &r.Input)
 	}
 	resp, err := n.d.xnodes.XAction(r.Selection.Context, &req)
 	if err != nil || resp.OutputNodeHnd == 0 {

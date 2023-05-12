@@ -1,0 +1,19 @@
+syntax="proto3";
+option go_package = "./pb";
+package pb;
+import "val.proto";
+
+enum PathSegmentType {
+    DATA_DEF = 0;
+    LIST_ITEM = 1;
+    RPC = 2;
+    RPC_INPUT = 3;      
+    RPC_OUTPUT = 4;
+    NOTIFICATION = 5;
+}
+
+message PathSegment {
+    string metaIdent = 1;
+    repeated Val key = 2;
+    PathSegmentType type = 3;
+}

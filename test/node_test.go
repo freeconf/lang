@@ -56,15 +56,6 @@ func TestBasic(t *testing.T) {
 	}
 }
 
-func tempFileName() string {
-	dumpFile, err := ioutil.TempFile("", "node-test")
-	if err != nil {
-		panic(err)
-	}
-	dumpFile.Close()
-	return dumpFile.Name()
-}
-
 func TestEcho(t *testing.T) {
 	ypath := source.Dir("testdata/yang")
 	for _, h := range langs {
@@ -86,6 +77,11 @@ func TestEcho(t *testing.T) {
 		}`)
 		output := sel.Action(input)
 		fc.AssertEqual(t, nil, output.LastErr)
+
+		echo, err := nodeutil.WritePrettyJSON(output)
+		fc.AssertEqual(t, nil, err)
+		fc.Gold(t, *update, []byte(echo), "testdata/gold/echo.json")
+
 		fc.AssertEqual(t, nil, h.finalizeTestCase())
 		fc.GoldFile(t, *update, traceFile, "testdata/gold/echo.trace")
 
@@ -93,6 +89,15 @@ func TestEcho(t *testing.T) {
 		os.Remove(traceFile)
 		fc.RequireEqual(t, nil, h.Close())
 	}
+}
+
+func tempFileName() string {
+	dumpFile, err := ioutil.TempFile("", "node-test")
+	if err != nil {
+		panic(err)
+	}
+	dumpFile.Close()
+	return dumpFile.Name()
 }
 
 func readJSON(fname string) node.Node {

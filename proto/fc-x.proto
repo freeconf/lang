@@ -2,6 +2,7 @@ syntax="proto3";
 option go_package = "./pb";
 package pb;
 import "val.proto";
+import "common.proto";
 
 /*
  This is used when Go calls into whatever language it is talking to which we
@@ -108,7 +109,7 @@ message XSelectRequest {
       uint64 parentSelHnd = 1;
       uint64 nodeHnd = 3;
       uint64 browserHnd = 4;
-      string metaIdent = 5;
+      PathSegment path = 5; // to be combined with parent's PathSegment to construct full path
 }
 
 message XSelectResponse {

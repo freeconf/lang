@@ -2,7 +2,7 @@ syntax="proto3";
 option go_package = "./pb";
 package pb;
 import "meta.proto";
-import "val.proto";
+import "common.proto";
 
 /*
   FreeCONF full developer API made available thru gRPC.  Services are roughly broken
@@ -25,7 +25,6 @@ message LoadModuleResponse {
       Module module = 1;
       uint64 moduleHnd = 2;
 }
-
 
 ////////////
 // Handles
@@ -137,11 +136,6 @@ message GetModuleResponse {
 
 message GetSelectionRequest {
       uint64 selHnd = 1;
-}
-
-message PathSegment {
-      string metaIdent = 1;
-      repeated Val key = 2;
 }
 
 message GetSelectionResponse {      

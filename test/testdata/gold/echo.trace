@@ -7,3 +7,9 @@ action: echo
             field.read: s
                 val: string(coffee)
     output: true
+        field.read: f
+            val: int32(99)
+        child.read: g
+            found: true
+            field.read: s
+                val: string(coffee)

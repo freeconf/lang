@@ -107,11 +107,21 @@ func (s *NodeService) GetSelection(ctx context.Context, in *pb.GetSelectionReque
 	resp := pb.GetSelectionResponse{
 		NodeHnd: s.d.handles.Hnd(sel.Node),
 	}
+	resp.Path = &pb.PathSegment{
+		MetaIdent: sel.Path.Meta.Ident(),
+	}
 	if sel.InsideList {
-		resp.Path = &pb.PathSegment{Key: encodeVals(sel.Path.Key)}
+		resp.Path.Key = encodeVals(sel.Path.Key)
+		resp.Path.Type = pb.PathSegmentType_LIST_ITEM
 		resp.InsideList = true
-	} else {
-		resp.Path = &pb.PathSegment{MetaIdent: sel.Path.Meta.Ident()}
+	} else if meta.IsAction(sel.Path.Meta) {
+		resp.Path.Type = pb.PathSegmentType_RPC
+	} else if meta.IsNotification(sel.Path.Meta) {
+		resp.Path.Type = pb.PathSegmentType_RPC
+	} else if _, isRpcInput := sel.Path.Meta.(*meta.RpcInput); isRpcInput {
+		resp.Path.Type = pb.PathSegmentType_RPC_INPUT
+	} else if _, isRpcOutput := sel.Path.Meta.(*meta.RpcOutput); isRpcOutput {
+		resp.Path.Type = pb.PathSegmentType_RPC_OUTPUT
 	}
 	if sel.Parent == nil {
 		resp.BrowserHnd = s.d.handles.Hnd(sel.Browser)
