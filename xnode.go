@@ -21,14 +21,14 @@ func (n *xnode) GetRemoteHandle() uint64 {
 	return n.nodeHnd
 }
 
-func (n *xnode) Context(s node.Selection) context.Context {
+func (n *xnode) Context(s *node.Selection) context.Context {
 	// TODO
 	return s.Context
 }
 
 func (n *xnode) Child(r node.ChildRequest) (node.Node, error) {
 	req := pb.XChildRequest{
-		SelHnd:    resolveSelection(n.d, &r.Selection),
+		SelHnd:    resolveSelection(n.d, r.Selection),
 		MetaIdent: r.Meta.Ident(),
 		New:       r.New,
 		Delete:    r.Delete,
@@ -42,7 +42,7 @@ func (n *xnode) Child(r node.ChildRequest) (node.Node, error) {
 
 func (n *xnode) Next(r node.ListRequest) (node.Node, []val.Value, error) {
 	req := pb.XNextRequest{
-		SelHnd:    resolveSelection(n.d, &r.Selection),
+		SelHnd:    resolveSelection(n.d, r.Selection),
 		MetaIdent: r.Meta.Ident(),
 		New:       r.New,
 		Row:       r.Row64,
@@ -68,7 +68,7 @@ func (n *xnode) Next(r node.ListRequest) (node.Node, []val.Value, error) {
 
 func (n *xnode) Field(r node.FieldRequest, hnd *node.ValueHandle) error {
 	req := pb.XFieldRequest{
-		SelHnd:    resolveSelection(n.d, &r.Selection),
+		SelHnd:    resolveSelection(n.d, r.Selection),
 		MetaIdent: r.Meta.Ident(),
 		Write:     r.Write,
 		Clear:     r.Clear,
@@ -87,13 +87,13 @@ func (n *xnode) Field(r node.FieldRequest, hnd *node.ValueHandle) error {
 	return nil
 }
 
-func (n *xnode) Choose(sel node.Selection, choice *meta.Choice) (m *meta.ChoiceCase, err error) {
+func (n *xnode) Choose(sel *node.Selection, choice *meta.Choice) (m *meta.ChoiceCase, err error) {
 	return nil, nil
 }
 
 func (n *xnode) BeginEdit(r node.NodeRequest) error {
 	req := pb.XBeginEditRequest{
-		SelHnd: resolveSelection(n.d, &r.Selection),
+		SelHnd: resolveSelection(n.d, r.Selection),
 		New:    r.New,
 		Delete: r.Delete,
 	}
@@ -103,7 +103,7 @@ func (n *xnode) BeginEdit(r node.NodeRequest) error {
 
 func (n *xnode) EndEdit(r node.NodeRequest) error {
 	req := pb.XEndEditRequest{
-		SelHnd: resolveSelection(n.d, &r.Selection),
+		SelHnd: resolveSelection(n.d, r.Selection),
 		New:    r.New,
 		Delete: r.Delete,
 	}
@@ -113,11 +113,11 @@ func (n *xnode) EndEdit(r node.NodeRequest) error {
 
 func (n *xnode) Action(r node.ActionRequest) (output node.Node, err error) {
 	req := pb.XActionRequest{
-		SelHnd:    resolveSelection(n.d, &r.Selection),
+		SelHnd:    resolveSelection(n.d, r.Selection),
 		MetaIdent: r.Meta.Ident(),
 	}
-	if !r.Input.IsNil() {
-		req.InputSelHnd = resolveSelection(n.d, &r.Input)
+	if r.Input != nil {
+		req.InputSelHnd = resolveSelection(n.d, r.Input)
 	}
 	resp, err := n.d.xnodes.XAction(r.Selection.Context, &req)
 	if err != nil || resp.OutputNodeHnd == 0 {
@@ -128,7 +128,7 @@ func (n *xnode) Action(r node.ActionRequest) (output node.Node, err error) {
 
 func (n *xnode) Notify(r node.NotifyRequest) (node.NotifyCloser, error) {
 	req := pb.XNotificationRequest{
-		SelHnd:    resolveSelection(n.d, &r.Selection),
+		SelHnd:    resolveSelection(n.d, r.Selection),
 		MetaIdent: r.Meta.Ident(),
 	}
 	var recvErr error
@@ -159,6 +159,6 @@ func (n *xnode) Notify(r node.NotifyRequest) (node.NotifyCloser, error) {
 	return closer, nil
 }
 
-func (n *xnode) Peek(sel node.Selection, consumer interface{}) interface{} {
+func (n *xnode) Peek(sel *node.Selection, consumer interface{}) interface{} {
 	return nil
 }

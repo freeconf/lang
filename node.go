@@ -2,6 +2,7 @@ package lang
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/freeconf/lang/pb"
 	"github.com/freeconf/yang/meta"
@@ -33,18 +34,21 @@ func (s *NodeService) BrowserRoot(ctx context.Context, in *pb.BrowserRootRequest
 	b := s.d.handles.Get(in.BrowserHnd).(*node.Browser)
 	root := b.Root()
 	var resp pb.BrowserRootResponse
-	resp.SelHnd = resolveSelection(s.d, &root)
+	resp.SelHnd = resolveSelection(s.d, root)
 	return &resp, nil
 }
 
 func (s NodeService) Find(ctx context.Context, in *pb.FindRequest) (*pb.FindResponse, error) {
 	sel := s.d.handles.Get(in.SelHnd).(*node.Selection)
-	found := sel.Find(in.Path)
-	var resp pb.FindResponse
-	if !found.IsNil() {
-		resp.SelHnd = resolveSelection(s.d, &found)
+	found, err := sel.Find(in.Path)
+	if err != nil {
+		return nil, err
 	}
-	return &resp, nil
+	var resp pb.FindResponse
+	if found != nil {
+		resp.SelHnd = resolveSelection(s.d, found)
+	}
+	return &resp, err
 }
 
 func (s *NodeService) SelectionEdit(ctx context.Context, in *pb.SelectionEditRequest) (*pb.SelectionEditResponse, error) {
@@ -53,21 +57,22 @@ func (s *NodeService) SelectionEdit(ctx context.Context, in *pb.SelectionEditReq
 	var err error
 	switch in.Op {
 	case pb.SelectionEditOp_UPSERT_INTO:
-		err = sel.UpsertInto(n).LastErr
+		err = sel.UpsertInto(n)
 	case pb.SelectionEditOp_UPSERT_FROM:
-		err = sel.UpsertFrom(n).LastErr
+		err = sel.UpsertFrom(n)
 	case pb.SelectionEditOp_INSERT_INTO:
-		err = sel.InsertInto(n).LastErr
+		fmt.Printf("go.insert_info[%d], path=%s\n", in.SelHnd, sel.Path.String())
+		err = sel.InsertInto(n)
 	case pb.SelectionEditOp_INSERT_FROM:
-		err = sel.InsertFrom(n).LastErr
+		err = sel.InsertFrom(n)
 	case pb.SelectionEditOp_UPSERT_INTO_SET_DEFAULTS:
-		err = sel.UpsertIntoSetDefaults(n).LastErr
+		err = sel.UpsertIntoSetDefaults(n)
 	case pb.SelectionEditOp_UPSERT_FROM_SET_DEFAULTS:
-		err = sel.UpsertFromSetDefaults(n).LastErr
+		err = sel.UpsertFromSetDefaults(n)
 	case pb.SelectionEditOp_UPDATE_INTO:
-		err = sel.UpdateInto(n).LastErr
+		err = sel.UpdateInto(n)
 	case pb.SelectionEditOp_UPDATE_FROM:
-		err = sel.UpdateFrom(n).LastErr
+		err = sel.UpdateFrom(n)
 	case pb.SelectionEditOp_REPLACE_FROM:
 		err = sel.ReplaceFrom(n)
 	}
@@ -86,20 +91,19 @@ func (s *NodeService) Action(ctx context.Context, in *pb.ActionRequest) (*pb.Act
 		input = s.d.handles.Get(in.InputNodeHnd).(node.Node)
 	}
 	sel := s.d.handles.Require(in.SelHnd).(*node.Selection)
-	output := sel.Action(input)
-	var resp pb.ActionResponse
-	if !output.IsNil() {
-		resp.OutputSelHnd = resolveSelection(s.d, &output)
+	output, err := sel.Action(input)
+	if err != nil {
+		return nil, err
 	}
-	return &resp, output.LastErr
+	var resp pb.ActionResponse
+	if output != nil {
+		resp.OutputSelHnd = resolveSelection(s.d, output)
+	}
+	return &resp, nil
 }
 
 func resolveSelection(d *Driver, sel *node.Selection) uint64 {
-	if sel.Hnd != 0 {
-		return sel.Hnd
-	}
-	sel.Hnd = d.handles.Put(sel)
-	return sel.Hnd
+	return d.handles.Hnd(sel)
 }
 
 func (s *NodeService) GetSelection(ctx context.Context, in *pb.GetSelectionRequest) (*pb.GetSelectionResponse, error) {
@@ -150,7 +154,7 @@ func (s *NodeService) Notification(in *pb.NotificationRequest, srv pb.Node_Notif
 	sel := s.d.handles.Require(in.SelHnd).(*node.Selection)
 	closer, err := sel.Notifications(func(n node.Notification) {
 		resp := pb.NotificationResponse{
-			SelHnd: resolveSelection(s.d, &n.Event),
+			SelHnd: resolveSelection(s.d, n.Event),
 		}
 		if err := srv.Send(&resp); err != nil {
 			panic(err)

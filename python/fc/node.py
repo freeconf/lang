@@ -26,11 +26,11 @@ class Selection():
 
     @classmethod
     def resolve(cls, driver, hnd_id):
-        print(f'resolve hnd={hnd_id}')
         sel = fc.handles.Handle.lookup(driver, hnd_id)
         if sel == None:
             req = pb.fc_pb2.GetSelectionRequest(selHnd=hnd_id)
             resp = driver.g_nodes.GetSelection(req)
+            print(f'Selection.resolve hnd={hnd_id}, resp.parentHnd={resp.parentHnd}')
             node = resolve_node(driver, resp.nodeHnd)
             if resp.parentHnd:
                 # recursive
@@ -54,7 +54,7 @@ class Selection():
                 elif resp.path.type == pb.common_pb2.RPC_INPUT:
                     input_meta = parent.path.meta.input
                     path = fc.meta.Path(parent.path, input_meta)
-                    print(f'input_meta, num ddefs = {len(path.meta.definitions)}')
+                    print(f'input_meta, sel_hnd={hnd_id}, num ddefs = {len(path.meta.definitions)} {input_meta}')
                 elif resp.path.type == pb.common_pb2.RPC_OUTPUT:
                     output_meta = parent.path.meta.output
                     path = fc.meta.Path(parent.path, output_meta)
@@ -314,7 +314,7 @@ class XNodeServicer(pb.fc_x_pb2_grpc.XNodeServicer):
     def XField(self, g_req, context):
         try:
             sel = Selection.resolve(self.driver, g_req.selHnd)
-            print(f'xfield, sel.hnd={g_req.selHnd}')
+            print(f'xfield, sel.hnd={g_req.selHnd}, node_hnd={sel.node.hnd.id}')
             meta = fc.meta.get_def(sel.path.meta, g_req.metaIdent)
             req = FieldRequest(sel, meta, g_req.write, g_req.clear)
             write_val = None
@@ -342,8 +342,11 @@ class XNodeServicer(pb.fc_x_pb2_grpc.XNodeServicer):
         meta = sel.path.meta
         input = None
         if g_req.inputSelHnd != 0:
+            print(f'xaction, inputSelHnd={g_req.inputSelHnd}')
             input = Selection.resolve(self.driver, g_req.inputSelHnd)
+        print(f'about to call action on node {sel.node}')
         output = sel.node.action(ActionRequest(sel, meta, input))
+        print(f'done calling action on node {sel.node}')
         outputNodeHnd = None
         if output != None:
             outputNodeHnd = resolve_node(self.driver, output).hnd.id

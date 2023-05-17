@@ -62,6 +62,8 @@ func (p *HandlePool) Get(handle uint64) any {
 	return p.objects[handle]
 }
 
+// Hnd returns current handle if there is one, otherwise adds this object to the pool
+// and returns the new handle
 func (p *HandlePool) Hnd(obj any) uint64 {
 	p.lock.Lock()
 	defer p.lock.Unlock()
@@ -110,9 +112,5 @@ func (p *HandlePool) Release(handle uint64) {
 	if obj, found := p.objects[handle]; found {
 		delete(p.objects, handle)
 		delete(p.handles, obj)
-		// } else {
-		// 	// start out being fail-fast as this could represent sloppy
-		// 	// accounting that should be fixed
-		// 	panic(fmt.Sprintf("attempting to release handle %d that was not found or already released", handle))
 	}
 }

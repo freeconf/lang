@@ -45,8 +45,7 @@ func TestBasic(t *testing.T) {
 		b := node.NewBrowser(m, n)
 
 		// test
-		err = b.Root().UpsertFrom(readJSON("testdata/seed/basic.json")).LastErr
-		fc.AssertEqual(t, nil, err)
+		fc.AssertEqual(t, nil, b.Root().UpsertFrom(readJSON("testdata/seed/basic.json")))
 		fc.AssertEqual(t, nil, h.finalizeTestCase())
 		fc.GoldFile(t, *update, traceFile, "testdata/gold/basic.trace")
 
@@ -68,15 +67,16 @@ func TestEcho(t *testing.T) {
 		b := node.NewBrowser(m, n)
 
 		// test
-		sel := b.Root().Find("echo")
+		sel, err := b.Root().Find("echo")
+		fc.RequireEqual(t, nil, err)
 		input := nodeutil.ReadJSON(`{
 			"f" : 99,
 			"g" : {
 				"s": "coffee"
 			}
 		}`)
-		output := sel.Action(input)
-		fc.AssertEqual(t, nil, output.LastErr)
+		output, err := sel.Action(input)
+		fc.RequireEqual(t, nil, err)
 
 		echo, err := nodeutil.WritePrettyJSON(output)
 		fc.AssertEqual(t, nil, err)

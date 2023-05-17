@@ -58,6 +58,7 @@ def echo_node():
     base = reflect.Reflect({})
     def on_action(parent, r):
         n = reflect.Reflect({})
+        print(f'r.input[{r.input.hnd.id}].insert_into()')
         r.input.insert_into(n)
         return n
     return extend.Extend(base, on_action=on_action)
