@@ -1,4 +1,7 @@
 from enum import Enum
+import pb.common_pb2
+import fc.val
+import fc.parser
 
 # This file is generated from meta.py.in
 
@@ -46,6 +49,34 @@ class Path():
         if self.parent:
             return self.parent.str() + '/' + s
         return s
+
+    @classmethod
+    def resolve(cls, driver, resp):
+        module = fc.parser.Parser.resolve_module(driver, resp.moduleHnd)
+        path = Path(None, module)
+        if resp.segments == None:
+            return path
+        for seg in resp.segments:
+            if seg.type == pb.common_pb2.DATA_DEF:
+                ddef_meta = get_def(path.meta, seg.metaIdent)
+                path = Path(path, ddef_meta)
+            elif seg.type == pb.common_pb2.RPC:
+                rpc_meta = get_rpc(path.meta, seg.metaIdent)
+                path = Path(path, rpc_meta)
+            elif seg.type == pb.common_pb2.NOTIFICATION:
+                notif_meta = get_notification(path.meta, seg.metaIdent)
+                path = Path(path, notif_meta)
+            elif seg.type == pb.common_pb2.RPC_INPUT:
+                input_meta = path.meta.input
+                path = Path(path, input_meta)
+            elif seg.type == pb.common_pb2.RPC_OUTPUT:
+                output_meta = path.meta.output
+                path = Path(path, output_meta)
+            else:
+                raise Exception(f"unrecognized path segment type {seg.type} at {path.meta.ident}")
+            if seg.key != None and len(seg.key) > 0:
+                path.key = [fc.val.proto_decode(v) for v in seg.key]
+        return path
 
 
 class InvalidPathException(Exception):

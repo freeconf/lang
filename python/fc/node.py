@@ -15,14 +15,20 @@ import logging
 
 class Selection():
 
-    def __init__(self, driver, hnd_id, node, path, parent, browser, inside_list=False):
+    def __init__(self, driver, hnd_id, node, path, parent_hnd, browser_hnd, inside_list=False):
         self.driver = driver
         self.hnd = fc.handles.Handle(driver, hnd_id, self)
-        self.parent = parent
+        self.parent_hnd = parent_hnd
         self.node = node
         self.path = path
-        self.browser = browser
+        self.browser_hnd = browser_hnd
         self.inside_list = inside_list
+
+    def browser(self):
+        return Browser.resolve(self.driver, self.browser_hnd)
+
+    def parent(self):
+        return Selection.resolve(self.driver, self.parent_hnd)
 
     @classmethod
     def resolve(cls, driver, hnd_id):
@@ -30,47 +36,9 @@ class Selection():
         if sel == None:
             req = pb.fc_pb2.GetSelectionRequest(selHnd=hnd_id)
             resp = driver.g_nodes.GetSelection(req)
-            print(f'Selection.resolve hnd={hnd_id}, resp.parentHnd={resp.parentHnd}')
             node = resolve_node(driver, resp.nodeHnd)
-            if resp.parentHnd:
-                # recursive
-                print(f'resolve w/parent hnd={hnd_id} path.type={resp.path.type}, input?={resp.path.type == pb.common_pb2.RPC_INPUT}')
-                parent = Selection.resolve(driver, resp.parentHnd)
-                if resp.path.type == pb.common_pb2.DATA_DEF:
-                    ddef_meta = fc.meta.get_def(parent.path.meta, resp.path.metaIdent)
-                    path = fc.meta.Path(parent.path, ddef_meta)
-                elif resp.path.type == pb.common_pb2.LIST_ITEM:
-                    key = None
-                    if resp.path.key != None and len(resp.path.key) > 0:
-                        key = [fc.val.proto_decode(v) for v in resp.path.key]
-                    meta = parent.path.meta
-                    path = fc.meta.Path(parent.path, meta, key=key)
-                elif resp.path.type == pb.common_pb2.RPC:
-                    rpc_meta = fc.meta.get_rpc(parent.path.meta, resp.path.metaIdent)
-                    path = fc.meta.Path(parent.path, rpc_meta)
-                elif resp.path.type == pb.common_pb2.NOTIFICATION:
-                    notif_meta = fc.meta.get_notification(parent.path.meta, resp.path.metaIdent)
-                    path = fc.meta.Path(parent.path, notif_meta)
-                elif resp.path.type == pb.common_pb2.RPC_INPUT:
-                    input_meta = parent.path.meta.input
-                    path = fc.meta.Path(parent.path, input_meta)
-                    print(f'input_meta, sel_hnd={hnd_id}, num ddefs = {len(path.meta.definitions)} {input_meta}')
-                elif resp.path.type == pb.common_pb2.RPC_OUTPUT:
-                    output_meta = parent.path.meta.output
-                    path = fc.meta.Path(parent.path, output_meta)
-                elif resp.path.type == pb.common_pb2.LIST_ITEM:
-                    key = None
-                    if resp.path.key != None and len(resp.path.key) > 0:
-                        key = [fc.val.proto_decode(v) for v in resp.path.key]
-                    meta = parent.path.meta
-                    path = fc.meta.Path(parent.path, meta, key=key)
-                else:
-                    raise Exception(f"unrecognized path segment type {resp.path.type} at {parent.path.meta.ident}")
-                sel = Selection(driver, hnd_id, node, path, parent, parent.browser, inside_list=resp.insideList) 
-            else:
-                browser = fc.node.Browser.resolve(driver, resp.browserHnd)
-                path = fc.meta.Path(None, browser.module)
-                sel = Selection(driver, hnd_id, node, path, None, browser)
+            path = fc.meta.Path.resolve(driver, resp.path)
+            sel = Selection(driver, hnd_id, node, path, resp.parentHnd, resp.browserHnd, resp.insideList)
         return sel
 
     def action(self, inputNode=0):
@@ -314,7 +282,6 @@ class XNodeServicer(pb.fc_x_pb2_grpc.XNodeServicer):
     def XField(self, g_req, context):
         try:
             sel = Selection.resolve(self.driver, g_req.selHnd)
-            print(f'xfield, sel.hnd={g_req.selHnd}, node_hnd={sel.node.hnd.id}')
             meta = fc.meta.get_def(sel.path.meta, g_req.metaIdent)
             req = FieldRequest(sel, meta, g_req.write, g_req.clear)
             write_val = None
@@ -336,21 +303,22 @@ class XNodeServicer(pb.fc_x_pb2_grpc.XNodeServicer):
         pass
 
     def XAction(self, g_req, context):
-        sel = Selection.resolve(self.driver, g_req.selHnd)
-        # TODO: Id this inconsistent?
-        # meta = fc.meta.require_def(sel.path.meta, g_req.metaIdent)
-        meta = sel.path.meta
-        input = None
-        if g_req.inputSelHnd != 0:
-            print(f'xaction, inputSelHnd={g_req.inputSelHnd}')
-            input = Selection.resolve(self.driver, g_req.inputSelHnd)
-        print(f'about to call action on node {sel.node}')
-        output = sel.node.action(ActionRequest(sel, meta, input))
-        print(f'done calling action on node {sel.node}')
-        outputNodeHnd = None
-        if output != None:
-            outputNodeHnd = resolve_node(self.driver, output).hnd.id
-        return pb.fc_x_pb2.XActionResponse(outputNodeHnd=outputNodeHnd)
+        try:
+            sel = Selection.resolve(self.driver, g_req.selHnd)
+            # TODO: Id this inconsistent?
+            # meta = fc.meta.require_def(sel.path.meta, g_req.metaIdent)
+            meta = sel.path.meta
+            input = None
+            if g_req.inputSelHnd != 0:
+                input = Selection.resolve(self.driver, g_req.inputSelHnd)
+            output = sel.node.action(ActionRequest(sel, meta, input))
+            outputNodeHnd = None
+            if output != None:
+                outputNodeHnd = resolve_node(self.driver, output).hnd.id
+            return pb.fc_x_pb2.XActionResponse(outputNodeHnd=outputNodeHnd)
+        except Exception as error:
+            print(traceback.format_exc())
+            raise error
 
 
     def XNodeSource(self, g_req, context):

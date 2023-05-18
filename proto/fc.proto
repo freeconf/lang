@@ -143,7 +143,7 @@ message GetSelectionResponse {
       uint64 parentHnd = 2;
       uint64 browserHnd = 3;      
       bool insideList = 4;
-      repeated PathSegment path = 5;
+      Path path = 5;
 }
 
 message NotificationRequest {

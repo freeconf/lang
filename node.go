@@ -2,7 +2,6 @@ package lang
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/freeconf/lang/pb"
 	"github.com/freeconf/yang/meta"
@@ -61,7 +60,6 @@ func (s *NodeService) SelectionEdit(ctx context.Context, in *pb.SelectionEditReq
 	case pb.SelectionEditOp_UPSERT_FROM:
 		err = sel.UpsertFrom(n)
 	case pb.SelectionEditOp_INSERT_INTO:
-		fmt.Printf("go.insert_info[%d], path=%s\n", in.SelHnd, sel.Path.String())
 		err = sel.InsertInto(n)
 	case pb.SelectionEditOp_INSERT_FROM:
 		err = sel.InsertFrom(n)
@@ -111,21 +109,10 @@ func (s *NodeService) GetSelection(ctx context.Context, in *pb.GetSelectionReque
 	resp := pb.GetSelectionResponse{
 		NodeHnd: s.d.handles.Hnd(sel.Node),
 	}
-	resp.Path = &pb.PathSegment{
-		MetaIdent: sel.Path.Meta.Ident(),
-	}
+	s.d.handles.Hnd(sel.Browser.Meta)
+	resp.Path = buildPath(s.d, sel.Path)
 	if sel.InsideList {
-		resp.Path.Key = encodeVals(sel.Path.Key)
-		resp.Path.Type = pb.PathSegmentType_LIST_ITEM
 		resp.InsideList = true
-	} else if meta.IsAction(sel.Path.Meta) {
-		resp.Path.Type = pb.PathSegmentType_RPC
-	} else if meta.IsNotification(sel.Path.Meta) {
-		resp.Path.Type = pb.PathSegmentType_RPC
-	} else if _, isRpcInput := sel.Path.Meta.(*meta.RpcInput); isRpcInput {
-		resp.Path.Type = pb.PathSegmentType_RPC_INPUT
-	} else if _, isRpcOutput := sel.Path.Meta.(*meta.RpcOutput); isRpcOutput {
-		resp.Path.Type = pb.PathSegmentType_RPC_OUTPUT
 	}
 	if sel.Parent == nil {
 		resp.BrowserHnd = s.d.handles.Hnd(sel.Browser)
@@ -133,6 +120,38 @@ func (s *NodeService) GetSelection(ctx context.Context, in *pb.GetSelectionReque
 		resp.ParentHnd = resolveSelection(s.d, sel.Parent)
 	}
 	return &resp, nil
+}
+
+func buildPath(d *Driver, p *node.Path) *pb.Path {
+	// there might be an opportunity to optimize this given that caller likely
+	// has most of the path from previous calls and we're sending full path copy back
+	// each time.  Maybe caller can send hint as to what piece they are
+	// missing and we can send just those pieces.
+	protoSegs := make([]*pb.PathSegment, len(p.Segments())-1)
+	protoPath := &pb.Path{
+		Segments:  protoSegs,
+		ModuleHnd: d.handles.Hnd(p.Segments()[0].Meta),
+	}
+	for i, seg := range p.Segments()[1:] {
+		protoSegs[i] = &pb.PathSegment{
+			MetaIdent: seg.Meta.Ident(),
+		}
+		if meta.IsAction(seg.Meta) {
+			protoSegs[i].Type = pb.PathSegmentType_RPC
+		} else if meta.IsNotification(seg.Meta) {
+			protoSegs[i].Type = pb.PathSegmentType_NOTIFICATION
+		} else if _, match := seg.Meta.(*meta.RpcInput); match {
+			protoSegs[i].Type = pb.PathSegmentType_RPC_INPUT
+		} else if _, match := seg.Meta.(*meta.RpcOutput); match {
+			protoSegs[i].Type = pb.PathSegmentType_RPC_OUTPUT
+		} else {
+			protoSegs[i].Type = pb.PathSegmentType_DATA_DEF
+		}
+		if seg.Key != nil {
+			protoSegs[i].Key = encodeVals(seg.Key)
+		}
+	}
+	return protoPath
 }
 
 func (s *NodeService) GetBrowser(ctx context.Context, in *pb.GetBrowserRequest) (*pb.GetBrowserResponse, error) {

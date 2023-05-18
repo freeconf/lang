@@ -5,6 +5,7 @@ import (
 	"flag"
 	"io/ioutil"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/freeconf/yang/fc"
@@ -29,13 +30,30 @@ type nodeTestHarness interface {
 // the go implementation, you have to rerun the go and accept the new trace results
 // before verify other languages match
 var langs = []nodeTestHarness{
-	//&golang{},
+	&golang{},
 	NewHarness(&python{}),
+}
+
+func Langs() []nodeTestHarness {
+	langEnv := os.Getenv("FC_LANG")
+	if langEnv == "" {
+		return langs
+	}
+	var specific []nodeTestHarness
+	for _, langId := range strings.Split(langEnv, ",") {
+		switch langId {
+		case "go":
+			specific = append(specific, &golang{})
+		case "python":
+			specific = append(specific, NewHarness(&python{}))
+		}
+	}
+	return specific
 }
 
 func TestBasic(t *testing.T) {
 	ypath := source.Dir("testdata/yang")
-	for _, h := range langs {
+	for _, h := range Langs() {
 		// setup
 		fc.RequireEqual(t, nil, h.Connect())
 		traceFile := tempFileName()
@@ -57,7 +75,7 @@ func TestBasic(t *testing.T) {
 
 func TestEcho(t *testing.T) {
 	ypath := source.Dir("testdata/yang")
-	for _, h := range langs {
+	for _, h := range Langs() {
 		// setup
 		fc.RequireEqual(t, nil, h.Connect())
 		traceFile := tempFileName()

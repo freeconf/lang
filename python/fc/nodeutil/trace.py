@@ -1,4 +1,4 @@
-from fc.nodeutil import basic
+from fc.nodeutil import reflect
 
 # Wrap a node with a trace and see all data into and out of node structure without
 # changing operation. 
@@ -30,13 +30,18 @@ class Trace():
         return Trace(next, self.out, level=self.level+1), key
 
 
+    def meta_str(self, meta):
+        if hasattr(meta, 'ident'):
+            return meta.ident
+        return str(type(meta))
+
     def child(self, r):
         if r.new:
-            self.trace(self.level, "child.new", r.meta.ident)
+            self.trace(self.level, "child.new", self.meta_str(r.meta))
         elif r.delete:
-            self.trace(self.level, "child.delete", r.meta.ident)
+            self.trace(self.level, "child.delete", self.meta_str(r.meta))
         else:
-            self.trace(self.level, "child.read", r.meta.ident)
+            self.trace(self.level, "child.read", self.meta_str(r.meta))
         child = self.target.child(r)
         self.trace(self.level+1, "found", child!=None)
         if child == None:
@@ -79,13 +84,13 @@ class Trace():
             self.trace(self.level+1, "input", "nil")
         else:
             self.trace(self.level+1, "input", "true")
-            r.input.node = Trace(r.input.node, self.out, level=self.level+1)
-        out = self.target.action(r)
-        if out is None:
+            
+        output = self.target.action(r)
+        if output is None:
             self.trace(self.level+1, "output", "nil")
         else:
-            out = Trace(out, self.out, level=self.level+1)
-        return out
+            self.trace(self.level+1, "output", "true")
+        return output
 
 
     def trace(self, level, key, val):
@@ -122,5 +127,5 @@ class Trace():
             strs = []
             for key in keys:
                 strs.append(str(key.v))
-            return f'{meta.ident}={",".join(strs)}'
-        return meta.ident
+            return f'{self.meta_str(meta)}={",".join(strs)}'
+        return self.meta_str(meta)
