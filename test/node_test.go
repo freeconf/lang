@@ -26,24 +26,26 @@ type nodeTestHarness interface {
 	Connect() error
 }
 
-// if you are just running a specific langauge AND remember you change the test data or
-// the go implementation, you have to rerun the go and accept the new trace results
-// before verify other languages match
-var langs = []nodeTestHarness{
-	&golang{},
+var allLangs = []nodeTestHarness{
+
+	// tip: when debugging in IDE, comment out langs you do not want to debug instead
+	// of setting env vars.  Just be sure to restore list when done.
+
+	// newGolang(),
+
 	NewHarness(&python{}),
 }
 
 func Langs() []nodeTestHarness {
 	langEnv := os.Getenv("FC_LANG")
 	if langEnv == "" {
-		return langs
+		return allLangs
 	}
 	var specific []nodeTestHarness
 	for _, langId := range strings.Split(langEnv, ",") {
 		switch langId {
 		case "go":
-			specific = append(specific, &golang{})
+			specific = append(specific, newGolang())
 		case "python":
 			specific = append(specific, NewHarness(&python{}))
 		}
@@ -102,6 +104,53 @@ func TestEcho(t *testing.T) {
 
 		fc.AssertEqual(t, nil, h.finalizeTestCase())
 		fc.GoldFile(t, *update, traceFile, "testdata/gold/echo.trace")
+
+		// teardown
+		os.Remove(traceFile)
+		fc.RequireEqual(t, nil, h.Close())
+	}
+}
+
+func TestNotify(t *testing.T) {
+	ypath := source.Dir("testdata/yang")
+	m := parser.RequireModule(ypath, "echo")
+	for _, h := range Langs() {
+		// setup
+		fc.RequireEqual(t, nil, h.Connect())
+		traceFile := tempFileName()
+		n, err := h.createTestCase(pb.TestCase_ECHO, traceFile)
+		fc.RequireEqual(t, nil, err)
+		b := node.NewBrowser(m, n)
+
+		// test
+		sel, err := b.Root().Find("recv")
+		fc.RequireEqual(t, nil, err)
+		msgs := make(chan string, 1)
+		unsub, err := sel.Notifications(func(n node.Notification) {
+			msg, err := nodeutil.WritePrettyJSON(n.Event)
+			if err != nil {
+				panic(err)
+			}
+			msgs <- msg
+		})
+		fc.RequireEqual(t, nil, err)
+
+		sendSel, err := b.Root().Find("send")
+		fc.RequireEqual(t, nil, err)
+		input := nodeutil.ReadJSON(`{
+			"f" : 99,
+			"g" : {
+				"s": "coffee"
+			}
+		}`)
+		_, err = sendSel.Action(input)
+		fc.RequireEqual(t, nil, err)
+		msg := <-msgs
+		fc.Gold(t, *update, []byte(msg), "testdata/gold/send.json")
+
+		unsub()
+
+		fc.AssertEqual(t, nil, h.finalizeTestCase())
 
 		// teardown
 		os.Remove(traceFile)

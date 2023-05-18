@@ -149,7 +149,11 @@ func (n *xnode) Notify(r node.NotifyRequest) (node.NotifyCloser, error) {
 		var resp *pb.XNotificationResponse
 		for {
 			resp, recvErr = client.Recv()
-			if resp == nil || recvErr != nil {
+			if recvErr != nil {
+				r.Send(node.ErrorNode{Err: recvErr})
+				continue
+			}
+			if resp == nil {
 				break
 			}
 			n := n.d.handles.Get(resp.NodeHnd).(node.Node)

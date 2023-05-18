@@ -9,12 +9,27 @@ module echo {
             }
         }
     }
+
     rpc echo {
+
+        // "input is returned in output";
+
         input {
             uses x;
         }
         output {
             uses x;
         }
+    }
+
+    rpc send {
+        input {
+            uses x;
+        }
+    }
+
+    notification recv {
+        // message is sent then send is called and it just sends payload in message
+        uses x;
     }
 }

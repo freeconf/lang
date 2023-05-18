@@ -38,7 +38,8 @@ class TestHarnessServicer(pb.fc_test_pb2_grpc.TestHarnessServicer):
     def CreateTestCase(self, req, context):
         out = open(req.traceFile, "w")
         if req.testCase == pb.fc_test_pb2.ECHO:
-            n = echo_node()
+            e = Echo()
+            n = e.node()
         elif req.testCase == pb.fc_test_pb2.BASIC:
             n = reflect.Reflect({})
         else:
@@ -54,13 +55,47 @@ class TestHarnessServicer(pb.fc_test_pb2_grpc.TestHarnessServicer):
         return pb.fc_test_pb2.FinalizeTestCaseResponse()
 
 
-def echo_node():
-    base = reflect.Reflect({})
-    def on_action(parent, r):
-        n = reflect.Reflect({})
-        r.input.insert_into(n)
-        return n
-    return extend.Extend(base, on_action=on_action)
+class Echo:
+    """
+    Implements the test harness compliance tests for "Echo" which includes:
+      1.) action that returns back into
+      2.) action that triggers a notification that send action input as event message  
+    """
+
+    def __init__(self):
+        self.listeners = []
+
+    def on_update(self, listener):
+        self.listeners.append(listener)
+        def closer():
+            self.listeners.remove(listener)
+        return closer
+
+    def update_listeners(self, n):
+        print(f'update_listeners called')
+        for l in self.listeners:
+            l(n)
+
+    def node(self):
+        base = reflect.Reflect({})
+
+        def action(parent, r):
+            if r.meta.ident == "echo":
+                n = reflect.Reflect({})
+                r.input.insert_into(n)
+                return n
+            elif r.meta.ident == "send":
+                self.update_listeners(r.input.node)
+            return None
+        
+        def notification(node, r):
+            print(f'notify called')
+            if r.meta.ident == "recv":
+                def listener(n):
+                    r.send(n)
+                return self.on_update(listener)
+        
+        return extend.Extend(base, on_action=action, on_notification=notification)
 
 
 g_addr = sys.argv[1]

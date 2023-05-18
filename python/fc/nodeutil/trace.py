@@ -91,6 +91,11 @@ class Trace():
         else:
             self.trace(self.level+1, "output", "true")
         return output
+    
+
+    def notification(self, r):
+        self.trace(self.level, "notification", r.meta.ident)
+        return self.target.notification(r)
 
 
     def trace(self, level, key, val):
