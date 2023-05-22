@@ -5,15 +5,18 @@ package pb;
 // Each language implements this to drive compatiblity tests from Go
 service TestHarness {
 
-    // Dump a selection to a file
-    rpc CreateTestCase(CreateTestCaseRequest) returns (CreateTestCaseResponse) {}
+    // Create a node that implements a specific test case and test harness in Go
+    // will excersise the node accordingly
+    rpc CreateTestCase(CreateTestCaseRequest) returns (CreateTestCaseResponse) {}    
     rpc FinalizeTestCase(FinalizeTestCaseRequest) returns (FinalizeTestCaseResponse) {}
 
+    rpc ParseModule(ParseModuleRequest) returns (ParseModuleResponse) {}
 }
 
 enum TestCase {
     BASIC = 0;
     ECHO = 1;
+    ADVANCED = 2;
 }
 
 message FinalizeTestCaseRequest {
@@ -28,4 +31,12 @@ message CreateTestCaseRequest {
 
 message CreateTestCaseResponse {
     uint64 nodeHnd = 1;
+}
+
+message ParseModuleRequest {
+    string dir = 1;
+    string moduleIdent = 2;
+}
+
+message ParseModuleResponse {    
 }

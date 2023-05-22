@@ -42,3 +42,8 @@ class Extend():
     def end_edit(self, r):
         if self.on_end_edit:
             return self.on_end_edit(self.base, r)
+        
+    def choose(self, sel, choice):
+        if self.on_end_edit:
+            return self.on_end_edit(self.base, sel, choice)
+        return self.base.choose(sel, choice)

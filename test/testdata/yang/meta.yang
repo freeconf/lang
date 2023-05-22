@@ -1,0 +1,66 @@
+module meta {
+    namespace "m.freeconf.org";
+    prefix "m";
+    description "smogishboard of yang features";
+    contact "douglas@hubler.us";
+    organization "freeconf.org";
+    reference "ref here";
+    yang-version "1.1";
+
+    revision 2023-05-18 {
+        description "day i wrote this";
+        reference "ref here";
+    }
+
+    revision 2023-05-01 {
+        description "older revsion";
+        reference "another ref here";
+    }
+
+    feature migration {
+        description "birds are moving";
+        reference "audobon guide";        
+    }
+
+    feature nesting {
+        description "home sweet home";
+        reference "national geographic";        
+    }
+
+    identity continent;
+
+    identity country {
+        base continent;
+    }
+
+    extension advanced {
+        description "this fact for the leet only";
+        argument "level";
+    }
+
+    list bird {
+        description "tweet tweet";
+        key name;
+
+        leaf name {
+            description "who dat?";
+            type string;
+        }
+
+        leaf ground-bird {
+            type boolean;
+            m:advanced 5;
+        }
+
+        choice transport {
+            leaf swim-speed {
+                type decimal64;
+                units "knots";
+            }
+            leaf fly-speed {
+                type decimal64;
+                units "m/s";
+            }
+        }
+    }
+}

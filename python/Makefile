@@ -1,6 +1,8 @@
 export YANGPATH = $(abspath ../test/yang)
-export LD_LIBRARY_PATH = $(abspath ../out)
-export PYTHONPATH = $(abspath .)
+#export LD_LIBRARY_PATH = $(abspath ../out)
+#export PYTHONPATH = $(abspath .)
+TESTS = \
+  ./
 
 .PHONY: test
 test:

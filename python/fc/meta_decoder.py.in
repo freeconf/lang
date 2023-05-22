@@ -7,11 +7,36 @@ import fc.val
 class Decoder():
     """Convert the protobuf Module to a meta Module """
 
-    def decode_ExtensionDefArgList(self, parent, encoded):
+    def decode_ExtensionDefArgList(self, parent, encoded_list):        
         pass
 
-    def decode_ExtensionList(self, parent, encoded):
-        pass
+    def decode_ExtensionList(self, parent, encoded_list):
+        to = {}
+        for encoded in encoded_list:
+            x = self.decode_Extension(parent, encoded)
+            to[encoded.ident] = x
+        return to
+
+    def decode_RevisionList(self, parent, encoded_list):
+        to = []
+        for encoded in encoded_list:
+            x = self.decode_Revision(parent, encoded)
+            to.append(x)
+        return to
+
+    def decode_IdentityList(self, parent, encoded_list):
+        to = {}
+        for encoded in encoded_list:
+            x = self.decode_Identity(parent, encoded)
+            to[encoded.ident] = x
+        return to
+
+    def decode_FeatureList(self, parent, encoded_list):
+        to = {}
+        for encoded in encoded_list:
+            x = self.decode_Feature(parent, encoded)
+            to[encoded.ident] = x
+        return to
 
     def decode_RpcList(self, parent, encoded_list):
         to = {}
@@ -25,6 +50,13 @@ class Decoder():
         for encoded in encoded_list:
             notif = self.decode_Notification(parent, encoded)
             to[notif.ident] = notif
+        return to
+
+    def decode_ChoiceCaseList(self, parent, encoded_list):
+        to = {}
+        for encoded in encoded_list:
+            x = self.decode_ChoiceCase(parent, encoded)
+            to[x.ident] = x
         return to
 
     def decode_Status(self, parent, encoded):
@@ -65,7 +97,7 @@ class Decoder():
         {{- if .PyCustomDecoder }}
         to.{{.PyName}} = self.decode_{{.PyCustomDecoder}}(to, encoded.{{.PyName}} )
         {{- else }}
-        to.{{.PyName}} = encoded.{{.PyName}}
+        to.{{.PyName}} = encoded.{{.Name}}
         {{- end }}
         {{- end }}
         return to

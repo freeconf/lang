@@ -9,13 +9,17 @@ class Reflect():
         self.object_hook = object_hook
         self.is_dict = isinstance(obj, dict)
 
+    def choose(self, sel, choice):
+        for choice_case in choice.cases.values():
+            for case_ddef in choice_case.definitions:
+                if Reflect.has_value(self.obj, case_ddef):
+                    return choice_case
+        return None
+
     def child(self, r):
         child = None
         if r.delete:
-            if self.is_dict:
-                del self.obj[r.meta.ident]
-            else:
-                Reflect.write_field(self.obj, r.meta, None)
+            Reflect.clear_field(self.obj, r.meta)
             return None
         elif r.new:
             if self.object_hook:
@@ -51,14 +55,31 @@ class Reflect():
      
     @classmethod
     def write_field(cls, obj, meta, v):
-        if isinstance(obj, dict):            
+        if isinstance(obj, dict):
             obj[meta.ident] = v
         else:
             setattr(obj, meta.ident, v)
 
+    @classmethod
+    def clear_field(cls, obj, meta):
+        if isinstance(obj, dict):
+            del obj[meta.ident]
+        else:
+            setattr(obj, meta.ident, None)
+
+    @classmethod
+    def has_value(cls, obj, meta):
+        if isinstance(obj, dict):
+            return meta.ident in obj
+        else:
+            hasattr(obj, meta.ident)
+
     def field(self, r, write_val):
         if r.write:
-            Reflect.write_field(self.obj, r.meta, write_val.v)
+            if r.clear:
+                Reflect.clear_field(self.obj, r.meta)
+            else:
+                Reflect.write_field(self.obj, r.meta, write_val.v)
         else:
             v = Reflect.read_field(self.obj, r.meta)
             if v != None:

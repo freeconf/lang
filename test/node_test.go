@@ -22,6 +22,9 @@ var update = flag.Bool("update", false, "update gold files instead of testing ag
 type nodeTestHarness interface {
 	createTestCase(tc pb.TestCase, tracefile string) (node.Node, error)
 	finalizeTestCase() error
+
+	parseModule(dir string, module string) error
+
 	Close() error
 	Connect() error
 }
@@ -31,37 +34,20 @@ var allLangs = []nodeTestHarness{
 	// tip: when debugging in IDE, comment out langs you do not want to debug instead
 	// of setting env vars.  Just be sure to restore list when done.
 
-	// newGolang(),
+	newGolang(),
 
 	NewHarness(&python{}),
 }
 
-func Langs() []nodeTestHarness {
-	langEnv := os.Getenv("FC_LANG")
-	if langEnv == "" {
-		return allLangs
-	}
-	var specific []nodeTestHarness
-	for _, langId := range strings.Split(langEnv, ",") {
-		switch langId {
-		case "go":
-			specific = append(specific, newGolang())
-		case "python":
-			specific = append(specific, NewHarness(&python{}))
-		}
-	}
-	return specific
-}
-
 func TestBasic(t *testing.T) {
 	ypath := source.Dir("testdata/yang")
+	m := parser.RequireModule(ypath, "basic")
 	for _, h := range Langs() {
 		// setup
 		fc.RequireEqual(t, nil, h.Connect())
 		traceFile := tempFileName()
 		n, err := h.createTestCase(pb.TestCase_BASIC, traceFile)
 		fc.RequireEqual(t, nil, err)
-		m := parser.RequireModule(ypath, "basic")
 		b := node.NewBrowser(m, n)
 
 		// test
@@ -77,13 +63,13 @@ func TestBasic(t *testing.T) {
 
 func TestEcho(t *testing.T) {
 	ypath := source.Dir("testdata/yang")
+	m := parser.RequireModule(ypath, "echo")
 	for _, h := range Langs() {
 		// setup
 		fc.RequireEqual(t, nil, h.Connect())
 		traceFile := tempFileName()
 		n, err := h.createTestCase(pb.TestCase_ECHO, traceFile)
 		fc.RequireEqual(t, nil, err)
-		m := parser.RequireModule(ypath, "echo")
 		b := node.NewBrowser(m, n)
 
 		// test
@@ -156,6 +142,68 @@ func TestNotify(t *testing.T) {
 		os.Remove(traceFile)
 		fc.RequireEqual(t, nil, h.Close())
 	}
+}
+
+func TestMeta(t *testing.T) {
+	dir := "testdata/yang"
+	for _, h := range Langs() {
+		// setup
+		fc.RequireEqual(t, nil, h.Connect())
+
+		// test
+		fc.AssertEqual(t, nil, h.parseModule(dir, "meta"))
+
+		fc.AssertEqual(t, nil, h.finalizeTestCase())
+
+		// teardown
+		fc.RequireEqual(t, nil, h.Close())
+	}
+}
+
+func TestChoose(t *testing.T) {
+	ypath := source.Dir("testdata/yang")
+	m := parser.RequireModule(ypath, "advanced")
+	for _, h := range Langs() {
+		// setup
+		fc.RequireEqual(t, nil, h.Connect())
+		traceFile := tempFileName()
+		n, err := h.createTestCase(pb.TestCase_ADVANCED, traceFile)
+		fc.RequireEqual(t, nil, err)
+		b := node.NewBrowser(m, n)
+
+		// test
+		root := b.Root()
+		fc.AssertEqual(t, nil, root.UpsertFrom(readJSON("testdata/seed/choose.json")))
+		fc.AssertEqual(t, nil, root.UpsertFrom(nodeutil.ReadJSON(`{"two":"dos"}`)))
+
+		two, err := nodeutil.WritePrettyJSON(root)
+		fc.AssertEqual(t, nil, err)
+		fc.Gold(t, *update, []byte(two), "testdata/gold/choose.json")
+
+		fc.AssertEqual(t, nil, h.finalizeTestCase())
+		fc.GoldFile(t, *update, traceFile, "testdata/gold/choose.trace")
+
+		// teardown
+		os.Remove(traceFile)
+		fc.RequireEqual(t, nil, h.Close())
+	}
+}
+
+func Langs() []nodeTestHarness {
+	langEnv := os.Getenv("FC_LANG")
+	if langEnv == "" {
+		return allLangs
+	}
+	var specific []nodeTestHarness
+	for _, langId := range strings.Split(langEnv, ",") {
+		switch langId {
+		case "go":
+			specific = append(specific, newGolang())
+		case "python":
+			specific = append(specific, NewHarness(&python{}))
+		}
+	}
+	return specific
 }
 
 func tempFileName() string {

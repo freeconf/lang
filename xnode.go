@@ -74,7 +74,9 @@ func (n *xnode) Field(r node.FieldRequest, hnd *node.ValueHandle) error {
 		Clear:     r.Clear,
 	}
 	if r.Write {
-		req.ToWrite = encodeVal(hnd.Val)
+		if hnd.Val != nil {
+			req.ToWrite = encodeVal(hnd.Val)
+		}
 	}
 	resp, err := n.d.xnodes.XField(r.Selection.Context, &req)
 	if err != nil {
@@ -88,7 +90,15 @@ func (n *xnode) Field(r node.FieldRequest, hnd *node.ValueHandle) error {
 }
 
 func (n *xnode) Choose(sel *node.Selection, choice *meta.Choice) (m *meta.ChoiceCase, err error) {
-	return nil, nil
+	req := pb.XChooseRequest{
+		SelHnd:      resolveSelection(n.d, sel),
+		ChoiceIdent: choice.Ident(),
+	}
+	resp, err := n.d.xnodes.XChoose(sel.Context, &req)
+	if err != nil {
+		return nil, err
+	}
+	return choice.Cases()[resp.CaseIdent], nil
 }
 
 func (n *xnode) BeginEdit(r node.NodeRequest) error {

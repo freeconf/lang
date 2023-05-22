@@ -115,3 +115,9 @@ func (h *Harness) finalizeTestCase() error {
 	_, err := h.client.FinalizeTestCase(context.Background(), &req)
 	return err
 }
+
+func (h *Harness) parseModule(dir string, moduleIdent string) error {
+	req := pb.ParseModuleRequest{Dir: dir, ModuleIdent: moduleIdent}
+	_, err := h.client.ParseModule(context.Background(), &req)
+	return err
+}

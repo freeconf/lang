@@ -1,17 +1,20 @@
 
 meta Module {
     ident string, ident string;
-    description string, description string;
-    extensions Extension, extensions Extension[];
-    definitions DataDef, definitions DataDef[];
     namespace string, namespace string;
     prefix string, prefix string;
+    description string, description string;
     contact string, contact string;
     organization string, organization string;
     reference string, reference string;
     version string, version string;
-    actions Rpc, actions Rpc[];
+    revisions Revision, revisions Revision[];
+    definitions DataDef, definitions DataDef[];
     notifications Notification, notifications Notification[];
+    actions Rpc, actions Rpc[];
+    identities Identity, identities Identity[];
+    features Feature, features Feature[];
+    extensions Extension, extensions Extension[];
 }
 
 meta RpcInput {
@@ -62,13 +65,14 @@ meta Extension {
     ident string, ident string;
     prefix string, prefix string;
     keyword string, keyword string;
-    def string, ext_def string;
+    definition string, definition string;
     arguments string, arguments string[];
 }
 
 meta Container {
     ident string, ident string;
     description string, description string;
+    reference string, reference string;
     extensions Extension, extensions Extension[];
     definitions DataDef, definitions DataDef[];
     config OptionalBool, config OptionalBool;
@@ -87,15 +91,18 @@ meta Type {
 meta Leaf {
     ident string, ident string;
     description string, description string;
+    reference string, reference string;
     extensions Extension, extensions Extension[];
     type Type, type Type;
     config OptionalBool, config OptionalBool;
     mandatory OptionalBool, mandatory OptionalBool;
+    defaultVal string, default_val string;
 }
 
 meta List {
     ident string, ident string;
     description string, description string;
+    reference string, reference string;
     extensions Extension, extensions Extension[];
     definitions DataDef, definitions DataDef[];
     config OptionalBool, config OptionalBool;
@@ -108,12 +115,55 @@ meta List {
 meta LeafList {
     ident string, ident string;
     description string, description string;
+    reference string, reference string;
     extensions Extension, extensions Extension[];
     config OptionalBool, config OptionalBool;
     mandatory OptionalBool, mandatory OptionalBool;
 }
 
 meta DataDef {
+}
+
+meta Identity {
+    ident string, ident string;
+    description string, description string;
+    reference string, reference string;
+    baseIds string, base_ids string[];
+    extensions Extension, extensions Extension[];
+}
+
+meta Feature {
+    ident string, ident string;
+    description string, description string;
+    reference string, reference string;
+    extensions Extension, extensions Extension[];
+}
+
+meta Revision {
+    ident string, ident string;
+    description string, description string;
+    reference string, reference string;
+    extensions Extension, extensions Extension[];
+}
+
+meta Choice {
+    ident string, ident string;
+    description string, description string;
+    reference string, reference string;
+    extensions Extension, extensions Extension[];
+    status Status, status Status;
+    config OptionalBool, config OptionalBool;
+    mandatory OptionalBool, mandatory OptionalBool;
+    defaultVal string, default_val string;
+    cases ChoiceCase, cases ChoiceCase[];
+}
+
+meta ChoiceCase {
+    ident string, ident string;
+    description string, description string;
+    reference string, reference string;
+    extensions Extension, extensions Extension[];
+    definitions DataDef, definitions DataDef[];
 }
 
 meta EnumVal {

@@ -9,11 +9,11 @@ x  notifications
 x  more val support incl. leaf-lists
 ?  val coersion
 o  how to get things from context
-o  choice
+x  choice
 
 nodeutil
 o  json writer
-o  restconf server
+-  restconf server
 o  gnmi
 
 test suite

@@ -17,17 +17,21 @@ enum Status {
 
 message Module {
       string ident = 1;
-      string description = 2;
-      repeated Extension extensions = 3;
-      repeated DataDef definitions = 4;
-      string namespace = 5;
-      string prefix = 6;
-      string contact = 7;
-      string organization = 8;
-      string reference = 9;
-      string version = 10;
-      repeated Rpc actions = 11;
-      repeated Notification notifications = 12;
+      string namespace = 2;
+      string prefix = 3;
+      string description = 4;
+      string contact = 5;
+      string organization = 6;
+      string reference = 7;
+      string version = 8;
+      repeated Revision revisions = 9;
+      repeated DataDef definitions = 10;
+      repeated Notification notifications = 11;
+      repeated Rpc actions = 12;
+      repeated Identity identities = 13;
+      repeated Feature features = 14;
+      // feature set = 15
+      repeated Extension extensions = 16;
 }
 
 message RpcInput {
@@ -78,21 +82,21 @@ message Extension {
       string ident = 1;
       string prefix = 2;
       string keyword = 3;
-      string def = 4;
+      string definition = 4;
       repeated string arguments = 5;
 }
 
 message Container {
       string ident = 1;
       string description = 2;
-      repeated Extension extensions = 3;
-      repeated DataDef definitions = 4;
+      string reference = 3;
+      repeated Extension extensions = 4;
+      repeated DataDef definitions = 5;
       OptionalBool config = 14;
       OptionalBool mandatory = 15;
       repeated Rpc actions = 16;
       repeated Notification notifications = 12;
 }
-
 
 message Type {
       string ident = 1;
@@ -104,17 +108,20 @@ message Type {
 message Leaf {
       string ident = 1;
       string description = 2;
-      repeated Extension extensions = 3;
-      Type type = 4;
+      string reference = 3;
+      repeated Extension extensions = 4;
+      Type type = 5;
       OptionalBool config = 14;
       OptionalBool mandatory = 15;
+      string defaultVal = 16;
 }
 
 message List {
     string ident = 1;
     string description = 2;
-    repeated Extension extensions = 3;
-    repeated DataDef definitions = 4;
+    string reference = 3;
+    repeated Extension extensions = 4;
+    repeated DataDef definitions = 5;
     OptionalBool config = 14;
     OptionalBool mandatory = 15;
     repeated Rpc actions = 16;
@@ -125,7 +132,8 @@ message List {
 message LeafList {
     string ident = 1;
     string description = 2;
-    repeated Extension extensions = 3;
+    string reference = 3;
+    repeated Extension extensions = 4;
     OptionalBool config = 14;
     OptionalBool mandatory = 15;
 }
@@ -136,5 +144,54 @@ message DataDef {
            Leaf leaf = 2;
            LeafList leafList = 3;
            List list = 4;
+           Choice choice = 5;
       }
+}
+
+message Identity {
+      string ident = 1;
+      string description = 2;
+      string reference = 3;
+      repeated string baseIds = 4;
+      // derived
+      // ifs
+      repeated Extension extensions = 7;
+}
+
+message Feature {
+      string ident = 1;
+      string description = 2;
+      string reference = 3;
+      // ifs
+      repeated Extension extensions = 7;
+}
+
+message Revision {
+      string ident = 1;
+      string description = 2;
+      string reference = 3;
+      repeated Extension extensions = 7;
+}
+
+message Choice {
+      string ident = 1;
+      string description = 2;
+      string reference = 3;
+      repeated Extension extensions = 4;
+      Status status = 5;
+      OptionalBool config = 14;
+      OptionalBool mandatory = 15;
+      string defaultVal = 16;
+      repeated ChoiceCase cases = 9;
+      // ifs  
+}
+
+message ChoiceCase {
+      string ident = 1;
+      string description = 2;
+      string reference = 3;
+      repeated Extension extensions = 4;
+      repeated DataDef definitions = 5;
+      // when
+      // ifs
 }

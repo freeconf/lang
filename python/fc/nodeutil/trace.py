@@ -52,7 +52,10 @@ class Trace():
     def field(self, r, write_val):
         if r.write:
             self.trace(self.level, "field.write", r.meta.ident)
-            self.trace_val(self.level+1, "val", write_val)
+            if r.clear:
+                self.trace(self.level+1, "clear", "true") 
+            else:
+                self.trace_val(self.level+1, "val", write_val)
             self.target.field(r, write_val)
         else:
             self.trace(self.level, "field.read", r.meta.ident)
@@ -97,6 +100,16 @@ class Trace():
         self.trace(self.level, "notification", r.meta.ident)
         return self.target.notification(r)
 
+
+    def choose(self, sel, choice):
+        self.trace(self.level, "choose", choice.ident)
+        choosen = self.target.choose(sel, choice)
+        if choosen is None:
+            self.trace(self.level+1, "choosen", "nil")
+        else:
+            self.trace(self.level+1, "choosen", choosen.ident)
+
+        return choosen
 
     def trace(self, level, key, val):
         if val == None:

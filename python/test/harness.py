@@ -7,6 +7,7 @@ import fc.driver
 from fc.nodeutil import reflect, trace, extend
 import pb.fc_test_pb2
 import pb.fc_test_pb2_grpc
+import fc.parser
 
 usage = f"""
 Usage: {sys.argv[0]} fc-g-socket-file fc-x-socket-file
@@ -37,7 +38,7 @@ class TestHarnessServicer(pb.fc_test_pb2_grpc.TestHarnessServicer):
 
     def CreateTestCase(self, req, context):
         out = open(req.traceFile, "w")
-        if req.testCase == pb.fc_test_pb2.ECHO:
+        if req.testCase == pb.fc_test_pb2.ECHO or req.testCase == pb.fc_test_pb2.ADVANCED:
             e = Echo()
             n = e.node()
         elif req.testCase == pb.fc_test_pb2.BASIC:
@@ -51,8 +52,16 @@ class TestHarnessServicer(pb.fc_test_pb2_grpc.TestHarnessServicer):
     
 
     def FinalizeTestCase(self, req, context):
-        self.trace_file.close()
+        if self.trace_file != None:
+            self.trace_file.close()
+            self.trace_file = None
         return pb.fc_test_pb2.FinalizeTestCaseResponse()
+
+
+    def ParseModule(self, req, context):
+        p = fc.parser.Parser(self.driver)
+        p.load_module(req.dir, req.moduleIdent)
+        return pb.fc_test_pb2.ParseModuleResponse()
 
 
 class Echo:

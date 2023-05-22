@@ -237,6 +237,20 @@ class XNodeServicer(pb.fc_x_pb2_grpc.XNodeServicer):
     def __init__(self, driver):
         self.driver = driver
 
+    def XChoose(self, g_req, context):
+        try:
+            sel = Selection.resolve(self.driver, g_req.selHnd)
+            choice = fc.meta.get_choice(sel.path.meta, g_req.choiceIdent)
+            choice_case = sel.node.choose(sel, choice)
+            if choice_case is None:
+                return pb.fc_x_pb2.XChooseResponse()
+            return pb.fc_x_pb2.XChooseResponse(caseIdent=choice_case.ident)
+        except Exception as error:
+            logging.debug(f'XNext error')
+            print(traceback.format_exc())
+            raise error
+        
+
     def XNext(self, g_req, context):
         try:
             sel = Selection.resolve(self.driver, g_req.selHnd)
@@ -286,7 +300,8 @@ class XNodeServicer(pb.fc_x_pb2_grpc.XNodeServicer):
             req = FieldRequest(sel, meta, g_req.write, g_req.clear)
             write_val = None
             if g_req.write:
-                write_val = fc.val.proto_decode(g_req.toWrite)
+                if not g_req.clear:
+                    write_val = fc.val.proto_decode(g_req.toWrite)
             read_val = sel.node.field(req, write_val)
             if not g_req.write:
                 fromRead = fc.val.proto_encode(read_val)

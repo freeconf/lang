@@ -1,0 +1,18 @@
+edit.begin: advanced
+choose: x
+    choosen: nil
+field.write: one
+    val: string(uno)
+edit.end: advanced
+edit.begin: advanced
+choose: x
+    choosen: one
+field.write: one
+    clear: true
+field.write: two
+    val: string(dos)
+edit.end: advanced
+choose: x
+    choosen: two
+field.read: two
+    val: string(dos)

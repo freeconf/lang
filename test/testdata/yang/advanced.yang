@@ -1,0 +1,14 @@
+module advanced {
+    namespace "n";
+    prefix "p";
+    revision 0000-00-00;
+
+    choice x {
+        leaf one {
+            type string;
+        }
+        leaf two {
+            type string; 
+        }
+    }
+}

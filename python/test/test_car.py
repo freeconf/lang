@@ -30,7 +30,6 @@ class TestCar(unittest.TestCase):
         update_called = False
         def update_listener(_msg):
             nonlocal update_called
-            print(f'update_called = {update_called}')
             update_called = True
         update_sel = root.find('update')
         unsubscribe = update_sel.notification(update_listener)

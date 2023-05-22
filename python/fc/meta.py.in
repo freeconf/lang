@@ -82,14 +82,26 @@ class Path():
 class InvalidPathException(Exception):
     pass
 
-
 def get_def(meta, ident):
     if not meta:
         raise Exception(f'no meta given to find {ident}')
     for ddef in meta.definitions:
-        if ddef.ident == ident:
+        if isinstance(ddef, Choice):
+            for ddef_cases in ddef.cases.values():
+                for case_ddef in ddef_cases.definitions:
+                    if case_ddef.ident == ident:
+                        return case_ddef            
+        elif ddef.ident == ident:
             return ddef
     raise InvalidPathException(f'definition {ident} not found in {meta.ident}')
+
+
+def get_choice(meta, ident):
+    for ddef in meta.definitions:
+        if isinstance(ddef, Choice):
+            if ddef.ident == ident:
+                return ddef
+    raise InvalidPathException(f'choice {ident} not found in {meta.ident}')
 
 
 def get_rpc(meta, ident):

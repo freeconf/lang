@@ -2,6 +2,7 @@ package lang
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/freeconf/lang/pb"
 	"github.com/freeconf/yang/meta"
@@ -128,9 +129,13 @@ func buildPath(d *Driver, p *node.Path) *pb.Path {
 	// each time.  Maybe caller can send hint as to what piece they are
 	// missing and we can send just those pieces.
 	protoSegs := make([]*pb.PathSegment, len(p.Segments())-1)
+	root := p.Segments()[0].Meta
+	if _, isMod := root.(*meta.Module); !isMod {
+		panic(fmt.Sprintf("path %s does not begin with a module", p.String()))
+	}
 	protoPath := &pb.Path{
 		Segments:  protoSegs,
-		ModuleHnd: d.handles.Hnd(p.Segments()[0].Meta),
+		ModuleHnd: d.handles.Hnd(root),
 	}
 	for i, seg := range p.Segments()[1:] {
 		protoSegs[i] = &pb.PathSegment{

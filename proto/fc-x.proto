@@ -13,17 +13,24 @@ import "common.proto";
 service XNode {
       rpc XRootSelection(XRootSelectionRequest) returns (XRootSelectionResponse) {}
       rpc XNodeSource(XNodeSourceRequest) returns (XNodeSourceResponse) {}
-
       rpc XSelect(XSelectRequest) returns (XSelectResponse) {}
       rpc XChild(XChildRequest) returns (XChildResponse) {}
       rpc XField(XFieldRequest) returns (XFieldResponse) {}
       rpc XAction(XActionRequest) returns (XActionResponse) {}
       rpc XNotification(XNotificationRequest) returns (stream XNotificationResponse) {}
-
-      rpc XNext(XNextRequest) returns (XNextResponse) {}
       rpc XChoose(XChooseRequest) returns (XChooseResponse) {}
+      rpc XNext(XNextRequest) returns (XNextResponse) {}
       rpc XBeginEdit(XBeginEditRequest) returns (XBeginEditResponse) {}
       rpc XEndEdit(XEndEditRequest) returns (XEndEditResponse) {}
+}
+
+message XChooseRequest {
+      uint64 selHnd = 1;
+      string choiceIdent = 2;
+}
+
+message XChooseResponse {
+      string caseIdent = 1;
 }
 
 message XNextRequest {
@@ -39,12 +46,6 @@ message XNextRequest {
 message XNextResponse {
       uint64 nodeHnd = 1;
       repeated Val key = 2;
-}
-
-message XChooseRequest {
-}
-
-message XChooseResponse {
 }
 
 message XBeginEditRequest {

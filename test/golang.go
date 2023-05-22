@@ -7,6 +7,8 @@ import (
 	"github.com/freeconf/lang/pb"
 	"github.com/freeconf/yang/node"
 	"github.com/freeconf/yang/nodeutil"
+	"github.com/freeconf/yang/parser"
+	"github.com/freeconf/yang/source"
 )
 
 type golang struct {
@@ -35,6 +37,8 @@ func (d *golang) createTestCase(c pb.TestCase, tracefile string) (node.Node, err
 		n = nodeutil.ReflectChild(make(map[string]any))
 	case pb.TestCase_ECHO:
 		n = d.echoNode()
+	case pb.TestCase_ADVANCED:
+		n = d.advancedNode(make(map[string]interface{}))
 	default:
 		panic("test case not implemented")
 	}
@@ -74,6 +78,10 @@ func (d *golang) echoNode() node.Node {
 	}
 }
 
+func (d *golang) advancedNode(data map[string]interface{}) node.Node {
+	return nodeutil.ReflectChild(data)
+}
+
 type reciever func(msg node.Node)
 
 func (d *golang) send(msg node.Node) {
@@ -89,5 +97,14 @@ func (d *golang) subscribe(r reciever) nodeutil.Subscription {
 }
 
 func (d *golang) finalizeTestCase() error {
-	return d.traceFile.Close()
+	if d.traceFile != nil {
+		d.traceFile.Close()
+	}
+	return nil
+}
+
+func (d *golang) parseModule(dir string, module string) error {
+	ypath := source.Dir(dir)
+	_, err := parser.LoadModule(ypath, module)
+	return err
 }

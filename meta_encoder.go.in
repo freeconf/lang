@@ -51,10 +51,48 @@ func (e *MetaEncoder) encodeOptionalBool(value bool, specified bool) pb.Optional
     return pb.OptionalBool_FALSE
 }
 
+func (e *MetaEncoder) encodeRevisionList(parent any, from []*meta.Revision) []*pb.Revision {
+    to := make([]*pb.Revision, len(from))    
+    for i, x := range from {
+        to[i] = e.encodeRevision(parent, x)
+    }
+    return to
+}
+
+func (e *MetaEncoder) encodeIdentityList(parent any, from map[string]*meta.Identity) []*pb.Identity {
+    to := make([]*pb.Identity, len(from))
+    i := 0
+    for _, x := range from {
+        to[i] = e.encodeIdentity(parent, x)
+        i++
+    }
+    return to
+}
+
+func (e *MetaEncoder) encodeFeatureList(parent any, from map[string]*meta.Feature) []*pb.Feature {
+    to := make([]*pb.Feature, len(from))    
+    i := 0
+    for _, x := range from {
+        to[i] = e.encodeFeature(parent, x)
+        i++
+    }
+    return to
+}
+
 func (e *MetaEncoder) encodeExtensionList(parent any, from []*meta.Extension) []*pb.Extension {
     to := make([]*pb.Extension, len(from))    
     for i, x := range from {
         to[i] = e.encodeExtension(parent, x)
+    }
+    return to
+}
+
+func (e *MetaEncoder) encodeChoiceCaseList(parent any, from map[string]*meta.ChoiceCase) []*pb.ChoiceCase {
+    to := make([]*pb.ChoiceCase, len(from))
+    i := 0
+    for _, x := range from {
+        to[i] = e.encodeChoiceCase(parent, x)
+        i++
     }
     return to
 }
@@ -82,7 +120,7 @@ func (e *MetaEncoder) encodeExtensionDefArgList(parent *pb.ExtensionDef, from []
     return to
 }
 
-func (e *MetaEncoder) encodeStatus(parent *pb.ExtensionDef, from meta.Status) pb.Status {
+func (e *MetaEncoder) encodeStatus(parent interface{}, from meta.Status) pb.Status {
     return pb.Status(from)
 }
 
@@ -98,12 +136,16 @@ func (e *MetaEncoder) encode{{.Name}}(parent any, from *meta.{{.Name}}) *pb.{{.N
         def.{{.GoName}} = e.encodeOptionalBool(from.{{.GoName}}(), from.Is{{.GoName}}Set())
         {{- else if eq .Type "DataDef" }}
         def.{{.GoName}} = e.encodeDataDefList(&def, from.DataDefinitions())
-        {{- else if eq .GoName "Def" }}
-        def.{{.GoName}} = from.Def().Ident()
+        {{- else if eq .GoName "Definition" }}
+        def.{{.GoName}} = from.Definition().Ident()
         {{- else if .CustomEncoder }}
         def.{{.GoName}} = e.encode{{.CustomEncoder}}(&def, from.{{.GoName}}())
         {{- else if eq .GoName "Key" }}
         def.Key = e.encodeListKeys(from)
+        {{- else if eq .GoName "DefaultVal" }}
+        if from.HasDefault() {
+            def.{{.GoName}} = from.Default()
+        }
         {{- else }}
         def.{{.GoName}} = from.{{.GoName}}()
         {{- end }}
