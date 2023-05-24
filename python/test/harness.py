@@ -4,7 +4,7 @@ import signal
 import logging
 import fc.node
 import fc.driver
-from fc.nodeutil import reflect, trace, extend
+import fc.nodeutil
 import pb.fc_test_pb2
 import pb.fc_test_pb2_grpc
 import fc.parser
@@ -42,10 +42,10 @@ class TestHarnessServicer(pb.fc_test_pb2_grpc.TestHarnessServicer):
             e = Echo()
             n = e.node()
         elif req.testCase == pb.fc_test_pb2.BASIC:
-            n = reflect.Reflect({})
+            n = fc.nodeutil.Reflect({})
         else:
             raise Exception("unimplemented test case")
-        n = trace.Trace(n, out)
+        n = fc.nodeutil.Trace(n, out)
         fc.node.resolve_node(self.driver, n)
         self.trace_file = out
         return pb.fc_test_pb2.CreateTestCaseResponse(nodeHnd=n.hnd.id)
@@ -86,11 +86,11 @@ class Echo:
             l(n)
 
     def node(self):
-        base = reflect.Reflect({})
+        base = fc.nodeutil.Reflect({})
 
         def action(parent, r):
             if r.meta.ident == "echo":
-                n = reflect.Reflect({})
+                n = fc.nodeutil.Reflect({})
                 r.input.insert_into(n)
                 return n
             elif r.meta.ident == "send":
@@ -104,7 +104,7 @@ class Echo:
                     r.send(n)
                 return self.on_update(listener)
         
-        return extend.Extend(base, on_action=action, on_notification=notification)
+        return fc.nodeutil.Extend(base, on_action=action, on_notification=notification)
 
 
 g_addr = sys.argv[1]

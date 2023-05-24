@@ -25,6 +25,8 @@ type nodeTestHarness interface {
 
 	parseModule(dir string, module string) error
 
+	Name() string
+
 	Close() error
 	Connect() error
 }
@@ -36,28 +38,32 @@ var allLangs = []nodeTestHarness{
 
 	newGolang(),
 
-	NewHarness(&python{}),
+	NewHarness("python", &python{}),
 }
 
 func TestBasic(t *testing.T) {
 	ypath := source.Dir("testdata/yang")
 	m := parser.RequireModule(ypath, "basic")
 	for _, h := range Langs() {
-		// setup
 		fc.RequireEqual(t, nil, h.Connect())
-		traceFile := tempFileName()
-		n, err := h.createTestCase(pb.TestCase_BASIC, traceFile)
-		fc.RequireEqual(t, nil, err)
-		b := node.NewBrowser(m, n)
+		t.Run(h.Name(), func(t *testing.T) {
+			defer func() {
+				fc.RequireEqual(t, nil, h.Close())
+			}()
+			// setup
+			traceFile := tempFileName()
+			n, err := h.createTestCase(pb.TestCase_BASIC, traceFile)
+			fc.RequireEqual(t, nil, err)
+			b := node.NewBrowser(m, n)
 
-		// test
-		fc.AssertEqual(t, nil, b.Root().UpsertFrom(readJSON("testdata/seed/basic.json")))
-		fc.AssertEqual(t, nil, h.finalizeTestCase())
-		fc.GoldFile(t, *update, traceFile, "testdata/gold/basic.trace")
+			// test
+			fc.AssertEqual(t, nil, b.Root().UpsertFrom(readJSON("testdata/seed/basic.json")))
+			fc.AssertEqual(t, nil, h.finalizeTestCase())
+			fc.GoldFile(t, *update, traceFile, "testdata/gold/basic.trace")
 
-		// teardown
-		os.Remove(traceFile)
-		fc.RequireEqual(t, nil, h.Close())
+			// teardown
+			os.Remove(traceFile)
+		})
 	}
 }
 
@@ -65,35 +71,39 @@ func TestEcho(t *testing.T) {
 	ypath := source.Dir("testdata/yang")
 	m := parser.RequireModule(ypath, "echo")
 	for _, h := range Langs() {
-		// setup
 		fc.RequireEqual(t, nil, h.Connect())
-		traceFile := tempFileName()
-		n, err := h.createTestCase(pb.TestCase_ECHO, traceFile)
-		fc.RequireEqual(t, nil, err)
-		b := node.NewBrowser(m, n)
+		t.Run(h.Name(), func(t *testing.T) {
+			defer func() {
+				fc.RequireEqual(t, nil, h.Close())
+			}()
+			// setup
+			traceFile := tempFileName()
+			n, err := h.createTestCase(pb.TestCase_ECHO, traceFile)
+			fc.RequireEqual(t, nil, err)
+			b := node.NewBrowser(m, n)
 
-		// test
-		sel, err := b.Root().Find("echo")
-		fc.RequireEqual(t, nil, err)
-		input := nodeutil.ReadJSON(`{
-			"f" : 99,
-			"g" : {
-				"s": "coffee"
-			}
-		}`)
-		output, err := sel.Action(input)
-		fc.RequireEqual(t, nil, err)
+			// test
+			sel, err := b.Root().Find("echo")
+			fc.RequireEqual(t, nil, err)
+			input := nodeutil.ReadJSON(`{
+				"f" : 99,
+				"g" : {
+					"s": "coffee"
+				}
+			}`)
+			output, err := sel.Action(input)
+			fc.RequireEqual(t, nil, err)
 
-		echo, err := nodeutil.WritePrettyJSON(output)
-		fc.AssertEqual(t, nil, err)
-		fc.Gold(t, *update, []byte(echo), "testdata/gold/echo.json")
+			echo, err := nodeutil.WritePrettyJSON(output)
+			fc.AssertEqual(t, nil, err)
+			fc.Gold(t, *update, []byte(echo), "testdata/gold/echo.json")
 
-		fc.AssertEqual(t, nil, h.finalizeTestCase())
-		fc.GoldFile(t, *update, traceFile, "testdata/gold/echo.trace")
+			fc.AssertEqual(t, nil, h.finalizeTestCase())
+			fc.GoldFile(t, *update, traceFile, "testdata/gold/echo.trace")
 
-		// teardown
-		os.Remove(traceFile)
-		fc.RequireEqual(t, nil, h.Close())
+			// teardown
+			os.Remove(traceFile)
+		})
 	}
 }
 
@@ -101,46 +111,51 @@ func TestNotify(t *testing.T) {
 	ypath := source.Dir("testdata/yang")
 	m := parser.RequireModule(ypath, "echo")
 	for _, h := range Langs() {
-		// setup
 		fc.RequireEqual(t, nil, h.Connect())
-		traceFile := tempFileName()
-		n, err := h.createTestCase(pb.TestCase_ECHO, traceFile)
-		fc.RequireEqual(t, nil, err)
-		b := node.NewBrowser(m, n)
+		t.Run(h.Name(), func(t *testing.T) {
+			defer func() {
+				fc.RequireEqual(t, nil, h.Close())
+			}()
 
-		// test
-		sel, err := b.Root().Find("recv")
-		fc.RequireEqual(t, nil, err)
-		msgs := make(chan string, 1)
-		unsub, err := sel.Notifications(func(n node.Notification) {
-			msg, err := nodeutil.WritePrettyJSON(n.Event)
-			if err != nil {
-				panic(err)
-			}
-			msgs <- msg
+			// setup
+			traceFile := tempFileName()
+			n, err := h.createTestCase(pb.TestCase_ECHO, traceFile)
+			fc.RequireEqual(t, nil, err)
+			b := node.NewBrowser(m, n)
+
+			// test
+			sel, err := b.Root().Find("recv")
+			fc.RequireEqual(t, nil, err)
+			msgs := make(chan string, 1)
+			unsub, err := sel.Notifications(func(n node.Notification) {
+				msg, err := nodeutil.WritePrettyJSON(n.Event)
+				if err != nil {
+					panic(err)
+				}
+				msgs <- msg
+			})
+			fc.RequireEqual(t, nil, err)
+
+			sendSel, err := b.Root().Find("send")
+			fc.RequireEqual(t, nil, err)
+			input := nodeutil.ReadJSON(`{
+				"f" : 99,
+				"g" : {
+					"s": "coffee"
+				}
+			}`)
+			_, err = sendSel.Action(input)
+			fc.RequireEqual(t, nil, err)
+			msg := <-msgs
+			fc.Gold(t, *update, []byte(msg), "testdata/gold/send.json")
+
+			unsub()
+
+			fc.AssertEqual(t, nil, h.finalizeTestCase())
+
+			// teardown
+			os.Remove(traceFile)
 		})
-		fc.RequireEqual(t, nil, err)
-
-		sendSel, err := b.Root().Find("send")
-		fc.RequireEqual(t, nil, err)
-		input := nodeutil.ReadJSON(`{
-			"f" : 99,
-			"g" : {
-				"s": "coffee"
-			}
-		}`)
-		_, err = sendSel.Action(input)
-		fc.RequireEqual(t, nil, err)
-		msg := <-msgs
-		fc.Gold(t, *update, []byte(msg), "testdata/gold/send.json")
-
-		unsub()
-
-		fc.AssertEqual(t, nil, h.finalizeTestCase())
-
-		// teardown
-		os.Remove(traceFile)
-		fc.RequireEqual(t, nil, h.Close())
 	}
 }
 
@@ -164,28 +179,32 @@ func TestChoose(t *testing.T) {
 	ypath := source.Dir("testdata/yang")
 	m := parser.RequireModule(ypath, "advanced")
 	for _, h := range Langs() {
-		// setup
 		fc.RequireEqual(t, nil, h.Connect())
-		traceFile := tempFileName()
-		n, err := h.createTestCase(pb.TestCase_ADVANCED, traceFile)
-		fc.RequireEqual(t, nil, err)
-		b := node.NewBrowser(m, n)
+		t.Run(h.Name(), func(t *testing.T) {
+			defer func() {
+				fc.RequireEqual(t, nil, h.Close())
+			}()
+			// setup
+			traceFile := tempFileName()
+			n, err := h.createTestCase(pb.TestCase_ADVANCED, traceFile)
+			fc.RequireEqual(t, nil, err)
+			b := node.NewBrowser(m, n)
 
-		// test
-		root := b.Root()
-		fc.AssertEqual(t, nil, root.UpsertFrom(readJSON("testdata/seed/choose.json")))
-		fc.AssertEqual(t, nil, root.UpsertFrom(nodeutil.ReadJSON(`{"two":"dos"}`)))
+			// test
+			root := b.Root()
+			fc.AssertEqual(t, nil, root.UpsertFrom(readJSON("testdata/seed/choose.json")))
+			fc.AssertEqual(t, nil, root.UpsertFrom(nodeutil.ReadJSON(`{"two":"dos"}`)))
 
-		two, err := nodeutil.WritePrettyJSON(root)
-		fc.AssertEqual(t, nil, err)
-		fc.Gold(t, *update, []byte(two), "testdata/gold/choose.json")
+			two, err := nodeutil.WritePrettyJSON(root)
+			fc.AssertEqual(t, nil, err)
+			fc.Gold(t, *update, []byte(two), "testdata/gold/choose.json")
 
-		fc.AssertEqual(t, nil, h.finalizeTestCase())
-		fc.GoldFile(t, *update, traceFile, "testdata/gold/choose.trace")
+			fc.AssertEqual(t, nil, h.finalizeTestCase())
+			fc.GoldFile(t, *update, traceFile, "testdata/gold/choose.trace")
 
-		// teardown
-		os.Remove(traceFile)
-		fc.RequireEqual(t, nil, h.Close())
+			// teardown
+			os.Remove(traceFile)
+		})
 	}
 }
 
@@ -200,7 +219,7 @@ func Langs() []nodeTestHarness {
 		case "go":
 			specific = append(specific, newGolang())
 		case "python":
-			specific = append(specific, NewHarness(&python{}))
+			specific = append(specific, NewHarness(langId, &python{}))
 		}
 	}
 	return specific

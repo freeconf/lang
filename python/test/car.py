@@ -1,4 +1,4 @@
-from fc.nodeutil import reflect, extend
+import fc.nodeutil
 import time
 import threading
 
@@ -57,7 +57,7 @@ def manage(c):
     def notification(node, req):
         if req.meta.ident == 'update':
             def listener(event):
-                req.send(reflect.Reflect({
+                req.send(fc.nodeutil.Reflect({
                     "event": event
                 }))
             closer = c.on_update(listener)
@@ -67,6 +67,6 @@ def manage(c):
 
     # because car's members and methods align with yang, we can use 
     # reflection for all of the CRUD
-    return extend.Extend(
-        base = reflect.Reflect(c),
+    return fc.nodeutil.Extend(
+        base = fc.nodeutil.Reflect(c),
         on_action = action, on_notification=notification)

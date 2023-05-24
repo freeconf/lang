@@ -5,7 +5,7 @@ import unittest
 import fc.driver
 import fc.parser
 import fc.node
-from fc.nodeutil import reflect, json, trace
+import fc.nodeutil
 from test import gold
 
 class TestNode(unittest.TestCase):
@@ -21,9 +21,9 @@ class TestNode(unittest.TestCase):
 
         actual = io.StringIO()
         actual.write('\n')        
-        dumper = trace.Trace(reflect.Reflect({}), actual)
+        dumper = fc.nodeutil.Trace(fc.nodeutil.Reflect({}), actual)
         b = fc.node.Browser(d, m, dumper)
-        rdr = json.rdr(d, "testdata/testme-sample-1.json")
+        rdr = fc.nodeutil.json_read(d, "testdata/testme-sample-1.json")
         b.root().upsert_from(rdr)
         gold.assert_equal(self, actual.getvalue(), "testdata/gold/node.trace")
         d.unload()

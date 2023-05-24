@@ -21,6 +21,7 @@ type x interface {
 }
 
 type Harness struct {
+	name   string
 	driver *lang.Driver
 	client pb.TestHarnessClient
 	access *lang.TestHarnessAccess
@@ -29,9 +30,10 @@ type Harness struct {
 	gAddr  string
 }
 
-func NewHarness(x x) *Harness {
+func NewHarness(name string, x x) *Harness {
 	cwd, _ := os.Getwd()
 	return &Harness{
+		name:  name,
 		x:     x,
 		xAddr: cwd + "/fc-test-x.sock",
 		gAddr: cwd + "/fc-test.sock",
@@ -40,6 +42,10 @@ func NewHarness(x x) *Harness {
 
 func (h *Harness) Close() error {
 	return h.x.stop()
+}
+
+func (h *Harness) Name() string {
+	return h.name
 }
 
 func (h *Harness) Connect() error {

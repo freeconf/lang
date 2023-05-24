@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import unittest
-from fc.nodeutil import reflect
+import fc.nodeutil
 import fc.meta
 import fc.driver
 import fc.parser
@@ -16,6 +16,7 @@ class request:
     delete = False
     new = False
     meta = None
+    clear = False
 
 class TestReflect(unittest.TestCase):
 
@@ -27,9 +28,9 @@ class TestReflect(unittest.TestCase):
     
     def test_dict_field(self):
         obj = {'x' : "X"}        
-        n = reflect.Reflect(obj)
+        n = fc.nodeutil.Reflect(obj)
         r = request()
-        r.meta = fc.meta.require_def(self.module, 'x')
+        r.meta = fc.meta.get_def(self.module, 'x')
 
         # field
 
@@ -44,9 +45,9 @@ class TestReflect(unittest.TestCase):
 
     def test_dict_child(self):
         obj = {'x' : "X"}        
-        n = reflect.Reflect(obj)
+        n = fc.nodeutil.Reflect(obj)
         r = request()
-        r.meta = fc.meta.require_def(self.module, 'x')
+        r.meta = fc.meta.get_def(self.module, 'x')
 
         # field
 
@@ -61,9 +62,9 @@ class TestReflect(unittest.TestCase):
 
     def test_cls_field(self):
         obj = dummy()
-        n = reflect.Reflect(obj)
+        n = fc.nodeutil.Reflect(obj)
         r = request()
-        r.meta = fc.meta.require_def(self.module, 'x')
+        r.meta = fc.meta.get_def(self.module, 'x')
 
         # read
         self.assertEqual("Hi", n.field(r, None).v)
@@ -75,9 +76,9 @@ class TestReflect(unittest.TestCase):
 
     def test_cls_child(self):
         obj = dummy()
-        n = reflect.Reflect(obj)
+        n = fc.nodeutil.Reflect(obj)
         r = request()
-        r.meta = fc.meta.require_def(self.module, 'z')
+        r.meta = fc.meta.get_def(self.module, 'z')
 
         # read
         self.assertEqual(None, n.child(r))
@@ -94,7 +95,7 @@ class TestReflect(unittest.TestCase):
     #     obj = {'x' : "X"}        
     #     n = reflect.Reflect(obj)
     #     r = request()
-    #     r.meta = fc.meta.require_def(self.module, 'x')
+    #     r.meta = fc.meta.get_def(self.module, 'x')
 
     #     # field
 

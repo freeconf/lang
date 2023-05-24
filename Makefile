@@ -19,9 +19,10 @@ PY_TESTS = \
 	test_val.py \
 	test_driver.py \
 	test_node.py \
+	test_reflect.py \
 	test_parser.py \
-	test_restconf.py \
-	test_car.py
+	test_car.py \
+	test_restconf.py
 
 test-py:
 	cd python/test; \

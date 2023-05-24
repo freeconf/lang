@@ -22,6 +22,10 @@ func newGolang() *golang {
 	}
 }
 
+func (d *golang) Name() string {
+	return "go"
+}
+
 func (d *golang) Close() error {
 	return nil
 }

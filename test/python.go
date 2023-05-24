@@ -14,8 +14,13 @@ type python struct {
 }
 
 func (x *python) stop() error {
-	fc.Debug.Println("killing python x server")
-	return x.proc.Process.Kill()
+	var err error
+	if x.proc != nil {
+		fc.Debug.Println("killing python x server")
+		err = x.proc.Process.Kill()
+		x.proc = nil
+	}
+	return err
 }
 
 func (x *python) connect(gAddr string, xAddr string) error {
