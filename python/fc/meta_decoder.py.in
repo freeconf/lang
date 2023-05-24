@@ -1,5 +1,5 @@
 import fc.meta
-import pb.meta_pb2
+import fc.pb.meta_pb2
 import fc.val
 
 # generated file
@@ -63,9 +63,9 @@ class Decoder():
         return fc.meta.Status(encoded)
 
     def decode_OptionalBool(self, parent, encoded):
-        if encoded == pb.meta_pb2.NOT_SPECIFIED:
+        if encoded == fc.pb.meta_pb2.NOT_SPECIFIED:
             return None
-        if encoded == pb.meta_pb2.TRUE:
+        if encoded == fc.pb.meta_pb2.TRUE:
             return True
         return False
 

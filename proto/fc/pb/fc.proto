@@ -1,8 +1,8 @@
 syntax="proto3";
 option go_package = "./pb";
 package pb;
-import "meta.proto";
-import "common.proto";
+import "fc/pb/meta.proto";
+import "fc/pb/common.proto";
 
 /*
   FreeCONF full developer API made available thru gRPC.  Services are roughly broken

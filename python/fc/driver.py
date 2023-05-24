@@ -3,10 +3,10 @@ import os.path
 import time
 import subprocess
 import grpc
-import pb.fc_pb2_grpc
-import pb.fc_pb2
-import pb.fc_x_pb2_grpc
-import pb.fc_x_pb2
+import fc.pb.fc_pb2_grpc
+import fc.pb.fc_pb2
+import fc.pb.fc_x_pb2_grpc
+import fc.pb.fc_x_pb2
 import fc.node
 import weakref
 
@@ -63,19 +63,19 @@ class Driver():
 
     def create_g_client(self):
         self.g_channel = grpc.insecure_channel(f'unix://{self.sock_file}')
-        self.g_handles = pb.fc_pb2_grpc.HandlesStub(self.g_channel)
-        self.g_parser = pb.fc_pb2_grpc.ParserStub(self.g_channel)
-        self.g_nodes = pb.fc_pb2_grpc.NodeStub(self.g_channel)
-        self.g_nodeutil = pb.fc_pb2_grpc.NodeUtilStub(self.g_channel)
-        self.g_device = pb.fc_pb2_grpc.DeviceStub(self.g_channel)
-        self.g_restconf = pb.fc_pb2_grpc.RestconfStub(self.g_channel)
+        self.g_handles = fc.pb.fc_pb2_grpc.HandlesStub(self.g_channel)
+        self.g_parser = fc.pb.fc_pb2_grpc.ParserStub(self.g_channel)
+        self.g_nodes = fc.pb.fc_pb2_grpc.NodeStub(self.g_channel)
+        self.g_nodeutil = fc.pb.fc_pb2_grpc.NodeUtilStub(self.g_channel)
+        self.g_device = fc.pb.fc_pb2_grpc.DeviceStub(self.g_channel)
+        self.g_restconf = fc.pb.fc_pb2_grpc.RestconfStub(self.g_channel)
 
     def start_x_server(self, test_harness=None):
         self.x_server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
         self.x_node_service = fc.node.XNodeServicer(self)        
-        pb.fc_x_pb2_grpc.add_XNodeServicer_to_server(self.x_node_service, self.x_server)
+        fc.pb.fc_x_pb2_grpc.add_XNodeServicer_to_server(self.x_node_service, self.x_server)
         if test_harness:
-            pb.fc_test_pb2_grpc.add_TestHarnessServicer_to_server(test_harness, self.x_server)
+            fc.pb.fc_test_pb2_grpc.add_TestHarnessServicer_to_server(test_harness, self.x_server)
         self.x_server.add_insecure_port(f'unix://{self.x_sock_file}')
         self.x_server.start()
 

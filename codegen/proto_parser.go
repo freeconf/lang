@@ -15,7 +15,7 @@ func ParseProtos(homeDir string) (Vars, error) {
 	w := &walker{
 		vars: &vars,
 	}
-	protos := []string{"proto/meta.proto", "proto/val.proto"}
+	protos := []string{"proto/fc/pb/meta.proto", "proto/fc/pb/val.proto"}
 	for _, pname := range protos {
 		w.Proto = pname
 		fname := filepath.Join(homeDir, pname)
@@ -43,7 +43,7 @@ func ParseProtos(homeDir string) (Vars, error) {
 	}
 
 	for _, msg := range vars.AllMessages {
-		if msg.Proto == "proto/meta.proto" {
+		if msg.Proto == "proto/fc/pb/meta.proto" {
 			mdef := &metaDef{
 				Message: msg,
 			}

@@ -1,5 +1,5 @@
 from enum import IntEnum
-from pb import val_pb2
+from fc.pb import val_pb2
 from pprint import pprint
 
 class Format(IntEnum):

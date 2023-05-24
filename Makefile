@@ -48,16 +48,16 @@ proto-go:
 		-I./proto \
 		--go_out=. \
 		--go-grpc_out=. \
-		./proto/*.proto
+		./proto/fc/pb/*.proto
 
 proto-py:
-	! test -d python/pb || rm -rf python/pb
-	mkdir python/pb
+	! test -d python/fc/pb || rm -rf python/fc/pb
+	mkdir python/fc/pb
 	cd python; \
 		. venv/bin/activate && \
 		python -m grpc_tools.protoc \
 			-I../proto \
-			--python_out=pb \
-			--pyi_out=pb \
-			--grpc_python_out=pb \
-			../proto/*.proto
+			--python_out=. \
+			--pyi_out=. \
+			--grpc_python_out=. \
+			../proto/fc/pb/*.proto

@@ -5,8 +5,8 @@ import logging
 import fc.node
 import fc.driver
 import fc.nodeutil
-import pb.fc_test_pb2
-import pb.fc_test_pb2_grpc
+import fc.pb.fc_test_pb2
+import fc.pb.fc_test_pb2_grpc
 import fc.parser
 
 usage = f"""
@@ -29,7 +29,7 @@ logging.basicConfig(
     level=logging.DEBUG,
     format='%(name)s - %(levelname)s - %(message)s')
 
-class TestHarnessServicer(pb.fc_test_pb2_grpc.TestHarnessServicer):
+class TestHarnessServicer(fc.pb.fc_test_pb2_grpc.TestHarnessServicer):
 
     def __init__(self, driver):
         self.driver = driver
@@ -38,30 +38,30 @@ class TestHarnessServicer(pb.fc_test_pb2_grpc.TestHarnessServicer):
 
     def CreateTestCase(self, req, context):
         out = open(req.traceFile, "w")
-        if req.testCase == pb.fc_test_pb2.ECHO or req.testCase == pb.fc_test_pb2.ADVANCED:
+        if req.testCase == fc.pb.fc_test_pb2.ECHO or req.testCase == fc.pb.fc_test_pb2.ADVANCED:
             e = Echo()
             n = e.node()
-        elif req.testCase == pb.fc_test_pb2.BASIC:
+        elif req.testCase == fc.pb.fc_test_pb2.BASIC:
             n = fc.nodeutil.Reflect({})
         else:
             raise Exception("unimplemented test case")
         n = fc.nodeutil.Trace(n, out)
         fc.node.resolve_node(self.driver, n)
         self.trace_file = out
-        return pb.fc_test_pb2.CreateTestCaseResponse(nodeHnd=n.hnd.id)
+        return fc.pb.fc_test_pb2.CreateTestCaseResponse(nodeHnd=n.hnd.id)
     
 
     def FinalizeTestCase(self, req, context):
         if self.trace_file != None:
             self.trace_file.close()
             self.trace_file = None
-        return pb.fc_test_pb2.FinalizeTestCaseResponse()
+        return fc.pb.fc_test_pb2.FinalizeTestCaseResponse()
 
 
     def ParseModule(self, req, context):
         p = fc.parser.Parser(self.driver)
         p.load_module(req.dir, req.moduleIdent)
-        return pb.fc_test_pb2.ParseModuleResponse()
+        return fc.pb.fc_test_pb2.ParseModuleResponse()
 
 
 class Echo:

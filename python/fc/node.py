@@ -1,11 +1,11 @@
 import queue
 import grpc
 import threading
-import pb.fc_pb2
-import pb.common_pb2
-import pb.fc_pb2_grpc
-import pb.fc_x_pb2
-import pb.fc_x_pb2_grpc
+import fc.pb.fc_pb2
+import fc.pb.common_pb2
+import fc.pb.fc_pb2_grpc
+import fc.pb.fc_x_pb2
+import fc.pb.fc_x_pb2_grpc
 import fc.handles
 import fc.meta
 import fc.val
@@ -34,7 +34,7 @@ class Selection():
     def resolve(cls, driver, hnd_id):
         sel = fc.handles.Handle.lookup(driver, hnd_id)
         if sel == None:
-            req = pb.fc_pb2.GetSelectionRequest(selHnd=hnd_id)
+            req = fc.pb.fc_pb2.GetSelectionRequest(selHnd=hnd_id)
             resp = driver.g_nodes.GetSelection(req)
             node = resolve_node(driver, resp.nodeHnd)
             path = fc.meta.Path.resolve(driver, resp.path)
@@ -45,7 +45,7 @@ class Selection():
         inputNodeHnd = 0        
         if inputNode != 0:
             inputNodeHnd = resolve_node(self.driver, inputNode).hnd.id
-        req = pb.fc_pb2.ActionRequest(selHnd=self.hnd.id, inputNodeHnd=inputNodeHnd)
+        req = fc.pb.fc_pb2.ActionRequest(selHnd=self.hnd.id, inputNodeHnd=inputNodeHnd)
         resp = self.driver.g_nodes.Action(req)
         outputSel = None
         if resp.outputSelHnd:
@@ -53,7 +53,7 @@ class Selection():
         return outputSel
     
     def notification(self, callback):
-        req = pb.fc_pb2.NotificationRequest(selHnd=self.hnd.id)
+        req = fc.pb.fc_pb2.NotificationRequest(selHnd=self.hnd.id)
         stream = self.driver.g_nodes.Notification(req)
         def rdr():
             try:
@@ -77,51 +77,51 @@ class Selection():
 
     def upsert_into(self, n):
         n = resolve_node(self.driver, n)
-        req = pb.fc_pb2.SelectionEditRequest(op=pb.fc_pb2.UPSERT_INTO, selHnd=self.hnd.id, nodeHnd=n.hnd.id)        
+        req = fc.pb.fc_pb2.SelectionEditRequest(op=fc.pb.fc_pb2.UPSERT_INTO, selHnd=self.hnd.id, nodeHnd=n.hnd.id)        
         self.driver.g_nodes.SelectionEdit(req)
 
     def upsert_from(self, n):
         n = resolve_node(self.driver, n)
-        req = pb.fc_pb2.SelectionEditRequest(op=pb.fc_pb2.UPSERT_FROM, selHnd=self.hnd.id, nodeHnd=n.hnd.id)        
+        req = fc.pb.fc_pb2.SelectionEditRequest(op=fc.pb.fc_pb2.UPSERT_FROM, selHnd=self.hnd.id, nodeHnd=n.hnd.id)        
         self.driver.g_nodes.SelectionEdit(req)
 
     def insert_from(self, n):
         n = resolve_node(self.driver, n)
-        req = pb.fc_pb2.SelectionEditRequest(op=pb.fc_pb2.INSERT_FROM, selHnd=self.hnd.id, nodeHnd=n.hnd.id)        
+        req = fc.pb.fc_pb2.SelectionEditRequest(op=fc.pb.fc_pb2.INSERT_FROM, selHnd=self.hnd.id, nodeHnd=n.hnd.id)        
         self.driver.g_nodes.SelectionEdit(req)
 
     def insert_into(self, n):
         n = resolve_node(self.driver, n)
-        req = pb.fc_pb2.SelectionEditRequest(op=pb.fc_pb2.INSERT_INTO, selHnd=self.hnd.id, nodeHnd=n.hnd.id)        
+        req = fc.pb.fc_pb2.SelectionEditRequest(op=fc.pb.fc_pb2.INSERT_INTO, selHnd=self.hnd.id, nodeHnd=n.hnd.id)        
         self.driver.g_nodes.SelectionEdit(req)
 
     def upsert_into_set_defaults(self, n):
         n = resolve_node(self.driver, n)
-        req = pb.fc_pb2.SelectionEditRequest(op=pb.fc_pb2.UPSERT_INTO_SET_DEFAULTS, selHnd=self.hnd.id, nodeHnd=n.hnd.id)        
+        req = fc.pb.fc_pb2.SelectionEditRequest(op=fc.pb.fc_pb2.UPSERT_INTO_SET_DEFAULTS, selHnd=self.hnd.id, nodeHnd=n.hnd.id)        
         self.driver.g_nodes.SelectionEdit(req)
 
     def upsert_from_set_defaults(self, n):
         n = resolve_node(self.driver, n)
-        req = pb.fc_pb2.SelectionEditRequest(op=pb.fc_pb2.UPSERT_FROM_SET_DEFAULTS, selHnd=self.hnd.id, nodeHnd=n.hnd.id)        
+        req = fc.pb.fc_pb2.SelectionEditRequest(op=fc.pb.fc_pb2.UPSERT_FROM_SET_DEFAULTS, selHnd=self.hnd.id, nodeHnd=n.hnd.id)        
         self.driver.g_nodes.SelectionEdit(req)
 
     def update_into(self, n):
         n = resolve_node(self.driver, n)
-        req = pb.fc_pb2.SelectionEditRequest(op=pb.fc_pb2.UPDATE_INTO, selHnd=self.hnd.id, nodeHnd=n.hnd.id)        
+        req = fc.pb.fc_pb2.SelectionEditRequest(op=fc.pb.fc_pb2.UPDATE_INTO, selHnd=self.hnd.id, nodeHnd=n.hnd.id)        
         self.driver.g_nodes.SelectionEdit(req)
 
     def update_from(self, n):
         n = resolve_node(self.driver, n)
-        req = pb.fc_pb2.SelectionEditRequest(op=pb.fc_pb2.UPDATE_FROM, selHnd=self.hnd.id, nodeHnd=n.hnd.id)        
+        req = fc.pb.fc_pb2.SelectionEditRequest(op=fc.pb.fc_pb2.UPDATE_FROM, selHnd=self.hnd.id, nodeHnd=n.hnd.id)        
         self.driver.g_nodes.SelectionEdit(req)
 
     def replace_from(self, n):
         n = resolve_node(self.driver, n)
-        req = pb.fc_pb2.SelectionEditRequest(op=pb.fc_pb2.REPLACE_FROM, selHnd=self.hnd.id, nodeHnd=n.hnd.id)        
+        req = fc.pb.fc_pb2.SelectionEditRequest(op=fc.pb.fc_pb2.REPLACE_FROM, selHnd=self.hnd.id, nodeHnd=n.hnd.id)        
         self.driver.g_nodes.SelectionEdit(req)
 
     def find(self, path):
-        req = pb.fc_pb2.FindRequest(selHnd=self.hnd.id, path=path)
+        req = fc.pb.fc_pb2.FindRequest(selHnd=self.hnd.id, path=path)
         resp = self.driver.g_nodes.Find(req)
         return Selection.resolve(self.driver, resp.selHnd)
 
@@ -138,7 +138,7 @@ def resolve_node(driver, n):
             return fc.handles.RemoteRef(driver, n)
     if not n.hnd:
         # unregistered local node about to be registered with go
-        resp = driver.g_nodes.NewNode(pb.fc_pb2.NewNodeRequest())
+        resp = driver.g_nodes.NewNode(fc.pb.fc_pb2.NewNodeRequest())
         n.hnd = fc.handles.Handle(driver, resp.nodeHnd, n)
     return n
 
@@ -148,7 +148,7 @@ class Browser():
     def __init__(self, driver, module, node=None, node_src=None, hnd_id=None):
         self.driver = driver
         if not hnd_id:
-            req = pb.fc_pb2.NewBrowserRequest(moduleHnd=module.hnd.id)
+            req = fc.pb.fc_pb2.NewBrowserRequest(moduleHnd=module.hnd.id)
             resp = self.driver.g_nodes.NewBrowser(req)
             self.hnd = fc.handles.Handle(driver, resp.browserHnd, self)
         else:
@@ -163,7 +163,7 @@ class Browser():
         return self.node_obj
 
     def root(self):
-        g_req = pb.fc_pb2.BrowserRootRequest(browserHnd=self.hnd.id)
+        g_req = fc.pb.fc_pb2.BrowserRootRequest(browserHnd=self.hnd.id)
         resp = self.driver.g_nodes.BrowserRoot(g_req)
         return Selection.resolve(self.driver, resp.selHnd)
 
@@ -172,7 +172,7 @@ class Browser():
         try:
             return fc.handles.Handle.require(driver, hnd_id)
         except KeyError:
-            req = pb.fc_pb2.GetBrowserRequest(browserHnd=hnd_id)
+            req = fc.pb.fc_pb2.GetBrowserRequest(browserHnd=hnd_id)
             resp = driver.g_nodes.GetBrowser(req)
             module = fc.parser.Parser.resolve_module(driver, resp.moduleHnd)
             return Browser(driver, module, hnd_id=hnd_id)
@@ -231,7 +231,7 @@ class NodeRequest():
         self.delete = delete
 
 
-class XNodeServicer(pb.fc_x_pb2_grpc.XNodeServicer):
+class XNodeServicer(fc.pb.fc_x_pb2_grpc.XNodeServicer):
     """Bridge between python node navigation and go node navigation"""
 
     def __init__(self, driver):
@@ -243,8 +243,8 @@ class XNodeServicer(pb.fc_x_pb2_grpc.XNodeServicer):
             choice = fc.meta.get_choice(sel.path.meta, g_req.choiceIdent)
             choice_case = sel.node.choose(sel, choice)
             if choice_case is None:
-                return pb.fc_x_pb2.XChooseResponse()
-            return pb.fc_x_pb2.XChooseResponse(caseIdent=choice_case.ident)
+                return fc.pb.fc_x_pb2.XChooseResponse()
+            return fc.pb.fc_x_pb2.XChooseResponse(caseIdent=choice_case.ident)
         except Exception as error:
             logging.debug(f'XNext error')
             print(traceback.format_exc())
@@ -269,9 +269,9 @@ class XNodeServicer(pb.fc_x_pb2_grpc.XNodeServicer):
                 if key_out != None:
                     for v in key_out:
                         g_key_out.append(fc.val.proto_encode(v))
-                return pb.fc_x_pb2.XNextResponse(nodeHnd=child.hnd.id, key=g_key_out)
+                return fc.pb.fc_x_pb2.XNextResponse(nodeHnd=child.hnd.id, key=g_key_out)
             else:
-                return pb.fc_x_pb2.XNextResponse()
+                return fc.pb.fc_x_pb2.XNextResponse()
         except Exception as error:
             logging.debug(f'XNext error')
             print(traceback.format_exc())
@@ -286,9 +286,9 @@ class XNodeServicer(pb.fc_x_pb2_grpc.XNodeServicer):
             child = sel.node.child(req)
             if child != None:
                 child = resolve_node(self.driver, child)
-                return pb.fc_x_pb2.XChildResponse(nodeHnd=child.hnd.id)
+                return fc.pb.fc_x_pb2.XChildResponse(nodeHnd=child.hnd.id)
             else:
-                return pb.fc_x_pb2.XChildResponse()
+                return fc.pb.fc_x_pb2.XChildResponse()
         except Exception as error:
             print(traceback.format_exc())
             raise error
@@ -305,9 +305,9 @@ class XNodeServicer(pb.fc_x_pb2_grpc.XNodeServicer):
             read_val = sel.node.field(req, write_val)
             if not g_req.write:
                 fromRead = fc.val.proto_encode(read_val)
-                resp = pb.fc_x_pb2.XFieldResponse(fromRead=fromRead)
+                resp = fc.pb.fc_x_pb2.XFieldResponse(fromRead=fromRead)
             else:
-                resp = pb.fc_x_pb2.XFieldResponse()
+                resp = fc.pb.fc_x_pb2.XFieldResponse()
             return resp
         except Exception as error:
             print(traceback.format_exc())
@@ -330,7 +330,7 @@ class XNodeServicer(pb.fc_x_pb2_grpc.XNodeServicer):
             outputNodeHnd = None
             if output != None:
                 outputNodeHnd = resolve_node(self.driver, output).hnd.id
-            return pb.fc_x_pb2.XActionResponse(outputNodeHnd=outputNodeHnd)
+            return fc.pb.fc_x_pb2.XActionResponse(outputNodeHnd=outputNodeHnd)
         except Exception as error:
             print(traceback.format_exc())
             raise error
@@ -339,7 +339,7 @@ class XNodeServicer(pb.fc_x_pb2_grpc.XNodeServicer):
     def XNodeSource(self, g_req, context):
         browser = fc.node.Browser.resolve(self.driver, g_req.browserHnd)
         n = resolve_node(self.driver, browser.node())
-        return pb.fc_x_pb2.XNodeSourceResponse(nodeHnd=n.hnd.id)
+        return fc.pb.fc_x_pb2.XNodeSourceResponse(nodeHnd=n.hnd.id)
 
 
     def XNotification(self, g_req, context):
@@ -356,7 +356,7 @@ class XNodeServicer(pb.fc_x_pb2_grpc.XNodeServicer):
                 if node == None:
                     break
                 n = resolve_node(self.driver, node)
-                yield pb.fc_x_pb2.XNotificationResponse(nodeHnd=n.hnd.id)
+                yield fc.pb.fc_x_pb2.XNotificationResponse(nodeHnd=n.hnd.id)
                 q.task_done()
         finally:
             closer()
@@ -365,9 +365,9 @@ class XNodeServicer(pb.fc_x_pb2_grpc.XNodeServicer):
     def XBeginEdit(self, g_req, context):
         sel = Selection.resolve(self.driver, g_req.selHnd)
         sel.node.begin_edit(NodeRequest(sel, new=g_req.new, delete=g_req.delete))
-        return pb.fc_x_pb2.XBeginEditResponse()
+        return fc.pb.fc_x_pb2.XBeginEditResponse()
 
     def XEndEdit(self, g_req, context):
         sel = Selection.resolve(self.driver, g_req.selHnd)
         sel.node.end_edit(NodeRequest(sel, new=g_req.new, delete=g_req.delete))
-        return pb.fc_x_pb2.XEndEditResponse()
+        return fc.pb.fc_x_pb2.XEndEditResponse()

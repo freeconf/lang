@@ -1,4 +1,4 @@
-import pb.fc_pb2
+import fc.pb.fc_pb2
 
 
 # a pointer to an object in Go that is being held for python
@@ -14,7 +14,7 @@ class Handle():
         # if driver is unloaded, no need to release anything as it would be killed
         # with the fc-lang process
         if self.driver.handles:
-            self.driver.g_handles.Release(pb.fc_pb2.ReleaseRequest(hnd=self.id))
+            self.driver.g_handles.Release(fc.pb.fc_pb2.ReleaseRequest(hnd=self.id))
 
     # TODO Get's claimed to early
     # def __del__(self):

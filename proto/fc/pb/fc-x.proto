@@ -1,8 +1,8 @@
 syntax="proto3";
 option go_package = "./pb";
 package pb;
-import "val.proto";
-import "common.proto";
+import "fc/pb/val.proto";
+import "fc/pb/common.proto";
 
 /*
  This is used when Go calls into whatever language it is talking to which we
