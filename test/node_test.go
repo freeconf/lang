@@ -3,6 +3,7 @@ package test
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -23,7 +24,7 @@ type nodeTestHarness interface {
 	createTestCase(tc pb.TestCase, tracefile string) (node.Node, error)
 	finalizeTestCase() error
 
-	parseModule(dir string, module string) error
+	parseModule(dir string, module string, dumpFile string) error
 
 	Name() string
 
@@ -31,15 +32,8 @@ type nodeTestHarness interface {
 	Connect() error
 }
 
-var allLangs = []nodeTestHarness{
-
-	// tip: when debugging in IDE, comment out langs you do not want to debug instead
-	// of setting env vars.  Just be sure to restore list when done.
-
-	newGolang(),
-
-	NewHarness("python", &python{}),
-}
+var goHarness = newGolang(source.Dir("../yang"))
+var pythonHarness = NewHarness("python", &python{})
 
 func TestBasic(t *testing.T) {
 	ypath := source.Dir("testdata/yang")
@@ -159,20 +153,58 @@ func TestNotify(t *testing.T) {
 	}
 }
 
+var yangFiles = []string{
+	"basic",
+	"advanced",
+	// "meta",
+}
+
 func TestMeta(t *testing.T) {
 	dir := "testdata/yang"
 	for _, h := range Langs() {
 		// setup
 		fc.RequireEqual(t, nil, h.Connect())
+		t.Run(h.Name(), func(t *testing.T) {
+			defer func() {
+				fc.RequireEqual(t, nil, h.Close())
+			}()
 
-		// test
-		fc.AssertEqual(t, nil, h.parseModule(dir, "meta"))
-
-		fc.AssertEqual(t, nil, h.finalizeTestCase())
-
-		// teardown
-		fc.RequireEqual(t, nil, h.Close())
+			for _, f := range yangFiles {
+				t.Log(f)
+				dumpFile := tempFileName()
+				fc.AssertEqual(t, nil, h.parseModule(dir, f, dumpFile))
+				fc.AssertEqual(t, nil, reformatJson(dumpFile))
+				goldFile := fmt.Sprintf("testdata/gold/meta/%s.json", f)
+				fc.GoldFile(t, *update, dumpFile, goldFile)
+			}
+			fc.AssertEqual(t, nil, h.finalizeTestCase())
+		})
 	}
+}
+
+func reformatJson(fname string) error {
+	orig, err := os.Open(fname)
+	if err != nil {
+		return err
+	}
+	d := json.NewDecoder(orig)
+	data := make(map[string]interface{})
+	if err = d.Decode(&data); err != nil {
+		return err
+	}
+	if err = orig.Close(); err != nil {
+		return err
+	}
+	fix, err := os.Create(fname)
+	if err != nil {
+		return err
+	}
+	e := json.NewEncoder(fix)
+	e.SetIndent("", "  ")
+	if err := e.Encode(data); err != nil {
+		return err
+	}
+	return fix.Close()
 }
 
 func TestChoose(t *testing.T) {
@@ -211,15 +243,18 @@ func TestChoose(t *testing.T) {
 func Langs() []nodeTestHarness {
 	langEnv := os.Getenv("FC_LANG")
 	if langEnv == "" {
-		return allLangs
+		return []nodeTestHarness{
+			goHarness,
+			pythonHarness,
+		}
 	}
 	var specific []nodeTestHarness
 	for _, langId := range strings.Split(langEnv, ",") {
 		switch langId {
 		case "go":
-			specific = append(specific, newGolang())
+			specific = append(specific, goHarness)
 		case "python":
-			specific = append(specific, NewHarness(langId, &python{}))
+			specific = append(specific, pythonHarness)
 		}
 	}
 	return specific

@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 import sys
+import enum
 import signal
 import logging
+import json
 import fc.node
 import fc.driver
 import fc.nodeutil
@@ -60,9 +62,103 @@ class TestHarnessServicer(fc.pb.fc_test_pb2_grpc.TestHarnessServicer):
 
     def ParseModule(self, req, context):
         p = fc.parser.Parser(self.driver)
-        p.load_module(req.dir, req.moduleIdent)
+        m = p.load_module(req.dir, req.moduleIdent)
+        dump = {"module":meta_walk(["module"], m)}
+
+        with open(req.dumpFile, 'w') as f:
+            json.dump(dump, f, indent=4)
         return fc.pb.fc_test_pb2.ParseModuleResponse()
 
+
+def meta_walk(path, val):
+    """
+      print every facet of a module and recurse into every meta object
+      in that module. print in a format that matches Go test harness metaDump
+      so that dump files can be diff'ed to ensure python is decoding modules
+      properly
+    """
+    context = path[-1]
+    if not val:
+        return None
+    if isinstance(val, dict):
+        if len(val) == 0:
+            return
+        obj = {}
+        for attr, attr_val in enumerate(val):
+            child = meta_walk(path_push(path, attr), attr_val)
+            if child:
+                obj[attr] = child
+        return obj
+    elif isinstance(val, list):
+        if len(val) == 0:
+            return
+        children = []
+        for item in val:
+            children.append(meta_walk(path, item))
+        return children
+    elif context == "dataDef":
+        return meta_walk_datadef(path, val)
+    elif context == "choice":
+        return meta_walk_choice(path, val)
+    elif hasattr(val, '__module__') and val.__module__ == "fc.meta":
+        obj = {}
+        for attr in dir(val):
+            if attr.startswith("__") or attr == "hnd" or attr == "parent":
+                continue
+            name = lookup_alias(attr)
+            child = meta_walk(path_push(path, name), getattr(val, attr))
+            if child:
+                obj[name] = child
+
+        if context == "module":
+            rev = val.revision()
+            if rev:
+                obj["revision"] = meta_walk(path_push(path, "revision"), rev)
+
+        return obj
+    elif context == "config" and val == True:
+        return None
+    elif isinstance(val, enum.Enum):
+        return val.name.lower()
+    else:
+        return val
+
+
+def meta_walk_datadef(path, ddef):
+    def_name = lookup_alias(ddef.__class__.__name__.lower())
+    data_def = {def_name:meta_walk(path_push(path, def_name), ddef)}
+    for pop_ident in ["ident", "description"]:
+        if pop_ident in data_def[def_name]:
+            data_def[pop_ident] = data_def[def_name].pop(pop_ident)
+    return data_def
+
+
+def meta_walk_choice(path, choice):
+     defs = []
+     idents = sorted(choice.cases.keys())
+     for ident in idents:
+        kase = meta_walk(path_push(path, "case"), choice.cases[ident])
+        del kase["ident"]
+        defs.append({
+            "case": kase,
+            "ident": ident,
+        })
+     return {"dataDef": defs, "ident": choice.ident}
+
+
+aliases = {
+    "definitions" : "dataDef",
+    "leaflist" : "leaf-list",
+}
+
+
+def lookup_alias(id):
+    return aliases.get(id, id)
+
+def path_push(path, item):
+    copy = path.copy()
+    copy.append(item)
+    return copy
 
 class Echo:
     """

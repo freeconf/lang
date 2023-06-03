@@ -25,5 +25,10 @@ o  document py
 o  document lang
 
 bugs/tests
-o python doesn't always exit after go stops in failed unit tests
+? python doesn't always exit after go stops in failed unit tests
 o performance test results
+
+renames
+- fc-yang.yang - dataDef -> defs  
+- proto: definitions -> defs
+- yang: rpc -> action

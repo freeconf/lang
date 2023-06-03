@@ -1,0 +1,57 @@
+{
+  "module": {
+    "dataDef": [
+      {
+        "choice": {
+          "dataDef": [
+            {
+              "case": {
+                "dataDef": [
+                  {
+                    "ident": "one",
+                    "leaf": {
+                      "type": {
+                        "format": "string",
+                        "ident": "string"
+                      }
+                    }
+                  }
+                ]
+              },
+              "ident": "one"
+            },
+            {
+              "case": {
+                "dataDef": [
+                  {
+                    "ident": "two",
+                    "leaf": {
+                      "type": {
+                        "format": "string",
+                        "ident": "string"
+                      }
+                    }
+                  }
+                ]
+              },
+              "ident": "two"
+            }
+          ]
+        },
+        "ident": "x"
+      }
+    ],
+    "ident": "advanced",
+    "namespace": "n",
+    "prefix": "p",
+    "revision": {
+      "ident": "0000-00-00"
+    },
+    "revisions": [
+      {
+        "ident": "0000-00-00"
+      }
+    ],
+    "version": "1"
+  }
+}

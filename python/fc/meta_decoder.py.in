@@ -72,6 +72,11 @@ class Decoder():
     def decode_Format(self, parent, encoded):
         return fc.val.Format(encoded)
 
+    # grpc wraps arrays with customer class that acts like an array. here we
+    # drop that wackyness
+    def decode_repeated_scalar(self, ary):
+        return [x for x in ary]
+
     def decode_DataDefList(self, parent, encoded_list):
         to = []
         for encoded in encoded_list:
@@ -96,7 +101,9 @@ class Decoder():
         {{- range .Fields }}
         {{- if .PyCustomDecoder }}
         to.{{.PyName}} = self.decode_{{.PyCustomDecoder}}(to, encoded.{{.PyName}} )
-        {{- else }}
+        {{- else if .Repeated }}
+        to.{{.PyName}} = self.decode_repeated_scalar(encoded.{{.Name}})
+        {{- else }}        
         to.{{.PyName}} = encoded.{{.Name}}
         {{- end }}
         {{- end }}

@@ -26,11 +26,19 @@ class {{ .Name }}():
 {{- end }}
 
     {{- if eq $def.Name "List" }}
-    def keyMeta(self):
-        keyMeta = []
-        for keyName in self.keys:
-            keyMeta.append(get_def(self, keyName))
-        return keyMeta
+    def key_meta(self):
+        key_meta = []
+        for key_name in self.key:
+            key_meta.append(get_def(self, key_name))
+        return key_meta
+    {{- end }}
+
+
+    {{- if eq $def.Name "Module" }}
+    def revision(self):
+        if len(self.revisions) > 0:
+            return self.revisions[0]
+        return None
     {{- end }}
 
 {{- end }}

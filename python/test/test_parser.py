@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
-import unittest 
+import sys
+import unittest
 import fc.driver
 import fc.parser
+import inspect
 
 class TestParser(unittest.TestCase):
 
     def test_basic(self):
         d = fc.driver.Driver()
         d.load()
-        
+
         # load a module as test that driver is working
         p = fc.parser.Parser(d)
         m = p.load_module('testdata', 'testme-1')
@@ -23,7 +25,7 @@ class TestParser(unittest.TestCase):
     def test_car(self):
         d = fc.driver.Driver()
         d.load()
-        
+
         # load a module as test that driver is working
         p = fc.parser.Parser(d)
         m = p.load_module('testdata', 'car')
@@ -31,7 +33,7 @@ class TestParser(unittest.TestCase):
         self.assertEqual(2, len(m.actions))
         start = m.actions['start']
         self.assertEqual('start', start.ident)
-        d.unload()        
+        d.unload()
 
 if __name__ == '__main__':
     unittest.main()

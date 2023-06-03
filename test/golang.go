@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/freeconf/lang/pb"
+	"github.com/freeconf/yang/meta"
 	"github.com/freeconf/yang/node"
 	"github.com/freeconf/yang/nodeutil"
 	"github.com/freeconf/yang/parser"
@@ -12,12 +13,15 @@ import (
 )
 
 type golang struct {
-	traceFile *os.File
-	recievers *list.List
+	ypath      source.Opener
+	yangModule *meta.Module
+	traceFile  *os.File
+	recievers  *list.List
 }
 
-func newGolang() *golang {
+func newGolang(ypath source.Opener) *golang {
 	return &golang{
+		ypath:     ypath,
 		recievers: list.New(),
 	}
 }
@@ -107,8 +111,30 @@ func (d *golang) finalizeTestCase() error {
 	return nil
 }
 
-func (d *golang) parseModule(dir string, module string) error {
+func (d *golang) loadYangModule() *meta.Module {
+	if d.yangModule == nil {
+		var err error
+		if d.yangModule, err = parser.LoadModule(d.ypath, "fc-yang"); err != nil {
+			panic(err)
+		}
+	}
+	return d.yangModule
+}
+
+func (d *golang) parseModule(dir string, module string, dumpFilename string) error {
 	ypath := source.Dir(dir)
-	_, err := parser.LoadModule(ypath, module)
+	m, err := parser.LoadModule(ypath, module)
+	if err != nil {
+		return err
+	}
+	dumpFile, err := os.Create(dumpFilename)
+	if err != nil {
+		return err
+	}
+	defer dumpFile.Close()
+	wtr := nodeutil.NewJSONWtr(dumpFile)
+	wtr.Pretty = true
+	b := nodeutil.Schema(d.loadYangModule(), m)
+	err = b.Root().UpsertInto(wtr.Node())
 	return err
 }

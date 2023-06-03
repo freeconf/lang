@@ -124,9 +124,10 @@ message List {
     repeated DataDef definitions = 5;
     OptionalBool config = 14;
     OptionalBool mandatory = 15;
-    repeated Rpc actions = 16;
-    repeated Notification notifications = 17;
-    repeated string key = 18;
+    OptionalBool unbounded = 16;
+    repeated Rpc actions = 17;
+    repeated Notification notifications = 18;
+    repeated string key = 19;
 }
 
 message LeafList {
