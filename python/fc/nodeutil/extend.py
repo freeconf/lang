@@ -1,6 +1,8 @@
 class Extend():
 
-    def __init__(self, base, on_child=None, on_field=None, on_action=None, on_notification=None, on_begin_edit=None, on_end_edit=None):
+    def __init__(self, base, on_child=None, on_field=None, on_action=None, on_notification=None, 
+                 on_begin_edit=None, on_end_edit=None,
+                 on_release=None, on_context=None):
         self.hnd = 0
         self.base = base
         self.on_child = on_child
@@ -9,6 +11,18 @@ class Extend():
         self.on_notification = on_notification
         self.on_begin_edit = on_begin_edit
         self.on_end_edit = on_end_edit
+        self.on_release = on_release
+        self.on_context = on_context
+
+    def context(self, sel):
+        if self.on_context:
+            return self.on_context(self, sel)
+        return self.base.context(sel)
+
+    def release(self, sel):
+        if self.on_release:
+            return self.on_release(self, sel)
+        return self.base.release(sel)
 
     def child(self, r):
         if self.on_child:

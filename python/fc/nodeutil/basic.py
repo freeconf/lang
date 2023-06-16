@@ -3,6 +3,12 @@ class Basic():
     def __init__(self):
         self.hnd = 0
 
+    def context(self, sel):
+        raise Exception(f'context not implemented in {sel.path.str()}')
+
+    def release(self, sel):
+        raise Exception(f'release not implemented in {sel.path.str()}')
+
     def child(self, r):
         raise Exception(f'child not implemented in {r.path.str()}/{r.meta.ident}')
 

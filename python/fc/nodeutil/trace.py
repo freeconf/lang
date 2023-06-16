@@ -14,6 +14,12 @@ class Trace():
         self.write = out.write
         self.level = level
 
+    def context(self, sel):
+        self.trace(self.level, 'context', "")
+
+    def release(self, sel):
+        self.trace(self.level, 'release', "")
+
     def next(self, r):
         if r.new:
             self.trace(self.level, f'next.new[{r.row}]', self.ident_str(r.meta, r.key))
@@ -65,7 +71,7 @@ class Trace():
 
 
     def begin_edit(self, r):
-        self.trace(self.level, "edit.begin", self.path_str(r.sel.path))
+        self.trace(self.level, f"edit.begin", self.path_str(r.sel.path))
         if r.new:
             self.trace(self.level+1, "new", "true") 
         if r.delete:

@@ -12,16 +12,15 @@ class Parser():
         req = fc.pb.fc_pb2.LoadModuleRequest(dir=dir, name=name)
         resp = self.driver.g_parser.LoadModule(req)
         m = fc.meta_decoder.Decoder().decode(resp.module)
-        m.hnd = fc.handles.Handle(self.driver, resp.moduleHnd, m)
+        m.hnd = self.driver.obj_weak.store_hnd(resp.moduleHnd, m)
         return m
     
     @classmethod
     def resolve_module(cls, driver, module_hnd_id):
-        try:
-            return fc.handles.Handle.require(driver, module_hnd_id)
-        except KeyError:
+        m = driver.obj_weak.lookup_hnd(module_hnd_id)
+        if m == None:
             req = fc.pb.fc_pb2.GetModuleRequest(moduleHnd=module_hnd_id)
             resp = driver.g_nodes.GetModule(req)
             m = fc.meta_decoder.Decoder().decode(resp.module)
-            m.hnd = fc.handles.Handle(driver, module_hnd_id, m)
-            return m
+            m.hnd = driver.obj_weak.store_hnd(module_hnd_id, m)
+        return m

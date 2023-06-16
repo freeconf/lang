@@ -22,8 +22,26 @@ func (n *xnode) GetRemoteHandle() uint64 {
 }
 
 func (n *xnode) Context(s *node.Selection) context.Context {
-	// TODO
+	req := pb.XContextRequest{
+		SelHnd: resolveSelection(n.d, s),
+	}
+	_, err := n.d.xnodes.XContext(s.Context, &req)
+	if err != nil {
+		// probably should have API so context can return an err
+		panic(err)
+	}
 	return s.Context
+}
+
+func (n *xnode) Release(s *node.Selection) {
+	req := pb.XReleaseRequest{
+		SelHnd: resolveSelection(n.d, s),
+	}
+	_, err := n.d.xnodes.XRelease(s.Context, &req)
+	if err != nil {
+		// probably should have API so context can return an err
+		panic(err)
+	}
 }
 
 func (n *xnode) Child(r node.ChildRequest) (node.Node, error) {
@@ -37,7 +55,7 @@ func (n *xnode) Child(r node.ChildRequest) (node.Node, error) {
 	if err != nil || resp.NodeHnd == 0 {
 		return nil, err
 	}
-	return n.d.handles.Get(resp.NodeHnd).(node.Node), nil
+	return n.d.handles.Require(resp.NodeHnd).(node.Node), nil
 }
 
 func (n *xnode) Next(r node.ListRequest) (node.Node, []val.Value, error) {
@@ -63,7 +81,7 @@ func (n *xnode) Next(r node.ListRequest) (node.Node, []val.Value, error) {
 	if len(resp.Key) > 0 {
 		key = decodeVals(resp.Key)
 	}
-	return n.d.handles.Get(resp.NodeHnd).(node.Node), key, nil
+	return n.d.handles.Require(resp.NodeHnd).(node.Node), key, nil
 }
 
 func (n *xnode) Field(r node.FieldRequest, hnd *node.ValueHandle) error {
@@ -133,7 +151,7 @@ func (n *xnode) Action(r node.ActionRequest) (output node.Node, err error) {
 	if err != nil || resp.OutputNodeHnd == 0 {
 		return nil, err
 	}
-	return n.d.handles.Get(resp.OutputNodeHnd).(node.Node), nil
+	return n.d.handles.Require(resp.OutputNodeHnd).(node.Node), nil
 }
 
 func (n *xnode) Notify(r node.NotifyRequest) (node.NotifyCloser, error) {
@@ -157,7 +175,7 @@ func (n *xnode) Notify(r node.NotifyRequest) (node.NotifyCloser, error) {
 	}
 	go func() {
 		var resp *pb.XNotificationResponse
-		for {
+		for client != nil {
 			resp, recvErr = client.Recv()
 			if recvErr != nil {
 				r.Send(node.ErrorNode{Err: recvErr})

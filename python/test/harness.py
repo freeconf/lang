@@ -36,6 +36,7 @@ class TestHarnessServicer(fc.pb.fc_test_pb2_grpc.TestHarnessServicer):
     def __init__(self, driver):
         self.driver = driver
         self.trace_file = None
+        self.trace_node = None
 
 
     def CreateTestCase(self, req, context):
@@ -47,16 +48,18 @@ class TestHarnessServicer(fc.pb.fc_test_pb2_grpc.TestHarnessServicer):
             n = fc.nodeutil.Reflect({})
         else:
             raise Exception("unimplemented test case")
-        n = fc.nodeutil.Trace(n, out)
-        fc.node.resolve_node(self.driver, n)
+        self.trace_node = fc.nodeutil.Trace(n, out)
+        node_hnd = fc.node.ensure_node_hnd(self.driver, self.trace_node)
         self.trace_file = out
-        return fc.pb.fc_test_pb2.CreateTestCaseResponse(nodeHnd=n.hnd.id)
+        return fc.pb.fc_test_pb2.CreateTestCaseResponse(nodeHnd=node_hnd)
     
 
     def FinalizeTestCase(self, req, context):
         if self.trace_file != None:
             self.trace_file.close()
             self.trace_file = None
+        if self.trace_node != None:
+            self.trace_node = None
         return fc.pb.fc_test_pb2.FinalizeTestCaseResponse()
 
 
@@ -194,7 +197,6 @@ class Echo:
             return None
         
         def notification(node, r):
-            print(f'notify called')
             if r.meta.ident == "recv":
                 def listener(n):
                     r.send(n)

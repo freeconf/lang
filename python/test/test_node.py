@@ -24,6 +24,7 @@ class TestNode(unittest.TestCase):
         dumper = fc.nodeutil.Trace(fc.nodeutil.Reflect({}), actual)
         b = fc.node.Browser(d, m, dumper)
         rdr = fc.nodeutil.json_read(d, "testdata/testme-sample-1.json")
+        print("about to upsert")
         b.root().upsert_from(rdr)
         gold.assert_equal(self, actual.getvalue(), "testdata/gold/node.trace")
         d.unload()

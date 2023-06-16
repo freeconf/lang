@@ -35,6 +35,11 @@ type nodeTestHarness interface {
 var goHarness = newGolang(source.Dir("../yang"))
 var pythonHarness = NewHarness("python", &python{})
 
+var allHarnesses = []nodeTestHarness{
+	goHarness,
+	pythonHarness,
+}
+
 func TestBasic(t *testing.T) {
 	ypath := source.Dir("testdata/yang")
 	m := parser.RequireModule(ypath, "basic")
@@ -107,8 +112,10 @@ func TestNotify(t *testing.T) {
 	for _, h := range Langs() {
 		fc.RequireEqual(t, nil, h.Connect())
 		t.Run(h.Name(), func(t *testing.T) {
+			done := false
 			defer func() {
 				fc.RequireEqual(t, nil, h.Close())
+				done = true
 			}()
 
 			// setup
@@ -124,9 +131,12 @@ func TestNotify(t *testing.T) {
 			unsub, err := sel.Notifications(func(n node.Notification) {
 				msg, err := nodeutil.WritePrettyJSON(n.Event)
 				if err != nil {
-					panic(err)
+					if !done {
+						panic(err)
+					}
+				} else {
+					msgs <- msg
 				}
-				msgs <- msg
 			})
 			fc.RequireEqual(t, nil, err)
 
@@ -243,10 +253,7 @@ func TestChoose(t *testing.T) {
 func Langs() []nodeTestHarness {
 	langEnv := os.Getenv("FC_LANG")
 	if langEnv == "" {
-		return []nodeTestHarness{
-			goHarness,
-			pythonHarness,
-		}
+		return allHarnesses
 	}
 	var specific []nodeTestHarness
 	for _, langId := range strings.Split(langEnv, ",") {

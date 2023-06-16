@@ -34,9 +34,9 @@ class Driver():
         if self.g_proc:
             raise Exception("fc-lang already loaded")
 
-        # TODO: at a minimum, nodes do not survive, they get claimed during the
-        # selection navigation
-        self.handles = {} #weakref.WeakValueDictionary()
+        self.obj_strong = HandlePool(self, False) # objects that have an explicit release/destroy
+        self.obj_weak = HandlePool(self, True) # objects that should disapear on their own
+
         self.start_x_server(test_harness)
         if test_harness is None:
             self.start_g_proc()
@@ -60,6 +60,7 @@ class Driver():
             time.sleep(0.5)
             i = i + 1
         raise Exception(f'timed out waiting for {self.sock_file} file')
+    
 
     def create_g_client(self):
         self.g_channel = grpc.insecure_channel(f'unix://{self.sock_file}')
@@ -80,11 +81,47 @@ class Driver():
         self.x_server.start()
 
     def unload(self):
-        self.handles = None
+        self.obj_weak.release()
+        self.obj_strong.release()
         self.x_server.stop(1).wait()
         self.g_proc.terminate()
         self.g_proc.wait()
         self.g_proc = None
+
+
+class HandlePool:
+    def __init__(self, driver, weak):
+        self.weak = weak
+        self.driver = driver
+        if self.weak:
+            self.handles = weakref.WeakValueDictionary() # objects that should disapear on their own
+        else:
+            self.handles = {}
+
+    def lookup_hnd(self, id):
+        #print(f"looking up {id}")
+        return self.handles.get(id, None)
+
+    def require_hnd(self, id):
+        try:
+            return self.handles[id]
+        except KeyError:
+            raise KeyError(f'could not resolve hnd {id}')
+
+    def store_hnd(self, id, obj):
+        #print(f"storing {id} {obj} weak={self.weak}")
+        self.handles[id] = obj
+        if self.weak:
+            weakref.finalize(obj, self.release_hnd, id)
+        return id
+
+    def release_hnd(self, id):
+        #print(f"releasing {id}, weak={self.weak}")
+        if self.handles != None:
+            self.driver.g_handles.Release(fc.pb.fc_pb2.ReleaseRequest(hnd=id))
+
+    def release(self):
+        self.handles = None
 
 
 # Ensure fc-lang is terminated when this python process is terminated

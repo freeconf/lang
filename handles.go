@@ -106,7 +106,6 @@ func (p *HandlePool) Record(x any, hnd uint64) {
 }
 
 func (p *HandlePool) Release(handle uint64) {
-	fmt.Printf("releasing %d\n", handle)
 	p.lock.Lock()
 	defer p.lock.Unlock()
 	if obj, found := p.objects[handle]; found {

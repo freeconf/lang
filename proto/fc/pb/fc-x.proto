@@ -22,7 +22,21 @@ service XNode {
       rpc XNext(XNextRequest) returns (XNextResponse) {}
       rpc XBeginEdit(XBeginEditRequest) returns (XBeginEditResponse) {}
       rpc XEndEdit(XEndEditRequest) returns (XEndEditResponse) {}
+      rpc XContext(XContextRequest) returns (XContextResponse) {}
+      rpc XRelease(XReleaseRequest) returns (XReleaseResponse) {}
 }
+
+message XContextRequest {
+      uint64 selHnd = 1;
+}
+
+message XContextResponse {}
+
+message XReleaseRequest {
+      uint64 selHnd = 1;
+}
+
+message XReleaseResponse {}
 
 message XChooseRequest {
       uint64 selHnd = 1;
@@ -137,13 +151,13 @@ message XNotificationResponse {
       uint64 nodeHnd = 1;
 }
 
-message XReleaseRequest {
+message XReleaseHandleRequest {
       uint64 xHnd = 1;
 }
 
-message XReleaseResponse {
+message XReleaseHandleResponse {
 }
 
 service XHandles {
-      rpc Release (XReleaseRequest) returns (XReleaseResponse) {}
+      rpc ReleaseHandle (XReleaseHandleRequest) returns (XReleaseHandleResponse) {}
 }

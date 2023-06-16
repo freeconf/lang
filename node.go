@@ -15,7 +15,7 @@ type NodeService struct {
 }
 
 func (s *NodeService) NewBrowser(ctx context.Context, in *pb.NewBrowserRequest) (*pb.NewBrowserResponse, error) {
-	m := s.d.handles.Get(in.ModuleHnd).(*meta.Module)
+	m := s.d.handles.Require(in.ModuleHnd).(*meta.Module)
 	browserHnd := s.d.handles.Reserve()
 	nodeSrc := func() node.Node {
 		req := pb.XNodeSourceRequest{BrowserHnd: browserHnd}
@@ -23,7 +23,7 @@ func (s *NodeService) NewBrowser(ctx context.Context, in *pb.NewBrowserRequest) 
 		if err != nil {
 			panic(err)
 		}
-		return s.d.handles.Get(resp.NodeHnd).(node.Node)
+		return s.d.handles.Require(resp.NodeHnd).(node.Node)
 	}
 	b := node.NewBrowserSource(m, nodeSrc)
 	s.d.handles.Record(b, browserHnd)
@@ -31,7 +31,7 @@ func (s *NodeService) NewBrowser(ctx context.Context, in *pb.NewBrowserRequest) 
 }
 
 func (s *NodeService) BrowserRoot(ctx context.Context, in *pb.BrowserRootRequest) (*pb.BrowserRootResponse, error) {
-	b := s.d.handles.Get(in.BrowserHnd).(*node.Browser)
+	b := s.d.handles.Require(in.BrowserHnd).(*node.Browser)
 	root := b.Root()
 	var resp pb.BrowserRootResponse
 	resp.SelHnd = resolveSelection(s.d, root)
@@ -39,7 +39,7 @@ func (s *NodeService) BrowserRoot(ctx context.Context, in *pb.BrowserRootRequest
 }
 
 func (s NodeService) Find(ctx context.Context, in *pb.FindRequest) (*pb.FindResponse, error) {
-	sel := s.d.handles.Get(in.SelHnd).(*node.Selection)
+	sel := s.d.handles.Require(in.SelHnd).(*node.Selection)
 	found, err := sel.Find(in.Path)
 	if err != nil {
 		return nil, err
@@ -52,8 +52,8 @@ func (s NodeService) Find(ctx context.Context, in *pb.FindRequest) (*pb.FindResp
 }
 
 func (s *NodeService) SelectionEdit(ctx context.Context, in *pb.SelectionEditRequest) (*pb.SelectionEditResponse, error) {
-	sel := s.d.handles.Get(in.SelHnd).(*node.Selection)
-	n := s.d.handles.Get(in.NodeHnd).(node.Node)
+	sel := s.d.handles.Require(in.SelHnd).(*node.Selection)
+	n := s.d.handles.Require(in.NodeHnd).(node.Node)
 	var err error
 	switch in.Op {
 	case pb.SelectionEditOp_UPSERT_INTO:
@@ -87,7 +87,7 @@ func (s *NodeService) NewNode(ctx context.Context, in *pb.NewNodeRequest) (*pb.N
 func (s *NodeService) Action(ctx context.Context, in *pb.ActionRequest) (*pb.ActionResponse, error) {
 	var input node.Node
 	if in.InputNodeHnd != 0 {
-		input = s.d.handles.Get(in.InputNodeHnd).(node.Node)
+		input = s.d.handles.Require(in.InputNodeHnd).(node.Node)
 	}
 	sel := s.d.handles.Require(in.SelHnd).(*node.Selection)
 	output, err := sel.Action(input)
@@ -102,24 +102,23 @@ func (s *NodeService) Action(ctx context.Context, in *pb.ActionRequest) (*pb.Act
 }
 
 func resolveSelection(d *Driver, sel *node.Selection) uint64 {
-	return d.handles.Hnd(sel)
+	hnd := d.handles.Hnd(sel)
+	return hnd
 }
 
 func (s *NodeService) GetSelection(ctx context.Context, in *pb.GetSelectionRequest) (*pb.GetSelectionResponse, error) {
 	sel := s.d.handles.Require(in.SelHnd).(*node.Selection)
+	_, isNotRemote := sel.Node.(*xnode) // here "remote" is from perspective of X impl
 	resp := pb.GetSelectionResponse{
-		NodeHnd: s.d.handles.Hnd(sel.Node),
+		NodeHnd:    s.d.handles.Hnd(sel.Node),
+		RemoteNode: !isNotRemote,
 	}
 	s.d.handles.Hnd(sel.Browser.Meta)
 	resp.Path = buildPath(s.d, sel.Path)
 	if sel.InsideList {
 		resp.InsideList = true
 	}
-	if sel.Parent == nil {
-		resp.BrowserHnd = s.d.handles.Hnd(sel.Browser)
-	} else {
-		resp.ParentHnd = resolveSelection(s.d, sel.Parent)
-	}
+	resp.BrowserHnd = s.d.handles.Hnd(sel.Browser)
 	return &resp, nil
 }
 

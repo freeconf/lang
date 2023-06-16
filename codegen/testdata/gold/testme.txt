@@ -107,6 +107,7 @@ meta List {
     definitions DataDef, definitions DataDef[];
     config OptionalBool, config OptionalBool;
     mandatory OptionalBool, mandatory OptionalBool;
+    unbounded OptionalBool, unbounded OptionalBool;
     actions Rpc, actions Rpc[];
     notifications Notification, notifications Notification[];
     key string, key string[];

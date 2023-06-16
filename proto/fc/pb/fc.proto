@@ -140,7 +140,7 @@ message GetSelectionRequest {
 
 message GetSelectionResponse {      
       uint64 nodeHnd = 1;
-      uint64 parentHnd = 2;
+      bool remoteNode = 2; // true is node originaly from Go, false if from X lang
       uint64 browserHnd = 3;      
       bool insideList = 4;
       Path path = 5;

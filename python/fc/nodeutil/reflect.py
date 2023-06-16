@@ -16,6 +16,12 @@ class Reflect():
                     return choice_case
         return None
 
+    def context(self, sel):
+        pass
+
+    def release(self, sel):
+        pass
+
     def child(self, r):
         child = None
         if r.delete:

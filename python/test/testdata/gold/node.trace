@@ -1,15 +1,19 @@
 
+context: 
 edit.begin: testme-1
 child.read: z
     found: false
 child.new: z
     found: true
+    context: 
     edit.begin: z
         new: true
     field.write: q
         val: int32(99)
     edit.end: z
         new: true
+    release: 
+release: 
 field.write: x
     val: string(hello)
 edit.end: testme-1

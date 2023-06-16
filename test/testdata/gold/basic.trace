@@ -1,18 +1,23 @@
+context: 
 edit.begin: basic
 child.read: x
     found: false
 child.new: x
     found: true
+    context: 
     edit.begin: x
         new: true
     field.write: l
         val: int32(99)
     edit.end: x
         new: true
+    release: 
+release: 
 child.read: z
     found: false
 child.new: z
     found: true
+    context: 
     edit.begin: z
         new: true
     next.read[0]: z=aa
@@ -20,23 +25,33 @@ child.new: z
         response.key: nil
     next.new[0]: z=aa
         found: true
+        context: 
         edit.begin: z=aa
             new: true
         field.write: p
             val: string(aa)
         edit.end: z=aa
             new: true
+        release: 
+    release: 
+release: 
     next.read[1]: z=bb
         found: false
         response.key: nil
     next.new[1]: z=bb
         found: true
+        context: 
         edit.begin: z=bb
             new: true
         field.write: p
             val: string(bb)
         edit.end: z=bb
             new: true
+        release: 
+    release: 
+release: 
     edit.end: z
         new: true
+    release: 
+release: 
 edit.end: basic
