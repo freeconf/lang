@@ -24,7 +24,7 @@ func (x *python) stop() error {
 }
 
 func (x *python) connect(gAddr string, xAddr string) error {
-	x.proc = exec.Command("../python/test/harness.py", gAddr, xAddr)
+	x.proc = exec.Command("../python/tests/harness.py", gAddr, xAddr)
 	x.proc.Stdout = os.Stdout
 	x.proc.Stderr = os.Stderr
 	return x.proc.Start()

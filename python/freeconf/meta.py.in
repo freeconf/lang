@@ -1,0 +1,130 @@
+from enum import Enum
+import freeconf.pb.common_pb2
+import freeconf.val
+import freeconf.parser
+
+# This file is generated from meta.py.in
+
+class Status(Enum):
+    CURRENT = 0
+    DEPRECATED = 1
+    OBSOLETE = 2
+
+{{ range $index, $def := .MetaDefs}}
+{{ if $def.IsMetaDef }}
+class {{ .Name }}():
+    __slots__ = [
+        "parent",
+{{- if eq $def.Name "Module" }}
+        "hnd",
+        '__weakref__',
+{{- end }}
+{{- range $def.Fields }}
+        "{{.PyName}}",
+{{- end }}
+    ]
+{{- end }}
+
+    {{- if eq $def.Name "List" }}
+    def key_meta(self):
+        key_meta = []
+        for key_name in self.key:
+            key_meta.append(get_def(self, key_name))
+        return key_meta
+    {{- end }}
+
+
+    {{- if eq $def.Name "Module" }}
+    def revision(self):
+        if len(self.revisions) > 0:
+            return self.revisions[0]
+        return None
+    {{- end }}
+
+{{- end }}
+
+class Path():
+
+    def __init__(self, parent, meta, key=None):
+        self.parent = parent
+        self.meta = meta
+        self.key = key
+
+    def str(self):
+        s = self.meta.ident
+        if self.key != None:
+            s = f'{s}({",".join(self.key)})'
+        if self.parent:
+            return self.parent.str() + '/' + s
+        return s
+
+    @classmethod
+    def resolve(cls, driver, resp):
+        module = freeconf.parser.Parser.resolve_module(driver, resp.moduleHnd)
+        path = Path(None, module)
+        if resp.segments == None:
+            return path
+        for seg in resp.segments:
+            if seg.type == freeconf.pb.common_pb2.DATA_DEF:
+                ddef_meta = get_def(path.meta, seg.metaIdent)
+                path = Path(path, ddef_meta)
+            elif seg.type == freeconf.pb.common_pb2.RPC:
+                rpc_meta = get_rpc(path.meta, seg.metaIdent)
+                path = Path(path, rpc_meta)
+            elif seg.type == freeconf.pb.common_pb2.NOTIFICATION:
+                notif_meta = get_notification(path.meta, seg.metaIdent)
+                path = Path(path, notif_meta)
+            elif seg.type == freeconf.pb.common_pb2.RPC_INPUT:
+                input_meta = path.meta.input
+                path = Path(path, input_meta)
+            elif seg.type == freeconf.pb.common_pb2.RPC_OUTPUT:
+                output_meta = path.meta.output
+                path = Path(path, output_meta)
+            else:
+                raise Exception(f"unrecognized path segment type {seg.type} at {path.meta.ident}")
+            if seg.key != None and len(seg.key) > 0:
+                path.key = [freeconf.val.proto_decode(v) for v in seg.key]
+        return path
+
+
+class InvalidPathException(Exception):
+    pass
+
+def get_def(meta, ident):
+    if not meta:
+        raise Exception(f'no meta given to find {ident}')
+    for ddef in meta.definitions:
+        if isinstance(ddef, Choice):
+            for ddef_cases in ddef.cases.values():
+                for case_ddef in ddef_cases.definitions:
+                    if case_ddef.ident == ident:
+                        return case_ddef            
+        elif ddef.ident == ident:
+            return ddef
+    raise InvalidPathException(f'definition {ident} not found in {meta.ident}')
+
+
+def get_choice(meta, ident):
+    for ddef in meta.definitions:
+        if isinstance(ddef, Choice):
+            if ddef.ident == ident:
+                return ddef
+    raise InvalidPathException(f'choice {ident} not found in {meta.ident}')
+
+
+def get_rpc(meta, ident):
+    if not meta:
+        raise Exception(f'no meta given to find {ident}')
+    ddef = meta.actions.get(ident, None)
+    if ddef:
+        return ddef
+    raise InvalidPathException(f'rpc {ident} not found in {meta.ident}')
+
+
+def get_notification(meta, ident):
+    if not meta:
+        raise Exception(f'no meta given to find {ident}')
+    ddef = meta.notifications.get(ident, None)
+    if ddef:
+        return ddef
+    raise InvalidPathException(f'notification {ident} not found in {meta.ident}')

@@ -1,13 +1,13 @@
 export YANGPATH = $(abspath test/yang)
 export PATH := $(PATH):./bin
-export PYTHONPATH := $(abspath python):$(abspath python)/pb
+export PYTHONPATH := $(abspath python)
 
 all : generate proto bin test test-py
 
 generate:
 	go run codegen/main.go \
 		./*.in \
-		python/fc/*.in
+		python/freeconf/*.in
 
 .PHONY: test
 test: test-go test-py
@@ -25,7 +25,7 @@ PY_TESTS = \
 	test_restconf.py
 
 test-py:
-	cd python/test; \
+	cd python/tests; \
 		. ../venv/bin/activate && \
 		$(foreach T,$(PY_TESTS),echo $(T) && python $(T) || exit;)
 
@@ -48,11 +48,11 @@ proto-go:
 		-I./proto \
 		--go_out=. \
 		--go-grpc_out=. \
-		./proto/fc/pb/*.proto
+		./proto/freeconf/pb/*.proto
 
 proto-py:
-	! test -d python/fc/pb || rm -rf python/fc/pb
-	mkdir python/fc/pb
+	! test -d python/freeconf/pb || rm -rf python/freeconf/pb
+	mkdir python/freeconf/pb
 	cd python; \
 		. venv/bin/activate && \
 		python -m grpc_tools.protoc \
@@ -60,4 +60,4 @@ proto-py:
 			--python_out=. \
 			--pyi_out=. \
 			--grpc_python_out=. \
-			../proto/fc/pb/*.proto
+			../proto/freeconf/pb/*.proto
