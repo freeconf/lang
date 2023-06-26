@@ -21,3 +21,12 @@ func (s *NodeUtilService) JSONRdr(ctx context.Context, req *pb.JSONRdrRequest) (
 	rdr := nodeutil.ReadJSONIO(f)
 	return &pb.JSONRdrResponse{NodeHnd: s.d.handles.Put(rdr)}, nil
 }
+
+func (s *NodeUtilService) JSONWtr(ctx context.Context, req *pb.JSONWtrRequest) (*pb.JSONWtrResponse, error) {
+	f, err := os.Create(req.Fname)
+	if err != nil {
+		return nil, err
+	}
+	wtr := nodeutil.NewJSONWtr(f)
+	return &pb.JSONWtrResponse{NodeHnd: s.d.handles.Put(wtr.Node())}, nil
+}

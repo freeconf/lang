@@ -53,6 +53,7 @@ service Node {
       rpc GetBrowser(GetBrowserRequest) returns (GetBrowserResponse) {}
       rpc GetModule(GetModuleRequest) returns (GetModuleResponse) {}
       rpc GetSelection(GetSelectionRequest) returns (GetSelectionResponse) {}
+      rpc ReleaseSelection(ReleaseSelectionRequest) returns (ReleaseSelectionResponse) {}
 }
 
 enum SelectionEditOp {
@@ -74,6 +75,13 @@ message NewBrowserRequest {
 
 message NewBrowserResponse {
       uint64 browserHnd = 1;
+}
+
+message ReleaseSelectionRequest {
+      uint64 selHnd = 1;
+}
+
+message ReleaseSelectionResponse {      
 }
 
 message SelectionEditRequest {
@@ -198,6 +206,7 @@ message ApplyStartupConfigResponse {
 ////////////
 service NodeUtil {
       rpc JSONRdr(JSONRdrRequest) returns (JSONRdrResponse) {}
+      rpc JSONWtr(JSONWtrRequest) returns (JSONWtrResponse) {}
 }
 
 message JSONRdrRequest {
@@ -208,6 +217,14 @@ message JSONRdrResponse {
       uint64 nodeHnd = 1;
 }
 
+
+message JSONWtrRequest {
+      string fname = 1;
+}
+
+message JSONWtrResponse {
+      uint64 nodeHnd = 1;
+}
 
 ////////////
 service Restconf {

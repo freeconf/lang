@@ -120,6 +120,10 @@ class Selection():
         resp = self.driver.g_nodes.Find(req)
         return Selection.resolve(self.driver, resp.selHnd)
 
+    def release(self):
+        req = freeconf.pb.fc_pb2.ReleaseSelectionRequest(selHnd=self.hnd)
+        self.driver.g_nodes.ReleaseSelection(req)
+
 
 def resolve_node_hnd(driver, hnd, is_remote):
     if not hnd:

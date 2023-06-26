@@ -38,6 +38,12 @@ func (s *NodeService) BrowserRoot(ctx context.Context, in *pb.BrowserRootRequest
 	return &resp, nil
 }
 
+func (s NodeService) ReleaseSelection(ctx context.Context, in *pb.ReleaseSelectionRequest) (*pb.ReleaseSelectionResponse, error) {
+	sel := s.d.handles.Require(in.SelHnd).(*node.Selection)
+	sel.Release()
+	return &pb.ReleaseSelectionResponse{}, nil
+}
+
 func (s NodeService) Find(ctx context.Context, in *pb.FindRequest) (*pb.FindResponse, error) {
 	sel := s.d.handles.Require(in.SelHnd).(*node.Selection)
 	found, err := sel.Find(in.Path)
