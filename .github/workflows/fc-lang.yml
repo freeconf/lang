@@ -19,8 +19,10 @@ jobs:
 
       - name: Installing protoc-gen-go
         run: |
-          go get -u google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
-          go get -u google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.31.0
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
+        env:
+          GOPATH: "."
 
       - name: Generate code
         run: |
@@ -28,8 +30,8 @@ jobs:
           mkdir pb
           protoc \
             -I./proto \
-            --plugin=protoc-gen-go-grpc=${HOME}/go/bin/protoc-gen-go-grpc \
-            --plugin=protoc-gen-go=${HOME}/go/bin/protoc-gen-go \
+            --plugin=protoc-gen-go-grpc=./protoc-gen-go-grpc \
+            --plugin=protoc-gen-go=./protoc-gen-go \
             --go_out=. \
             --go-grpc_out=. \
             ./proto/freeconf/pb/*.proto
