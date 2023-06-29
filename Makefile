@@ -41,11 +41,20 @@ bin/fc-lang-dbg bin/fc-lang :
 
 proto: proto-go proto-py
 
+install-deps:
+	sudo mkdir /opt/protoc
+	sudo unzip -d /opt/protoc/ ./protoc-21.12-linux-x86_64.zip
+	export PATH=$PATH:/opt/protoc/bin
+	go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
+	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2	
+
 proto-go:
 	! test -d pb || rm -rf pb
 	mkdir pb
 	protoc \
 		-I./proto \
+		--plugin=protoc-gen-go-grpc=${HOME}/go/bin/protoc-gen-go-grpc \
+		--plugin=protoc-gen-go=${HOME}/go/bin/protoc-gen-go \
 		--go_out=. \
 		--go-grpc_out=. \
 		./proto/freeconf/pb/*.proto
