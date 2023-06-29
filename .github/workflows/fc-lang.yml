@@ -28,6 +28,8 @@ jobs:
           mkdir pb
           protoc \
             -I./proto \
+            --plugin=protoc-gen-go-grpc=~/go/bin/protoc-gen-go-grpc \
+            --plugin=protoc-gen-go=~/go/bin/protoc-gen-go \
             --go_out=. \
             --go-grpc_out=. \
             ./proto/freeconf/pb/*.proto
