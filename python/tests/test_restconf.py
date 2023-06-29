@@ -12,11 +12,11 @@ sys.path.append(".")
 import car
 
 def new_car_app(drv):
-    p = freeconf.parser.Parser(drv)
+    p = freeconf.parser.Parser(driver=drv)
     mod = p.load_module('./testdata', 'car')
     app = car.Car()
     mgmt = car.manage(app)
-    b = freeconf.node.Browser(drv, mod, mgmt)
+    b = freeconf.node.Browser(mod, mgmt, driver=drv)
     return b, app
 
 class TestRestconf(unittest.TestCase):
@@ -27,10 +27,10 @@ class TestRestconf(unittest.TestCase):
         drv.load()
 
         b, _ = new_car_app(drv)
-        dev = freeconf.device.Device(drv, "./testdata:../yang")
+        dev = freeconf.device.Device("./testdata:../yang", driver=drv)
         dev.add_browser(b)
 
-        _ = freeconf.restconf.Server(drv, dev)
+        _ = freeconf.restconf.Server(dev, driver=drv)
         dev.apply_startup_config("testdata/server-startup.json")
 
         resp = requests.get("http://localhost:9999/restconf/data/car:")

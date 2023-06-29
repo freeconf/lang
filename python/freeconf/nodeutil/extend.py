@@ -16,23 +16,23 @@ class Extend():
 
     def context(self, sel):
         if self.on_context:
-            return self.on_context(self, sel)
+            return self.on_context(self.base, sel)
         return self.base.context(sel)
 
     def release(self, sel):
         if self.on_release:
-            return self.on_release(self, sel)
+            return self.on_release(self.base, sel)
         return self.base.release(sel)
 
     def child(self, r):
         if self.on_child:
-            return self.on_child(self, self.base, r)
+            return self.on_child(self.base, r)
         return self.base.child(r)
 
 
     def field(self, r, write_val):
         if self.on_field:
-            return self.on_field(self, self.base, r, write_val)
+            return self.on_field(self.base, r, write_val)
         return self.base.field(r, write_val)
 
 

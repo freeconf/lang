@@ -23,11 +23,11 @@ class TestCar(unittest.TestCase):
         drv = freeconf.driver.Driver()
         drv.load()
 
-        p = freeconf.parser.Parser(drv)
+        p = freeconf.parser.Parser(driver=drv)
         schema = p.load_module('testdata', 'car')
         app = car.Car()
         mgmt = car.manage(app)
-        b = freeconf.node.Browser(drv, schema, mgmt)
+        b = freeconf.node.Browser(schema, mgmt, driver=drv)
         root = b.root()
         update_called = False
         def update_listener(_msg):

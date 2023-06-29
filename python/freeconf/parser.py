@@ -2,11 +2,12 @@ import freeconf.pb.fc_pb2
 import freeconf.pb.fc_pb2_grpc
 import freeconf.meta_decoder
 import freeconf.handles
+import freeconf.driver
 
 class Parser():
 
-    def __init__(self, driver):
-        self.driver = driver
+    def __init__(self, driver=None):
+        self.driver = driver if driver else freeconf.driver.shared_instance()
 
     def load_module(self, dir, name):
         req = freeconf.pb.fc_pb2.LoadModuleRequest(dir=dir, name=name)

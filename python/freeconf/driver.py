@@ -15,6 +15,20 @@ from concurrent import futures
 import signal
 import ctypes
 
+
+instance = None
+
+def shared_instance():
+    """ shared instance of Driver.  Applications generally just need a single instance and so
+      this would be typical access unless 
+    """
+
+    global instance
+    if instance == None:
+        instance = Driver()
+        instance.load()
+    return instance
+
 # Start up the Go executable and create a bi-directional gRPC API with a server in Go
 # and a server in python and each side creating clients to respective servers.
 class Driver():
@@ -99,7 +113,6 @@ class HandlePool:
             self.handles = {}
 
     def lookup_hnd(self, id):
-        #print(f"looking up {id}")
         return self.handles.get(id, None)
 
     def require_hnd(self, id):
@@ -109,14 +122,12 @@ class HandlePool:
             raise KeyError(f'could not resolve hnd {id}')
 
     def store_hnd(self, id, obj):
-        #print(f"storing {id} {obj} weak={self.weak}")
         self.handles[id] = obj
         if self.weak:
             weakref.finalize(obj, self.release_hnd, id)
         return id
 
     def release_hnd(self, id):
-        #print(f"releasing {id}, weak={self.weak}")
         if self.handles != None:
             self.driver.g_handles.Release(freeconf.pb.fc_pb2.ReleaseRequest(hnd=id))
 

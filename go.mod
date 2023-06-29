@@ -3,13 +3,14 @@ module github.com/freeconf/lang
 go 1.19
 
 require (
-	github.com/freeconf/yang v0.0.0-20230101224752-477dff6703ec
+	github.com/freeconf/yang v0.0.0-20230628221039-b960c6e11aae
 	google.golang.org/grpc v1.51.0
 	google.golang.org/protobuf v1.28.1
 )
 
 require (
 	github.com/emicklei/proto v1.11.1 // indirect
+	github.com/freeconf/restconf v0.0.0-20230628221403-3428ad7da10e // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/flatbuffers/go v0.0.0-20230108230133-3b8644d32c50 // indirect
 	github.com/iancoleman/strcase v0.2.0 // indirect

@@ -9,6 +9,7 @@ import freeconf.pb.fc_x_pb2_grpc
 import freeconf.meta
 import freeconf.val
 import freeconf.parser
+import freeconf.driver
 import traceback
 
 class Selection():
@@ -149,15 +150,15 @@ def ensure_node_hnd(driver, n):
 
 class Browser():
 
-    def __init__(self, driver, module, node=None, node_src=None, hnd_id=None):
-        self.driver = driver
+    def __init__(self, module, node, driver=None, node_src=None, hnd_id=None):
+        self.driver = driver if driver else freeconf.driver.shared_instance()
         if hnd_id == None:
-            node_hnd = ensure_node_hnd(driver, node)
+            node_hnd = ensure_node_hnd(self.driver, node)
             req = freeconf.pb.fc_pb2.NewBrowserRequest(moduleHnd=module.hnd, nodeHnd=node_hnd)
             resp = self.driver.g_nodes.NewBrowser(req)
-            self.hnd = driver.obj_weak.store_hnd(resp.browserHnd, self)
+            self.hnd = self.driver.obj_weak.store_hnd(resp.browserHnd, self)
         else:
-            self.hnd = driver.obj_weak.store_hnd(hnd_id, self)
+            self.hnd = self.driver.obj_weak.store_hnd(hnd_id, self)
         self.module = module
         self.node_src = node_src
         self.node_obj = node
@@ -179,7 +180,7 @@ class Browser():
             req = freeconf.pb.fc_pb2.GetBrowserRequest(browserHnd=hnd_id)
             resp = driver.g_nodes.GetBrowser(req)
             module = freeconf.parser.Parser.resolve_module(driver, resp.moduleHnd)
-            b = Browser(driver, module, hnd_id=hnd_id)
+            b = Browser(module, None, hnd_id=hnd_id, driver=driver)
         return b
 
 

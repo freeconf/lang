@@ -3,10 +3,9 @@ o  full support of meta package
 ?  val coersion
 o  how to get things from context
 
-nodeutil
-o  json writer
--  restconf server
-o  gnmi
+other
+o streams (json, module loading, testing)
+o nodeutil.gnmi
 
 package
 o  submit to Pypy
@@ -24,5 +23,4 @@ renames
 - yang: rpc -> action
 
 examples
-o port examples in go to new api
 o port examples in python

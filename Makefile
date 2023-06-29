@@ -1,5 +1,5 @@
 export YANGPATH = $(abspath test/yang)
-export PATH := $(PATH):./bin
+export PATH := $(PATH):$(abspath ./bin)
 export PYTHONPATH := $(abspath python)
 
 all : generate proto bin test test-py

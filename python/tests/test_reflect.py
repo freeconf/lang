@@ -23,7 +23,7 @@ class TestReflect(unittest.TestCase):
     def setUp(self):
         d = freeconf.driver.Driver()
         d.load()
-        p = freeconf.parser.Parser(d)
+        p = freeconf.parser.Parser(driver=d)
         self.module = p.load_module('testdata', 'testme-1')
     
     def test_dict_field(self):
@@ -89,24 +89,7 @@ class TestReflect(unittest.TestCase):
         r.new = True
         obj.z = None
         self.assertEqual({}, n.child(r).obj)
-        self.assertEqual({}, obj.z)
-
-    # def test_list_list(self):
-    #     obj = {'x' : "X"}        
-    #     n = reflect.Reflect(obj)
-    #     r = request()
-    #     r.meta = freeconf.meta.get_def(self.module, 'x')
-
-    #     # field
-
-    #     # read
-    #     self.assertEqual("X", n.field(r, None).v)
-
-    #     # write
-    #     z = freeconf.val.Val(r.meta.type.format, "Z")
-    #     r.write = True
-    #     n.field(r, z)
-    #     self.assertEqual("Z", obj["x"])        
+        self.assertEqual({}, obj.z)      
 
 
 if __name__ == '__main__':

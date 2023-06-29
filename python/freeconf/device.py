@@ -1,10 +1,11 @@
 import freeconf.pb.fc_pb2
 import freeconf.handles
+import freeconf.driver
 
 class Device():
 
-    def __init__(self, driver, yangPath, hnd_id=None):
-        self.driver = driver
+    def __init__(self, yangPath, hnd_id=None, driver=None):
+        self.driver = driver if driver else freeconf.driver.shared_instance()
         if not hnd_id:
             req = freeconf.pb.fc_pb2.NewDeviceRequest(yangPath=yangPath)
             resp = self.driver.g_device.NewDevice(req)

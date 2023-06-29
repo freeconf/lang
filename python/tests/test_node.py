@@ -17,15 +17,15 @@ class TestNode(unittest.TestCase):
         d.load()
         
         # load a module as test that driver is working
-        p = freeconf.parser.Parser(d)
+        p = freeconf.parser.Parser(driver=d)
         m = p.load_module('./testdata', 'testme-1')
         self.assertEqual(m.ident, 'testme-1')
 
         actual = io.StringIO()
         actual.write('\n')        
         dumper = freeconf.nodeutil.Trace(freeconf.nodeutil.Reflect({}), actual)
-        b = freeconf.node.Browser(d, m, dumper)
-        rdr = freeconf.nodeutil.json_read(d, "testdata/testme-sample-1.json")
+        b = freeconf.node.Browser(m, dumper, driver=d)
+        rdr = freeconf.nodeutil.json_read("testdata/testme-sample-1.json", driver=d)
         print("about to upsert")
         b.root().upsert_from(rdr)
         gold.assert_equal(self, actual.getvalue(), "testdata/gold/node.trace")
