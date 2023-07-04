@@ -41,7 +41,7 @@ jobs:
           echo "${PWD}/bin" >> $GITHUB_PATH
 
       - name: Test
-        run: make test-go
+        run: FC=LANG=go make test-go
 
   python:
     needs: go
@@ -51,13 +51,17 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r python/requirements.txt -r python/requirements-dev.txt
+          pip install -e .
+          pip install -e ".[dev]""
 
       - name: Generate Python code
         run: make proto-py
 
       - name: Test
         run: make test-py
+
+      - name: Test from go
+        run: FC_LANG=python make test-go
 
       - name: Dist
         run: make dist-py
