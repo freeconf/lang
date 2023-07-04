@@ -21,6 +21,10 @@ proto: proto-go proto-py
 test-go:
 	FC_LANG=GO go test . ./...
 
+deps-go:
+	go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.31.0
+	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
+
 .PHONY: bin
 bin : bin/fc-lang bin/fc-lang-dbg
 
@@ -73,3 +77,8 @@ test-py:
 dist-py :
 	cd python; \
 		python3 -m build
+
+deps-py:
+	cd python; \
+		pip install -e . && \
+		pip install -e ".[dev]"
