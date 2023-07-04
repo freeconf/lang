@@ -12,8 +12,49 @@ generate:
 .PHONY: test
 test: test-go test-py
 
+.PHONY: dist
+proto: proto-go proto-py
+
+#################
+## G O
+#################
 test-go:
 	go test . ./...
+
+.PHONY: bin
+bin : bin/fc-lang bin/fc-lang-dbg
+
+.PHONY: bin/fc-lang
+# see https://www.jetbrains.com/help/go/attach-to-running-go-processes-with-debugger.html#step-2-build-the-application
+bin/fc-lang-dbg : BUILD_OPTS=-gcflags="all=-N -l"
+bin/fc-lang-dbg bin/fc-lang :
+	test -d $(dir $@) || mkdir -p $(dir $@)
+	go build $(BUILD_OPTS) -o $@ cmd/fc-lang/main.go
+
+
+proto-go:
+	! test -d pb || rm -rf pb
+	mkdir pb
+	protoc \
+		-I./proto \
+		--go_out=. \
+		--go-grpc_out=. \
+		./proto/freeconf/pb/*.proto
+
+#################
+## P Y T H O N
+#################
+
+proto-py:
+	! test -d python/freeconf/pb || rm -rf python/freeconf/pb
+	mkdir python/freeconf/pb
+	cd python; \
+		python3 -m grpc_tools.protoc \
+			-I../proto \
+			--python_out=. \
+			--pyi_out=. \
+			--grpc_python_out=. \
+			../proto/freeconf/pb/*.proto
 
 PY_TESTS = \
 	test_val.py \
@@ -28,34 +69,6 @@ test-py:
 	cd python/tests; \
 		$(foreach T,$(PY_TESTS),echo $(T) && python3 $(T) || exit;)
 
-.PHONY: bin
-bin : bin/fc-lang bin/fc-lang-dbg
-
-.PHONY: bin/fc-lang
-# see https://www.jetbrains.com/help/go/attach-to-running-go-processes-with-debugger.html#step-2-build-the-application
-bin/fc-lang-dbg : BUILD_OPTS=-gcflags="all=-N -l"
-bin/fc-lang-dbg bin/fc-lang :
-	test -d $(dir $@) || mkdir -p $(dir $@)
-	go build $(BUILD_OPTS) -o $@ cmd/fc-lang/main.go
-
-proto: proto-go proto-py
-
-proto-go:
-	! test -d pb || rm -rf pb
-	mkdir pb
-	protoc \
-		-I./proto \
-		--go_out=. \
-		--go-grpc_out=. \
-		./proto/freeconf/pb/*.proto
-
-proto-py:
-	! test -d python/freeconf/pb || rm -rf python/freeconf/pb
-	mkdir python/freeconf/pb
+dist-py :
 	cd python; \
-		python3 -m grpc_tools.protoc \
-			-I../proto \
-			--python_out=. \
-			--pyi_out=. \
-			--grpc_python_out=. \
-			../proto/freeconf/pb/*.proto
+		python3 -m build

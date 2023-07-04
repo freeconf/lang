@@ -2,5 +2,3 @@
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
-[options.extras_require]
-dev = ["requests"]

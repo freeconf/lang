@@ -3,8 +3,8 @@ name: GitHub Actions Demo
 on: [push]
 
 jobs:
-  build:
 
+  go:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -19,10 +19,6 @@ jobs:
         with:
           python-version: "3.10"
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r python/requirements.txt -r python/requirements-dev.txt
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v2
@@ -44,8 +40,24 @@ jobs:
           make bin/fc-lang
           echo "${PWD}/bin" >> $GITHUB_PATH
 
+      - name: Test
+        run: make test-go
+
+  python:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r python/requirements.txt -r python/requirements-dev.txt
+
       - name: Generate Python code
         run: make proto-py
 
       - name: Test
-        run: make test
+        run: make test-py
+
+      - name: Dist
+        run: make dist-py
