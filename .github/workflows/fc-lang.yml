@@ -44,7 +44,7 @@ jobs:
         run: make test-go
 
   python:
-    needs: build
+    needs: go
     runs-on: ubuntu-latest
     steps:
 
