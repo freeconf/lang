@@ -34,10 +34,10 @@ jobs:
       - name: Test
         run: FC=LANG=go make test-go
 
-  python:
-    needs: go
-    runs-on: ubuntu-latest
-    steps:
+  # python:
+  #   needs: go
+  #   runs-on: ubuntu-latest
+  #   steps:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
