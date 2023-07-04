@@ -79,6 +79,7 @@ dist-py :
 		python3 -m build
 
 deps-py:
+	pip install build
 	cd python; \
 		pip install -e . && \
 		pip install -e ".[dev]"

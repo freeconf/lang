@@ -49,10 +49,10 @@ jobs:
       - name: Generate Python code
         run: make proto-py
 
-      - name: Test
+      - name: Test python to go
         run: make test-py
 
-      - name: Test from go
+      - name: Test go to python via harness.py
         run: FC_LANG=python make test-go
 
       - name: Dist
