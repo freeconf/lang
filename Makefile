@@ -19,7 +19,7 @@ proto: proto-go proto-py
 ## G O
 #################
 test-go:
-	go test . ./...
+	FC_LANG=GO go test . ./...
 
 .PHONY: bin
 bin : bin/fc-lang bin/fc-lang-dbg
@@ -68,6 +68,7 @@ PY_TESTS = \
 test-py:
 	cd python/tests; \
 		$(foreach T,$(PY_TESTS),echo $(T) && python3 $(T) || exit;)
+	FC_LANG=GO go test ./test
 
 dist-py :
 	cd python; \
