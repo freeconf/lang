@@ -2,3 +2,12 @@
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
+[project]
+name = "freeconf"
+version = "0.1.0"
+dependencies = [
+    "grpcio"
+]
+
+[project.optional-dependencies]
+dev = ["grpcio_tools", "requests"]
