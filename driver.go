@@ -17,6 +17,7 @@ type Driver struct {
 	gserver  *grpc.Server
 	pb.UnimplementedNodeServer
 	xnodes      pb.XNodeClient
+	xfs         pb.FileSystemClient
 	handles     *HandlePool
 	xclientAddr string
 }
@@ -28,7 +29,6 @@ func NewDriver(gServerAddr string, xClientAddr string) (*Driver, error) {
 	}
 	// "" only useful for testing
 	if xClientAddr != "" {
-
 		if err := d.createXClient(xClientAddr); err != nil {
 			return nil, err
 		}
@@ -57,6 +57,7 @@ func (d *Driver) createGServer(addr string) error {
 	pb.RegisterNodeUtilServer(d.gserver, &NodeUtilService{d: d})
 	pb.RegisterDeviceServer(d.gserver, &DeviceService{d: d})
 	pb.RegisterRestconfServer(d.gserver, &RestconfService{d: d})
+	pb.RegisterFileSystemServer(d.gserver, &FileSystemService{d: d})
 	return nil
 }
 
@@ -77,6 +78,7 @@ func (s *Driver) createXClient(addr string) error {
 	}
 	fc.Debug.Printf("connected to %s", addr)
 	s.xnodes = pb.NewXNodeClient(channel)
+	s.xfs = pb.NewFileSystemClient(channel)
 	return nil
 }
 

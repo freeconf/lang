@@ -3,6 +3,7 @@ option go_package = "./pb";
 package pb;
 import "freeconf/pb/meta.proto";
 import "freeconf/pb/common.proto";
+import "freeconf/pb/fs.proto";
 
 /*
   FreeCONF full developer API made available thru gRPC.  Services are roughly broken
@@ -210,7 +211,7 @@ service NodeUtil {
 }
 
 message JSONRdrRequest {
-      string fname = 1;
+      FileHandle file = 1;
 }
 
 message JSONRdrResponse {

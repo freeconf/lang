@@ -2,7 +2,7 @@ export YANGPATH = $(abspath test/yang)
 export PATH := $(PATH):$(abspath ./bin)
 export PYTHONPATH := $(abspath python)
 
-all : generate proto bin test test-py
+all : generate proto bin test
 
 generate:
 	go run codegen/main.go \
@@ -60,6 +60,7 @@ proto-py:
 			--grpc_python_out=. \
 			../proto/freeconf/pb/*.proto
 
+# Loosely ordered by lower level to to higher level operations
 PY_TESTS = \
 	test_val.py \
 	test_driver.py \
@@ -74,12 +75,12 @@ test-py:
 		$(foreach T,$(PY_TESTS),echo $(T) && python3 $(T) || exit;)
 	FC_LANG=GO go test ./test
 
-dist-py :
-	cd python; \
-		python3 -m build
-
 deps-py:
 	pip install build
 	cd python; \
 		pip install -e . && \
 		pip install -e ".[dev]"
+
+dist-py :
+	cd python; \
+		python3 -m build

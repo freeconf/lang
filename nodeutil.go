@@ -14,12 +14,13 @@ type NodeUtilService struct {
 }
 
 func (s *NodeUtilService) JSONRdr(ctx context.Context, req *pb.JSONRdrRequest) (*pb.JSONRdrResponse, error) {
-	f, err := os.Open(req.Fname)
+	rdr, err := openFileHandle(ctx, s.d, req.File)
 	if err != nil {
 		return nil, err
 	}
-	rdr := nodeutil.ReadJSONIO(f)
-	return &pb.JSONRdrResponse{NodeHnd: s.d.handles.Put(rdr)}, nil
+	defer rdr.Close()
+	jrdr := nodeutil.ReadJSONIO(rdr)
+	return &pb.JSONRdrResponse{NodeHnd: s.d.handles.Put(jrdr)}, nil
 }
 
 func (s *NodeUtilService) JSONWtr(ctx context.Context, req *pb.JSONWtrRequest) (*pb.JSONWtrResponse, error) {

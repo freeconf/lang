@@ -4,7 +4,7 @@ on: [push]
 
 jobs:
 
-  go:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -34,10 +34,16 @@ jobs:
       - name: Test
         run: FC=LANG=go make test-go
 
+  # TODO: Figure out how to separate this into separate jobs. currently this
+  # doesn't have access to source and likely not build output from go build
+  # so i supposed i don't understand workflows just yet.  Until then, merge in
+  # the python tasks after the go tasks
+  #
   # python:
   #   needs: go
   #   runs-on: ubuntu-latest
   #   steps:
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:

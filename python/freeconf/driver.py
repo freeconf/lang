@@ -7,7 +7,10 @@ import freeconf.pb.fc_pb2_grpc
 import freeconf.pb.fc_pb2
 import freeconf.pb.fc_x_pb2_grpc
 import freeconf.pb.fc_x_pb2
+import freeconf.pb.fs_pb2_grpc
+import freeconf.pb.fs_pb2
 import freeconf.node
+import freeconf.fs
 import weakref
 
 # for cleanup after exit.
@@ -84,6 +87,7 @@ class Driver():
         self.g_nodeutil = freeconf.pb.fc_pb2_grpc.NodeUtilStub(self.g_channel)
         self.g_device = freeconf.pb.fc_pb2_grpc.DeviceStub(self.g_channel)
         self.g_restconf = freeconf.pb.fc_pb2_grpc.RestconfStub(self.g_channel)
+        self.g_fs = freeconf.pb.fs_pb2_grpc.FileSystemStub(self.g_channel)
 
     def start_x_server(self, test_harness=None):
         self.x_server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
@@ -93,6 +97,8 @@ class Driver():
             freeconf.pb.fc_test_pb2_grpc.add_TestHarnessServicer_to_server(test_harness, self.x_server)
         self.x_server.add_insecure_port(f'unix://{self.x_sock_file}')
         self.x_server.start()
+        self.x_fs = freeconf.fs.FileSystemServicer(self)
+        freeconf.pb.fs_pb2_grpc.add_FileSystemServicer_to_server(self.x_fs, self.x_server)
 
     def unload(self):
         self.obj_weak.release()
