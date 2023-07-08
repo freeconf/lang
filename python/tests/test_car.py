@@ -36,13 +36,18 @@ class TestCar(unittest.TestCase):
         update_sel = root.find('update')
         unsubscribe = update_sel.notification(update_listener)
         root.upsert_from(freeconf.nodeutil.Reflect({'speed': 10}))
-        root.find('start').action()
+        update_sel.release()
+        start = root.find('start')
+        start.action()
+        start.release()
+        root.release()
         print("waiting....")
         time.sleep(0.1)
         self.assertTrue(update_called)
         odometer = app.miles
         self.assertGreater(odometer, 0)
         print(f'odometer={odometer}')
+
         unsubscribe()
         drv.unload()
         
