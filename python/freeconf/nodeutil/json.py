@@ -8,48 +8,42 @@ import freeconf.driver
 
 def json_read_file(fname, driver=None):
     d = driver if driver else freeconf.driver.shared_instance()
-    return __json_read(d.x_fs.new_file_handle_file(fname), d)
+    return __json_read(d.fs.new_rdr_file(fname), d)
 
 def json_read_str(s, driver=None):
     d = driver if driver else freeconf.driver.shared_instance()
-    return __json_read(d.x_fs.new_file_handle_str(s) , d)
+    return __json_read(d.fs.new_rdr_str(s) , d)
 
 def json_read_io(rdr, driver=None):
     d = driver if driver else freeconf.driver.shared_instance()    
-    return __json_read(d.x_fs.new_file_handle_str(rdr), d)
+    return __json_read(d.fs.new_rdr_io(rdr), d)
 
-def __json_read(f, d):
-    req = freeconf.pb.fc_pb2.JSONRdrRequest(file=f)
-    resp = d.g_nodeutil.JSONRdr(req)
-    return freeconf.handles.RemoteRef(d, resp.nodeHnd)
+def __json_read(stream, driver):
+    req = freeconf.pb.fc_pb2.JSONRdrRequest(streamHnd=stream.hnd)
+    resp = driver.g_nodeutil.JSONRdr(req)
+    return freeconf.handles.RemoteRef(driver, resp.nodeHnd)
+
 
 def json_write_file(fname, driver=None):
     d = driver if driver else freeconf.driver.shared_instance()    
-    return __json_write(d.x_fs.new_file_handle_file(fname), d)
+    return __json_write(d.fs.new_wtr_file(fname), d)
 
 def json_write_io(wtr, driver=None):
     d = driver if driver else freeconf.driver.shared_instance()    
-    return __json_write(d.x_fs.new_file_handle_io(wtr), d)
+    return __json_write(d.fs.new_wtr_io(wtr), d)
 
 def json_write_str(sel, driver=None):
     d = driver if driver else freeconf.driver.shared_instance()    
     wtr = io.BytesIO()
-    n = __json_write(d.x_fs.new_file_handle_io(wtr), d)
+    stream = d.fs.new_wtr_io(wtr)
+    n = __json_write(stream, d)
     sel.upsert_into(n)
-    #wtr.seek(0)
-    s = wtr.read().decode('UTF-8')
-    
-    # BUG: This happens before python grpc has handled all the writes from Go's
-    # WriteFile streaming call.  Go side is done in time, it is just the python
-    # side recieving them is async and delayed.  #racecondition
-    print(f"json_write_str done inserting, got {len(s)} bytes")
+    d.g_fs.CloseStream(freeconf.pb.fs_pb2.CloseStreamRequest(streamHnd=stream.hnd))
+    wtr.seek(0)
+    return wtr.read().decode('UTF-8')
 
-    return s
-
-
-def __json_write(f, driver=None):
-    d = driver if driver else freeconf.driver.shared_instance()
-    req = freeconf.pb.fc_pb2.JSONWtrRequest(file=f)
-    resp = d.g_nodeutil.JSONWtr(req)
-    return freeconf.handles.RemoteRef(d, resp.nodeHnd)
-
+def __json_write(stream, driver):
+    print(f"py: json wtr req steamHnd={stream.hnd}")
+    req = freeconf.pb.fc_pb2.JSONWtrRequest(streamHnd=stream.hnd)
+    resp = driver.g_nodeutil.JSONWtr(req)
+    return freeconf.handles.RemoteRef(driver, resp.nodeHnd)

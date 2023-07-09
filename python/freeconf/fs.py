@@ -6,122 +6,95 @@ import threading
 # 2048 is likely low, and should be tested, only limitation is max GRPC message size
 BUFF_SIZE = 2048
 
-# Unclear if this is optimal or even below default threshold of result GRPC message
-MAX_INLINE_CONTENT = 1024 * 2048
-
-class FileSystemServicer(freeconf.pb.fs_pb2_grpc.FileSystemServicer):
+class FileSystemServicer():
 
     def __init__(self, driver):
         self.driver = driver
-        self.handles = {}
-        self.counter = 1
 
-    def register_stream(self, stream):
-        hnd = self.counter + 1
-        self.counter = hnd
-        self.handles[hnd] = stream
-        return hnd
-    
     def new_rdr_str(self, s):
         b = bytes(s, 'utf-8')
-        if len(s) < MAX_INLINE_CONTENT:
-            return freeconf.pb.fs_pb2.FileHandle(inlineContent=b)
-        return self.new_file_handle_io(io.BytesIO(b))
+        req = freeconf.pb.fs_pb2.ReaderInitRequest(inlineContent=b)
+        resp = self.driver.g_fs.ReaderInit(req)
+        return StreamRef(self.driver, resp.streamHnd)
     
-    def new_rdr_io(self, rdr):
-        # OPTIMIZE: inspect rdr for known types and see if inline is possible
-        freeconf.pb.fs_pb2
-        FileReader()
-        hnd = self.register_stream(rdr)
-        return freeconf.pb.fs_pb2.FileHandle(streamHnd=hnd)
-
     def new_rdr_file(self, fname):
-        req = freeconf.pb.fs_pb2.ReaderRequest(fname=fname)
-        resp = self.driver.g_fs.Read(req)
-        return FileRef(self.driver, resp.streamHnd)
+        req = freeconf.pb.fs_pb2.ReaderInitRequest(fname=fname)
+        resp = self.driver.g_fs.ReaderInit(req)
+        return StreamRef(self.driver, resp.streamHnd)
 
-    def require_handle(self, hnd):
-        try:
-            return self.obj_strong(handles[hnd]
-        except KeyError:
-            raise Exception(f"stream handle {hnd} not registered")
+    def new_rdr_io(self, rdr):
+        req = freeconf.pb.fs_pb2.ReaderInitRequest(stream=True)
+        resp = self.driver.g_fs.ReaderInit(req)
+        return StreamReader(self.driver, resp.streamHnd, rdr)
 
-    def ReadFile(self, req, context):
-        rdr = None
-        try:            
-            rdr = self.require_handle(req.streamHnd)
-            data = rdr.read(BUFF_SIZE)
-            while data and len(data) > 0:
-                yield freeconf.pb.fs_pb2.ReadFileResponse(chunk=data)
-                data = rdr.read(BUFF_SIZE)
-        except EOFError:
-            pass
-        except Exception as error:
-            print(traceback.format_exc())
-            raise error
+    def new_wtr_io(self, wtr):
+        req = freeconf.pb.fs_pb2.WriterInitRequest(stream=True)
+        resp = self.driver.g_fs.WriterInit(req)
+        return StreamWriter(self.driver, resp.streamHnd, wtr)
 
-    def WriteFile(self, req_iter, context):
-        try:          
-            for req in req_iter:
-                wtr = self.require_handle(req.streamHnd)
-                n = wtr.write(req.chunk)
-                print(f"py: wrote {n} bytes to {wtr}")
-                if n != len(req.chunk):
-                    raise Exception("failure to write entire contents to file")
-            print("py: exiting write")
-            return freeconf.pb.fs_pb2.WriteFileResponse()
-        except Exception as error:
-            print(traceback.format_exc())
-            raise error            
+    def new_wtr_file(self, fname):
+        req = freeconf.pb.fs_pb2.WriterInitRequest(fname=fname)
+        resp = self.driver.g_fs.WriterInit(req)
+        return StreamRef(self.driver, resp.streamHnd)        
 
-    def CloseFile(self, req, context):
-        try:            
-            print(f"py: closing {req.streamHnd}")
-            stream = self.handles.pop(req.streamHnd, None)
-            if stream:
-                stream.close()
-        except Exception as error:
-            print(traceback.format_exc())
-            raise error
+class StreamRef():
 
-class FileRef():
-
-    def __init__(self, driver, hnd):
-        self.hnd = hnd
-        driver.obj_strong.store_hnd(hnd, self)
+    def __init__(self, driver, streamHnd):
+        self.hnd = streamHnd
+        driver.obj_strong.store_hnd(streamHnd, self)
 
 
-class FileReader():
+class StreamReader():
 
-    def __init__(self, client, delegate_rdr):
-        self.client = client
+    def __init__(self, driver, streamHnd, delegate_rdr):
+        self.hnd = streamHnd
+        self.driver = driver
         self.delegate_rdr = delegate_rdr
         self.keep_running = True
-
-    def readall_nonblocking(self):
-        self.t = threading.Thread(target=self.readall_blocking)
+        driver.obj_strong.store_hnd(streamHnd, self)
+        self.t = threading.Thread(target=self.run)
         self.t.start()
 
-    def readall_blocking(self):
+    def run(self):
+        self.driver.g_fs.ReaderStream(self.readall())
+    
+    def readall(self):
         while self.keep_running:
             # should block
             chunk = self.delegate_rdr.read(BUFF_SIZE)
             if chunk == None or len(chunk) == 0:
                 return
-            self.client.send(freeconf.pb.fs_pb2.FileReaderResponse(chunk=chunk))
+            yield freeconf.pb.fs_pb2.ReaderStreamData(streamHnd=self.streamHnd, chunk=chunk)
     
-    def close(self, blocking=False):
+    def close(self):
         self.keep_running = False
-        if blocking:
-            self.t.join()
+        self.delegate_rdr.close()
+
+    def close_and_wait(self):
+        self.close()
+        self.t.join()
+
+class StreamWriter():
+
+    def __init__(self, driver, streamHnd, delegate_wtr):
+        self.hnd = streamHnd
+        self.delegate_wtr = delegate_wtr
+        self.driver = driver
+        self.keep_running = True
+        driver.obj_strong.store_hnd(streamHnd, self)
+        self.t = threading.Thread(target=self.run)
+        self.t.start()
+
+    def run(self):
+        print("py: StreamWriter.run")
+        chunks = self.driver.g_fs.WriterStream(freeconf.pb.fs_pb2.WriterStreamRequest(streamHnd=self.hnd))
+        for data in chunks:
+            print(f"py: StreamWriter {len(data.chunk)} chunk")
+            n = self.delegate_wtr.write(data.chunk)
+            if n != len(data.chunk):
+                raise Exception(f"partial write not supported. requested {len(data.chunk)}, wrote {n} bytes")
+        print("py: StreamWriter.run exiting")
 
 
-
-def new_file_handle_str(s, driver):
-    b = bytes(s, 'utf-8')
-    if len(s) < MAX_INLINE_CONTENT:
-        f = freeconf.pb.fs_pb2.FileHandle(inlineContent=b)
-    else:
-        rdr = io.BytesIO(b)
-        hnd = driver.x_fs.register_stream(rdr)
-        f = freeconf.pb.fs_pb2.FileHandle(streamHnd=hnd)
+    def wait(self):
+        self.t.join()

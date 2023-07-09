@@ -5,6 +5,7 @@ choose: x
 field.write: one
     val: string(uno)
 edit.end: advanced
+release: 
 edit.begin: advanced
 choose: x
     choosen: one
@@ -13,6 +14,7 @@ field.write: one
 field.write: two
     val: string(dos)
 edit.end: advanced
+release: 
 choose: x
     choosen: two
 field.read: two

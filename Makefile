@@ -19,7 +19,7 @@ proto: proto-go proto-py
 ## G O
 #################
 test-go:
-	FC_LANG=GO go test . ./...
+	FC_LANG=go go test . ./...
 
 deps-go:
 	go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.31.0
@@ -73,7 +73,7 @@ PY_TESTS = \
 test-py:
 	cd python/tests; \
 		$(foreach T,$(PY_TESTS),echo $(T) && python3 $(T) || exit;)
-	FC_LANG=GO go test ./test
+	FC_LANG=python go test ./test
 
 deps-py:
 	pip install build

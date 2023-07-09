@@ -88,6 +88,7 @@ class Driver():
         self.g_device = freeconf.pb.fc_pb2_grpc.DeviceStub(self.g_channel)
         self.g_restconf = freeconf.pb.fc_pb2_grpc.RestconfStub(self.g_channel)
         self.g_fs = freeconf.pb.fs_pb2_grpc.FileSystemStub(self.g_channel)
+        self.fs = freeconf.fs.FileSystemServicer(self)
 
     def start_x_server(self, test_harness=None):
         self.x_server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
@@ -97,8 +98,6 @@ class Driver():
             freeconf.pb.fc_test_pb2_grpc.add_TestHarnessServicer_to_server(test_harness, self.x_server)
         self.x_server.add_insecure_port(f'unix://{self.x_sock_file}')
         self.x_server.start()
-        self.x_fs = freeconf.fs.FileSystemServicer(self)
-        freeconf.pb.fs_pb2_grpc.add_FileSystemServicer_to_server(self.x_fs, self.x_server)
 
     def unload(self):
         self.obj_weak.release()
@@ -128,6 +127,8 @@ class HandlePool:
             raise KeyError(f'could not resolve hnd {id}')
 
     def store_hnd(self, id, obj):
+        if id == 0:
+            raise Exception("0 id not valid")
         self.handles[id] = obj
         if self.weak:
             weakref.finalize(obj, self.release_hnd, id)

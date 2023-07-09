@@ -17,3 +17,4 @@ release:
 field.write: x
     val: string(hello)
 edit.end: testme-1
+release: 
