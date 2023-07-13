@@ -79,6 +79,10 @@ def meta_walk(path, val):
       in that module. print in a format that matches Go test harness metaDump
       so that dump files can be diff'ed to ensure python is decoding modules
       properly
+
+      it is my hope to replace this with implementation of schema_node.go so
+      python can generate the same exact file fc-yang and then better diffs can be
+      made.
     """
     context = path[-1]
     if not val:

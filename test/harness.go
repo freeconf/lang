@@ -127,3 +127,7 @@ func (h *Harness) parseModule(dir string, moduleIdent string, dumpFile string) e
 	_, err := h.client.ParseModule(context.Background(), &req)
 	return err
 }
+
+func (h *Harness) handleCount() int {
+	return h.access.HandleCount()
+}

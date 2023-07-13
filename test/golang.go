@@ -138,3 +138,7 @@ func (d *golang) parseModule(dir string, module string, dumpFilename string) err
 	err = b.Root().UpsertInto(wtr.Node())
 	return err
 }
+
+func (d *golang) handleCount() int {
+	return 0
+}

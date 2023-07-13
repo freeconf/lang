@@ -28,6 +28,8 @@ type nodeTestHarness interface {
 
 	Name() string
 
+	handleCount() int
+
 	Close() error
 	Connect() error
 }
@@ -62,6 +64,7 @@ func TestBasic(t *testing.T) {
 
 			// teardown
 			os.Remove(traceFile)
+			fmt.Printf("handles %d\n", h.handleCount())
 		})
 	}
 }

@@ -1,5 +1,5 @@
+o test all handles are properly released
 o port examples in python
-o streams (json, module loading, testing)
 o full support of meta package
 o submit to Pypy
 o document py

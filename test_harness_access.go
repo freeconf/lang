@@ -23,3 +23,7 @@ func (c *TestHarnessAccess) ResolveSelection(sel node.Selection) uint64 {
 func (c *TestHarnessAccess) CreateNode(nodeHnd uint64) node.Node {
 	return &xnode{d: c.d, nodeHnd: nodeHnd}
 }
+
+func (c *TestHarnessAccess) HandleCount() int {
+	return len(c.d.handles.handles)
+}
