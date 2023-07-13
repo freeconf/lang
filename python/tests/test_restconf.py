@@ -13,7 +13,7 @@ import car
 
 def new_car_app(drv):
     p = freeconf.parser.Parser(driver=drv)
-    mod = p.load_module('./testdata', 'car')
+    mod = p.load_module_file('./testdata', 'car')
     app = car.Car()
     mgmt = car.manage(app)
     b = freeconf.node.Browser(mod, mgmt, driver=drv)

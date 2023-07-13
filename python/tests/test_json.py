@@ -18,7 +18,7 @@ class TestJson(unittest.TestCase):
         drv.load()
 
         p = freeconf.parser.Parser(driver=drv)
-        schema = p.load_module('testdata', 'car')
+        schema = p.load_module_file('testdata', 'car')
         app = car.Car()
         mgmt = car.manage(app)
         b = freeconf.node.Browser(schema, mgmt, driver=drv)

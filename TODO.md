@@ -11,3 +11,7 @@ o python doesn't always exit after go stops in failed unit tests
 o how to get things from context
 o windows soluion for existing fc-lang exec on python driver
 o performance test results
+
+yang simplifiactions/ideas
+* remote Dir, just use Path
+* releasing each selection is cumbersome and error prone

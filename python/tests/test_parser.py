@@ -13,7 +13,7 @@ class TestParser(unittest.TestCase):
 
         # load a module as test that driver is working
         p = freeconf.parser.Parser(driver=d)
-        m = p.load_module('testdata', 'testme-1')
+        m = p.load_module_file('testdata', 'testme-1')
         self.assertEqual('testme-1', m.ident)
         self.assertEqual(2, len(m.definitions))
         self.assertEqual('z', m.definitions[0].ident)
@@ -28,12 +28,29 @@ class TestParser(unittest.TestCase):
 
         # load a module as test that driver is working
         p = freeconf.parser.Parser(driver=d)
-        m = p.load_module('testdata', 'car')
+        m = p.load_module_file('testdata', 'car')
         self.assertEqual('car', m.ident)
         self.assertEqual(2, len(m.actions))
         start = m.actions['start']
         self.assertEqual('start', start.ident)
         d.unload()
+
+    def test_module_str(self):
+        d = freeconf.driver.Driver()
+        d.load()
+
+        # load a module as test that driver is working
+        p = freeconf.parser.Parser(driver=d)
+        mstr = """
+module x {
+    container c { }
+}
+        """
+        m = p.load_module_str(None, mstr)
+        self.assertEqual('x', m.ident)
+        self.assertEqual(1, len(m.definitions))
+        d.unload()
+
 
 if __name__ == '__main__':
     unittest.main()

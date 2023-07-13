@@ -17,8 +17,11 @@ service Parser {
 }
 
 message LoadModuleRequest {
-      string dir = 1;
-      string name = 2;
+      string path = 1;
+      oneof module {
+            string name = 2;
+            uint64 streamHnd = 3;
+      }
 }
 
 message LoadModuleResponse {

@@ -24,7 +24,7 @@ class TestReflect(unittest.TestCase):
         d = freeconf.driver.Driver()
         d.load()
         p = freeconf.parser.Parser(driver=d)
-        self.module = p.load_module('testdata', 'testme-1')
+        self.module = p.load_module_file('testdata', 'testme-1')
     
     def test_dict_field(self):
         obj = {'x' : "X"}        

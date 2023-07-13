@@ -65,7 +65,7 @@ class TestHarnessServicer(freeconf.pb.fc_test_pb2_grpc.TestHarnessServicer):
 
     def ParseModule(self, req, context):
         p = freeconf.parser.Parser(self.driver)
-        m = p.load_module(req.dir, req.moduleIdent)
+        m = p.load_module_file(req.dir, req.moduleIdent)
         dump = {"module":meta_walk(["module"], m)}
 
         with open(req.dumpFile, 'w') as f:
