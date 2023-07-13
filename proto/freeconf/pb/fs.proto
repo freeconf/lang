@@ -1,0 +1,75 @@
+syntax="proto3";
+option go_package = "./pb";
+package pb;
+
+service FileSystem {
+
+    rpc CloseStream(CloseStreamRequest) returns (CloseStreamResponse) {}
+
+    // Write stream to X and appears as io.Writer in Go.  The first response is always
+    // the streamHnd that should be used for futher reference.  There are additional
+    // responses that contain the chunked data or there is no more response if Go is
+    // using a Go file to write data and X doesn't need to coordinate anything.
+
+    rpc WriterInit(WriterInitRequest) returns (WriterInitResponse) {}
+
+    rpc WriterStream(WriterStreamRequest) returns (stream WriterStreamData) {}
+
+    // Read stream from X and appears as io.Reader in Go. 
+    
+    // Because server is implemented in Go
+    // each request contains either a series of chunked data from X or a single request that
+    // is a filename Go can open as a reader or a single request that is entire contents of
+    // stream in one shot.
+    //
+    // We need a stream on the response because we need to send back
+    rpc ReaderInit(ReaderInitRequest) returns (ReaderInitResponse) {}
+
+    rpc ReaderStream(stream ReaderStreamData) returns (ReaderStreamResponse) {}
+}
+
+message ReaderInitRequest {
+    oneof data {
+        bool stream = 1;
+        string fname = 2;
+        bytes inlineContent = 3; // if content is not a stream and small enough, just send it straight-away
+    }    
+}
+
+message ReaderInitResponse {
+    uint64 streamHnd = 1;
+}
+
+message ReaderStreamResponse {
+}
+
+message ReaderStreamData {
+    uint64 streamHnd = 1;
+    bytes chunk = 2;
+}
+
+message WriterInitRequest {
+    oneof data {
+        bool stream = 1;
+        string fname = 2;
+    }    
+}
+
+message WriterInitResponse {
+    uint64 streamHnd = 1;
+}
+
+message WriterStreamRequest {
+    uint64 streamHnd = 1;
+}
+
+message WriterStreamData {
+    bytes chunk = 1;
+}
+
+message CloseStreamRequest {
+    uint64  streamHnd = 1;
+}
+
+message CloseStreamResponse {    
+}
