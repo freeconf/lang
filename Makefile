@@ -1,3 +1,4 @@
+VER = 0.1.0
 export YANGPATH = $(abspath test/yang)
 export PATH := $(PATH):$(abspath ./bin)
 export PYTHONPATH := $(abspath python)
@@ -26,15 +27,35 @@ deps-go:
 	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
 
 .PHONY: bin
-bin : bin/fc-lang bin/fc-lang-dbg
+bin : bin/fc-lang
 
-.PHONY: bin/fc-lang
+# Just the popular ones.  You can easily build binary for missing platform
+PLATFORMS = \
+  darwin-amd64 \
+  darwin-arm64 \
+  linux-amd64 \
+  windows-amd64
+
+BIN_TARGETS = $(foreach P,$(PLATFORMS), bin/fc-lang-$(VER)-$(P))
+
+dist-go: $(BIN_TARGETS)
+
+bin/fc-lang-$(VER)-darwin-amd64: BUILD_ENV=GOARCH=amd64 GOOS=darwin
+bin/fc-lang-$(VER)-darwin-arm64: BUILD_ENV=GOARCH=amd64 GOOS=darwin
+bin/fc-lang-$(VER)-windows-amd64: BUILD_ENV=GOARCH=amd64 GOOS=windows
+bin/fc-lang-$(VER)-linux-amd64: BUILD_ENV=GOARCH=amd64 GOOS=linux
+
 # see https://www.jetbrains.com/help/go/attach-to-running-go-processes-with-debugger.html#step-2-build-the-application
 bin/fc-lang-dbg : BUILD_OPTS=-gcflags="all=-N -l"
-bin/fc-lang-dbg bin/fc-lang :
-	test -d $(dir $@) || mkdir -p $(dir $@)
-	go build $(BUILD_OPTS) -o $@ cmd/fc-lang/main.go
 
+debug:
+	echo $(BIN_TARGETS)
+
+.PHONY: bin/fc-lang bin/fc-lang-dbg $(BIN_TARGETS)
+
+bin/fc-lang bin/fc-lang-dbg $(BIN_TARGETS):
+	test -d $(dir $@) || mkdir -p $(dir $@)
+	$(BUILD_ENV) go build $(BUILD_OPTS) -o $@ cmd/fc-lang/main.go
 
 proto-go:
 	! test -d pb || rm -rf pb
@@ -52,6 +73,7 @@ proto-go:
 proto-py:
 	! test -d python/freeconf/pb || rm -rf python/freeconf/pb
 	mkdir python/freeconf/pb
+	touch python/freeconf/pb/__init__.py
 	cd python; \
 		python3 -m grpc_tools.protoc \
 			-I../proto \
@@ -82,5 +104,6 @@ deps-py:
 		pip install -e ".[dev]"
 
 dist-py :
+	! test -d python/freeconf.egg-info || rm -rf python/freeconf.egg-info
 	cd python; \
 		python3 -m build
