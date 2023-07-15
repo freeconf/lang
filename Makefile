@@ -43,6 +43,7 @@ dist-go: $(BIN_TARGETS)
 bin/fc-lang-$(VER)-darwin-amd64: BUILD_ENV=GOARCH=amd64 GOOS=darwin
 bin/fc-lang-$(VER)-darwin-arm64: BUILD_ENV=GOARCH=amd64 GOOS=darwin
 bin/fc-lang-$(VER)-windows-amd64: BUILD_ENV=GOARCH=amd64 GOOS=windows
+bin/fc-lang-$(VER)-windows-amd64: BIN_EXT=.exe
 bin/fc-lang-$(VER)-linux-amd64: BUILD_ENV=GOARCH=amd64 GOOS=linux
 
 # see https://www.jetbrains.com/help/go/attach-to-running-go-processes-with-debugger.html#step-2-build-the-application
@@ -55,7 +56,7 @@ debug:
 
 bin/fc-lang bin/fc-lang-dbg $(BIN_TARGETS):
 	test -d $(dir $@) || mkdir -p $(dir $@)
-	$(BUILD_ENV) go build $(BUILD_OPTS) -o $@ cmd/fc-lang/main.go
+	$(BUILD_ENV) go build $(BUILD_OPTS) -o $@$(BIN_EXT) cmd/fc-lang/main.go
 
 proto-go:
 	! test -d pb || rm -rf pb

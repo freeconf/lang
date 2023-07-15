@@ -6,7 +6,8 @@ build-backend = "setuptools.build_meta"
 name = "freeconf"
 version = "0.1.0"
 dependencies = [
-    "grpcio"
+    "grpcio",
+    "google-api-python-client"
 ]
 
 [project.optional-dependencies]
