@@ -5,6 +5,7 @@ import freeconf.driver
 import freeconf.parser
 import freeconf.node
 import freeconf.nodeutil
+import freeconf.source
 import time
 
 sys.path.append(".")
@@ -24,7 +25,8 @@ class TestCar(unittest.TestCase):
         drv.load()
 
         p = freeconf.parser.Parser(driver=drv)
-        schema = p.load_module_file('testdata', 'car')
+        ypath = freeconf.source.path('testdata', driver=drv)
+        schema = p.load_module_file(ypath, 'car')
         app = car.Car()
         mgmt = car.manage(app)
         b = freeconf.node.Browser(schema, mgmt, driver=drv)

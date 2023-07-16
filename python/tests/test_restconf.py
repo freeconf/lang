@@ -6,14 +6,15 @@ import freeconf.parser
 import freeconf.node
 import freeconf.device
 import freeconf.restconf
+import freeconf.source
 import requests
 
 sys.path.append(".")
 import car
 
-def new_car_app(drv):
+def new_car_app(drv, ypath):
     p = freeconf.parser.Parser(driver=drv)
-    mod = p.load_module_file('./testdata', 'car')
+    mod = p.load_module_file(ypath, 'car')
     app = car.Car()
     mgmt = car.manage(app)
     b = freeconf.node.Browser(mod, mgmt, driver=drv)
@@ -26,8 +27,12 @@ class TestRestconf(unittest.TestCase):
         drv = freeconf.driver.Driver()
         drv.load()
 
-        b, _ = new_car_app(drv)
-        dev = freeconf.device.Device("./testdata:../yang", driver=drv)
+        ypath = freeconf.source.any(
+            freeconf.source.restconf_internal_ypath(driver=drv),
+            freeconf.source.path("testdata")
+        )
+        b, _ = new_car_app(drv, ypath)
+        dev = freeconf.device.Device(ypath, driver=drv)
         dev.add_browser(b)
 
         _ = freeconf.restconf.Server(dev, driver=drv)

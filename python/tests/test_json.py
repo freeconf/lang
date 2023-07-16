@@ -5,6 +5,7 @@ import unittest
 import freeconf.driver
 import freeconf.parser
 import freeconf.node
+import freeconf.source
 import freeconf.nodeutil.json as fcjson
 
 sys.path.append(".")
@@ -18,7 +19,8 @@ class TestJson(unittest.TestCase):
         drv.load()
 
         p = freeconf.parser.Parser(driver=drv)
-        schema = p.load_module_file('testdata', 'car')
+        ypath = freeconf.source.path("testdata", driver=drv)
+        schema = p.load_module_file(ypath, 'car')
         app = car.Car()
         mgmt = car.manage(app)
         b = freeconf.node.Browser(schema, mgmt, driver=drv)

@@ -6,7 +6,6 @@ import (
 	"github.com/freeconf/lang/pb"
 	"github.com/freeconf/restconf/device"
 	"github.com/freeconf/yang/node"
-	"github.com/freeconf/yang/source"
 )
 
 type DeviceService struct {
@@ -15,7 +14,7 @@ type DeviceService struct {
 }
 
 func (s *DeviceService) NewDevice(ctx context.Context, req *pb.NewDeviceRequest) (*pb.NewDeviceResponse, error) {
-	ypath := source.Path(req.YangPath)
+	ypath := resolveOpener(s.d.handles, req.YangPathSourceHnd)
 	d := device.New(ypath)
 	resp := pb.NewDeviceResponse{
 		DeviceHnd: s.d.handles.Put(d),

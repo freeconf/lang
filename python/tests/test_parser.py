@@ -3,7 +3,7 @@ import sys
 import unittest
 import freeconf.driver
 import freeconf.parser
-import inspect
+import freeconf.source
 
 class TestParser(unittest.TestCase):
 
@@ -13,7 +13,8 @@ class TestParser(unittest.TestCase):
 
         # load a module as test that driver is working
         p = freeconf.parser.Parser(driver=d)
-        m = p.load_module_file('testdata', 'testme-1')
+        ypath = freeconf.source.path("testdata", driver=d)
+        m = p.load_module_file(ypath, 'testme-1')
         self.assertEqual('testme-1', m.ident)
         self.assertEqual(2, len(m.definitions))
         self.assertEqual('z', m.definitions[0].ident)
@@ -28,7 +29,8 @@ class TestParser(unittest.TestCase):
 
         # load a module as test that driver is working
         p = freeconf.parser.Parser(driver=d)
-        m = p.load_module_file('testdata', 'car')
+        ypath = freeconf.source.path("testdata", driver=d)
+        m = p.load_module_file(ypath, 'car')
         self.assertEqual('car', m.ident)
         self.assertEqual(2, len(m.actions))
         start = m.actions['start']

@@ -13,11 +13,23 @@ import "freeconf/pb/common.proto";
 // Parser
 
 service Parser {
+      rpc Source(SourceRequest) returns (SourceResponse) {}
       rpc LoadModule (LoadModuleRequest) returns (LoadModuleResponse) {}
 }
 
-message LoadModuleRequest {
+message SourceRequest {
       string path = 1;
+      bool yangInternalYpath = 2;
+      bool restconfInternalYpath = 3;
+      repeated uint64 any = 4;
+}
+
+message SourceResponse {
+      uint64 sourceHnd = 1;
+}
+
+message LoadModuleRequest {
+      uint64 sourceHnd = 1;
       oneof module {
             string name = 2;
             uint64 streamHnd = 3;
@@ -174,7 +186,7 @@ service Device {
 }
 
 message NewDeviceRequest {
-      string yangPath = 1;
+      uint64 yangPathSourceHnd = 1;
 }
 
 message NewDeviceResponse {

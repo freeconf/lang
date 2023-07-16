@@ -10,6 +10,7 @@ import freeconf.nodeutil
 import freeconf.pb.fc_test_pb2
 import freeconf.pb.fc_test_pb2_grpc
 import freeconf.parser
+import freeconf.source
 
 usage = f"""
 Usage: {sys.argv[0]} fc-g-socket-file fc-x-socket-file
@@ -65,7 +66,8 @@ class TestHarnessServicer(freeconf.pb.fc_test_pb2_grpc.TestHarnessServicer):
 
     def ParseModule(self, req, context):
         p = freeconf.parser.Parser(self.driver)
-        m = p.load_module_file(req.dir, req.moduleIdent)
+        ypath = freeconf.source.path(req.dir, driver=self.driver)
+        m = p.load_module_file(ypath, req.moduleIdent)
         dump = {"module":meta_walk(["module"], m)}
 
         with open(req.dumpFile, 'w') as f:

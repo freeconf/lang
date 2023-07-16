@@ -8,7 +8,6 @@ import (
 	"github.com/freeconf/lang/pb"
 	"github.com/freeconf/yang/meta"
 	"github.com/freeconf/yang/parser"
-	"github.com/freeconf/yang/source"
 )
 
 type ParserService struct {
@@ -17,10 +16,9 @@ type ParserService struct {
 }
 
 func (s *ParserService) LoadModule(ctx context.Context, in *pb.LoadModuleRequest) (*pb.LoadModuleResponse, error) {
-	var ypath source.Opener
-	if in.Path != "" {
-		ypath = source.Path(in.Path)
-	}
+	// In golang, apparently you cannot put a func pointer type into a map, so we put the pointer
+	// in and so we need to expected that here when resolving the handle
+	ypath := resolveOpener(s.d.handles, in.SourceHnd)
 	var m *meta.Module
 	var err error
 	if in.GetName() != "" {

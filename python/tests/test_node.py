@@ -6,6 +6,7 @@ import freeconf.driver
 import freeconf.parser
 import freeconf.node
 import freeconf.nodeutil
+import freeconf.source
 
 sys.path.append(".")
 import gold
@@ -18,7 +19,8 @@ class TestNode(unittest.TestCase):
         
         # load a module as test that driver is working
         p = freeconf.parser.Parser(driver=d)
-        m = p.load_module_file('./testdata', 'testme-1')
+        ypath = freeconf.source.path("testdata", driver=d)
+        m = p.load_module_file(ypath, 'testme-1')
         self.assertEqual(m.ident, 'testme-1')
 
         actual = io.StringIO()
