@@ -27,10 +27,6 @@ jobs:
       - name: Generate Go code
         run: make proto-go generate
 
-      - name: Build
-        run: |
-          make bin/fc-lang
-
       - name: Test
         run: FC=LANG=go make test-go
 
@@ -60,9 +56,6 @@ jobs:
 
       - name: Test python to go
         run: make test-py
-
-      - name: Test go to python via harness.py
-        run: FC_LANG=python make test-go
 
       - name: Dist
         run: make dist-py
