@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"os"
 
@@ -104,9 +103,7 @@ func (r *streamWriter) Write(p []byte) (int, error) {
 	if len(p) == 0 {
 		return 0, nil
 	}
-	fmt.Printf("go: sending %d bytes...\n", len(p))
 	r.chunks <- p
-	fmt.Printf("go: sent %d bytes\n", len(p))
 	return len(p), nil
 }
 

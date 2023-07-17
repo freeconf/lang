@@ -39,7 +39,6 @@ func (s *NodeService) BrowserRoot(ctx context.Context, in *pb.BrowserRootRequest
 }
 
 func (s NodeService) ReleaseSelection(ctx context.Context, in *pb.ReleaseSelectionRequest) (*pb.ReleaseSelectionResponse, error) {
-	fmt.Print("go:release\n")
 	sel := s.d.handles.Require(in.SelHnd).(*node.Selection)
 	sel.Release()
 	return &pb.ReleaseSelectionResponse{}, nil

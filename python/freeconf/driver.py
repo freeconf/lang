@@ -11,7 +11,11 @@ import freeconf.pb.fs_pb2_grpc
 import freeconf.pb.fs_pb2
 import freeconf.node
 import freeconf.fs
+import freeconf
 import weakref
+import platform
+import distutils.spawn
+import importlib.resources
 
 # for cleanup after exit.
 from concurrent import futures
@@ -60,9 +64,47 @@ class Driver():
         self.wait_for_g_connection(self.dbg_addr != None)
         self.create_g_client()
 
+    def os_arch(self):
+        os = platform.system().lower()
+        py_arch = platform.machine().lower()
+        arch = {
+            "x86_64": "amd64",
+        }.get(py_arch, py_arch)
+        return f'{os}-{arch}'
+
+
+    def path_to_exe(self):
+        """
+        Rules for finding fc-lang exe.  We are someone flexible because we want to make it
+        usable in all environments without too much hassle, but not at the expense of being
+        too magical.  Hopefully this is the right balance.
+        
+         1. If explicitly set path to exe using FC_LANG_EXEC env var, use that only
+         2. If explicitly set dir to set of exes using FC_LANG_DIR env var, use that only
+         3. Otherwise use Python's package file system to find dir
+
+         Once a dir is selected.
+         1. Find exe using fc-lang-{version}-{os}-{arch} pattern only to ensure compat.
+
+        """
+        path = os.environ.get('FC_LANG_EXEC', None)
+        if path:
+            return path
+
+        fname = f'fc-lang-{freeconf.__version__}-{self.os_arch()}'
+        fc_dir = os.environ.get('FC_LANG_DIR', None)
+        if fc_dir != None:
+            file_path = os.path.joint(fc_dir, fname)
+        else:
+            file_path = importlib.resources.files("freeconf.data").joinpath(fname)
+
+        if not os.path.isfile(file_path):
+            raise Exception(f"{file_path} was not found.  Use FC_LANG_EXEC to set path to executable file")
+        return file_path
+        
     def start_g_proc(self):
-        exec_bin = os.environ.get('FC_LANG_EXEC', 'fc-lang')
-        cmd = [exec_bin, self.sock_file, self.x_sock_file]
+        exec_bin = self.path_to_exe()
+        cmd = [self.path_to_exe(), self.sock_file, self.x_sock_file]
         if self.dbg_addr:
             dbg = ['dlv', f'--listen={self.dbg_addr}', '--headless=true', '--api-version=2', 'exec']
             dbg.extend(cmd)

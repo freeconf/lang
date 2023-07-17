@@ -3,7 +3,7 @@ export YANGPATH = $(abspath test/yang)
 export PATH := $(PATH):$(abspath ./bin)
 export PYTHONPATH := $(abspath python)
 
-all : generate proto bin test
+all : generate proto dist-go test dist-py
 
 generate:
 	go run codegen/main.go \
@@ -26,8 +26,6 @@ deps-go:
 	go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.31.0
 	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
 
-.PHONY: bin
-bin : bin/fc-lang
 
 # Just the popular ones.  You can easily build binary for missing platform
 PLATFORMS = \
