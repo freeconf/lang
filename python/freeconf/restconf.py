@@ -8,4 +8,4 @@ class Server():
         self.driver = driver if driver else freeconf.driver.shared_instance()
         req = freeconf.pb.fc_pb2.NewServerRequest(deviceHnd=device.hnd)
         resp = self.driver.g_restconf.NewServer(req)
-        self.hnd = driver.obj_weak.store_hnd(resp.serverHnd, self)
+        self.hnd = self.driver.obj_weak.store_hnd(resp.serverHnd, self)
