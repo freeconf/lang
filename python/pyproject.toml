@@ -12,3 +12,6 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["grpcio_tools", "requests"]
+
+[project.scripts]
+download-fc-lang = "freeconf.download:run"

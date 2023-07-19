@@ -15,13 +15,11 @@ import freeconf
 import weakref
 import platform
 import distutils.spawn
-import importlib.resources
 
 # for cleanup after exit.
 from concurrent import futures
 import signal
 import ctypes
-
 
 instance = None
 
@@ -35,6 +33,73 @@ def shared_instance():
         instance = Driver()
         instance.load()
     return instance
+
+def exe_fname():
+    os = platform.system().lower()
+    py_arch = platform.machine().lower()
+    exe_ext = ""
+    if os == "windows":
+        exe_ext = ".exe"
+    arch = {
+        "x86_64": "amd64",
+    }.get(py_arch, py_arch)
+    fname = f'fc-lang-{freeconf.__version__}-{os}-{arch}{exe_ext}'
+    return fname
+
+def home_bin_dir():
+    return os.path.expanduser("~/.freeconf/bin") # works on windows too
+
+
+class ExecNotFoundException(Exception):
+    def __init__(self, msg):
+        super().__init__(msg)
+
+
+def path_to_exe(verbose=False):
+    """
+    Rules for finding fc-lang exe.  We are someone flexible because we want to make it
+    usable in all environments without too much hassle, but not at the expense of being
+    too magical.  Hopefully this is the right balance.
+    
+        1. If explicitly set exact exec filename using FC_LANG_EXEC env var, use that only
+        2. If explicitly set dir to set of exes using FC_LANG_DIR env var, use that only
+        3. Look in ~/.freeconf/bin 
+        4. Look in PATH
+        5. Fail
+
+    """
+    file_path = os.environ.get('FC_LANG_EXEC', None)
+    if file_path:
+        if verbose:
+            print(f"FC_LANG_EXEC set. checking {file_path}...")
+        if not os.path.isfile(file_path):
+            raise ExecNotFoundException(f"FC_LANG_EXEC={file_path} does not point to a valid file")
+        return file_path
+    elif verbose:
+        print("FC_LANG_EXEC not set")
+
+    fname = exe_fname()
+    fc_lang_dir = os.environ.get('FC_LANG_DIR', None)
+    if verbose:
+        print(f"FC_LANG_DIR set" if fc_lang_dir != None else "FC_LANG_DIR not set, checking home dir")
+    fc_dir = home_bin_dir() if fc_lang_dir == None else fc_lang_dir
+    file_path = os.path.join(fc_dir, fname)
+    if verbose:
+        print(f"checking {file_path}")
+    if os.path.isfile(file_path):
+        return file_path
+    elif fc_lang_dir != None:
+        # if they explicitly set FC_LANG_DIR and we didn't find file, then exit as this is likely a misconfig
+        raise ExecNotFoundException(f"{file_path} was not found in {fc_lang_dir}")
+    
+    if verbose:
+        print("checking PATH")
+    full_path = distutils.spawn.find_executable(fname)
+    if not full_path:
+        raise ExecNotFoundException(f"{fname} was not found in PATH or any of the other documented locations")
+
+    return full_path
+
 
 # Start up the Go executable and create a bi-directional gRPC API with a server in Go
 # and a server in python and each side creating clients to respective servers.
@@ -63,48 +128,10 @@ class Driver():
             self.start_g_proc()
         self.wait_for_g_connection(self.dbg_addr != None)
         self.create_g_client()
-
-    def os_arch(self):
-        os = platform.system().lower()
-        py_arch = platform.machine().lower()
-        arch = {
-            "x86_64": "amd64",
-        }.get(py_arch, py_arch)
-        return f'{os}-{arch}'
-
-
-    def path_to_exe(self):
-        """
-        Rules for finding fc-lang exe.  We are someone flexible because we want to make it
-        usable in all environments without too much hassle, but not at the expense of being
-        too magical.  Hopefully this is the right balance.
-        
-         1. If explicitly set path to exe using FC_LANG_EXEC env var, use that only
-         2. If explicitly set dir to set of exes using FC_LANG_DIR env var, use that only
-         3. Otherwise use Python's package file system to find dir
-
-         Once a dir is selected.
-         1. Find exe using fc-lang-{version}-{os}-{arch} pattern only to ensure compat.
-
-        """
-        path = os.environ.get('FC_LANG_EXEC', None)
-        if path:
-            return path
-
-        fname = f'fc-lang-{freeconf.__version__}-{self.os_arch()}'
-        fc_dir = os.environ.get('FC_LANG_DIR', None)
-        if fc_dir != None:
-            file_path = os.path.joint(fc_dir, fname)
-        else:
-            file_path = importlib.resources.files("freeconf.data").joinpath(fname)
-
-        if not os.path.isfile(file_path):
-            raise Exception(f"{file_path} was not found.  Use FC_LANG_EXEC to set path to executable file")
-        return file_path
         
     def start_g_proc(self):
-        exec_bin = self.path_to_exe()
-        cmd = [self.path_to_exe(), self.sock_file, self.x_sock_file]
+        exec_bin = path_to_exe()
+        cmd = [exec_bin, self.sock_file, self.x_sock_file]
         if self.dbg_addr:
             dbg = ['dlv', f'--listen={self.dbg_addr}', '--headless=true', '--api-version=2', 'exec']
             dbg.extend(cmd)

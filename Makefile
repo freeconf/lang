@@ -105,4 +105,4 @@ deps-py:
 dist-py :
 	! test -d python/freeconf.egg-info || rm -rf python/freeconf.egg-info
 	cd python; \
-		python3 -m build
+		python3 -m build 
