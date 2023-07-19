@@ -54,7 +54,7 @@ jobs:
       - name: Generate Python code
         run: make proto-py
 
-      - name: Test python to go
+      - name: Test python
         run: make test-py
 
       - name: Dist
