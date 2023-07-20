@@ -18,9 +18,8 @@ class TestNode(unittest.TestCase):
         d.load()
         
         # load a module as test that driver is working
-        p = freeconf.parser.Parser(driver=d)
         ypath = freeconf.source.path("testdata", driver=d)
-        m = p.load_module_file(ypath, 'testme-1')
+        m = freeconf.parser.load_module_file(ypath, 'testme-1', driver=d)
         self.assertEqual(m.ident, 'testme-1')
 
         actual = io.StringIO()

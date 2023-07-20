@@ -13,8 +13,7 @@ sys.path.append(".")
 import car
 
 def new_car_app(drv, ypath):
-    p = freeconf.parser.Parser(driver=drv)
-    mod = p.load_module_file(ypath, 'car')
+    mod = freeconf.parser.load_module_file(ypath, 'car', driver=drv)
     app = car.Car()
     mgmt = car.manage(app)
     b = freeconf.node.Browser(mod, mgmt, driver=drv)

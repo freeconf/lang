@@ -60,7 +60,7 @@ class Path():
 
     @classmethod
     def resolve(cls, driver, resp):
-        module = freeconf.parser.Parser.resolve_module(driver, resp.moduleHnd)
+        module = freeconf.parser.resolve_module(driver, resp.moduleHnd)
         path = Path(None, module)
         if resp.segments == None:
             return path

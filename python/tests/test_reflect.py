@@ -23,9 +23,8 @@ class TestReflect(unittest.TestCase):
     def setUp(self):
         d = freeconf.driver.Driver()
         d.load()
-        p = freeconf.parser.Parser(driver=d)
         ypath = freeconf.source.path("testdata", driver=d)
-        self.module = p.load_module_file(ypath, 'testme-1')
+        self.module = freeconf.parser.load_module_file(ypath, 'testme-1', driver=d)
     
     def test_dict_field(self):
         obj = {'x' : "X"}        

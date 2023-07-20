@@ -12,9 +12,8 @@ class TestParser(unittest.TestCase):
         d.load()
 
         # load a module as test that driver is working
-        p = freeconf.parser.Parser(driver=d)
         ypath = freeconf.source.path("testdata", driver=d)
-        m = p.load_module_file(ypath, 'testme-1')
+        m = freeconf.parser.load_module_file(ypath, 'testme-1', driver=d)
         self.assertEqual('testme-1', m.ident)
         self.assertEqual(2, len(m.definitions))
         self.assertEqual('z', m.definitions[0].ident)
@@ -28,9 +27,8 @@ class TestParser(unittest.TestCase):
         d.load()
 
         # load a module as test that driver is working
-        p = freeconf.parser.Parser(driver=d)
         ypath = freeconf.source.path("testdata", driver=d)
-        m = p.load_module_file(ypath, 'car')
+        m = freeconf.parser.load_module_file(ypath, 'car', driver=d)
         self.assertEqual('car', m.ident)
         self.assertEqual(2, len(m.actions))
         start = m.actions['start']
@@ -42,13 +40,12 @@ class TestParser(unittest.TestCase):
         d.load()
 
         # load a module as test that driver is working
-        p = freeconf.parser.Parser(driver=d)
         mstr = """
 module x {
     container c { }
 }
         """
-        m = p.load_module_str(None, mstr)
+        m = freeconf.parser.load_module_str(None, mstr, driver=d)
         self.assertEqual('x', m.ident)
         self.assertEqual(1, len(m.definitions))
         d.unload()

@@ -24,9 +24,8 @@ class TestCar(unittest.TestCase):
         drv = freeconf.driver.Driver()
         drv.load()
 
-        p = freeconf.parser.Parser(driver=drv)
         ypath = freeconf.source.path('testdata', driver=drv)
-        schema = p.load_module_file(ypath, 'car')
+        schema = freeconf.parser.load_module_file(ypath, 'car', driver=drv)
         app = car.Car()
         mgmt = car.manage(app)
         b = freeconf.node.Browser(schema, mgmt, driver=drv)

@@ -179,7 +179,7 @@ class Browser():
         if b == None:
             req = freeconf.pb.fc_pb2.GetBrowserRequest(browserHnd=hnd_id)
             resp = driver.g_nodes.GetBrowser(req)
-            module = freeconf.parser.Parser.resolve_module(driver, resp.moduleHnd)
+            module = freeconf.parser.resolve_module(driver, resp.moduleHnd)
             b = Browser(module, None, hnd_id=hnd_id, driver=driver)
         return b
 
