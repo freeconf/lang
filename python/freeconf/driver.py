@@ -66,7 +66,6 @@ def path_to_exe(verbose=False):
         3. Look in ~/.freeconf/bin 
         4. Look in PATH
         5. Fail
-
     """
     file_path = os.environ.get('FC_LANG_EXEC', None)
     if file_path:

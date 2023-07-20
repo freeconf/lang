@@ -14,4 +14,4 @@ dependencies = [
 dev = ["grpcio_tools", "requests"]
 
 [project.scripts]
-download-fc-lang = "freeconf.download:run"
+fc-lang-install = "freeconf.install:run"
