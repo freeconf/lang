@@ -2,8 +2,10 @@ package lang
 
 import (
 	"context"
+	"io"
 
 	"github.com/freeconf/lang/pb"
+	"github.com/freeconf/restconf/client"
 	"github.com/freeconf/restconf/device"
 	"github.com/freeconf/yang/node"
 )
@@ -43,7 +45,21 @@ func (s *DeviceService) DeviceGetBrowser(ctx context.Context, req *pb.DeviceGetB
 
 func (s *DeviceService) ApplyStartupConfig(ctx context.Context, req *pb.ApplyStartupConfigRequest) (*pb.ApplyStartupConfigResponse, error) {
 	d := s.d.handles.Require(req.DeviceHnd).(*device.Local)
-	err := d.ApplyStartupConfigFile(req.ConfigFile)
+	rdr := s.d.handles.Require(req.StreamHnd).(io.Reader)
+	err := d.ApplyStartupConfig(rdr)
 	resp := pb.ApplyStartupConfigResponse{}
 	return &resp, err
+}
+
+func (s *DeviceService) Client(ctx context.Context, req *pb.ClientRequest) (*pb.ClientResponse, error) {
+	ypath := resolveOpener(s.d.handles, req.YpathHnd)
+	proto := client.ProtocolHandler(ypath)
+	dev, err := proto(req.Address)
+	if err != nil {
+		return nil, err
+	}
+	resp := pb.ClientResponse{
+		DeviceHnd: s.d.handles.Hnd(dev),
+	}
+	return &resp, nil
 }

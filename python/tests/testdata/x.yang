@@ -1,0 +1,6 @@
+module x {
+    revision 000-00-00;
+    leaf message {
+        type string;
+    }
+}

@@ -21,7 +21,6 @@ def new_car_app(drv, ypath):
 
 class TestRestconf(unittest.TestCase):
 
-
     def test_server(self):
         drv = freeconf.driver.Driver()
         drv.load()
@@ -35,7 +34,7 @@ class TestRestconf(unittest.TestCase):
         dev.add_browser(b)
 
         _ = freeconf.restconf.Server(dev, driver=drv)
-        dev.apply_startup_config("testdata/server-startup.json")
+        dev.apply_startup_config_file("testdata/server-startup.json")
 
         resp = requests.get("http://localhost:9999/restconf/data/car:")
         self.assertEqual(200, resp.status_code)

@@ -14,7 +14,7 @@ func (s *metaDef) Fields() []*fieldDef {
 
 func (s *metaDef) IsDataDef() bool {
 	switch s.Message.Name {
-	case "Container", "List", "Leaf", "LeafList", "Choice":
+	case "Container", "List", "Leaf", "LeafList", "Choice", "Any":
 		return true
 	}
 	return false

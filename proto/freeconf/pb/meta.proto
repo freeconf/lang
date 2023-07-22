@@ -146,7 +146,17 @@ message DataDef {
            LeafList leafList = 3;
            List list = 4;
            Choice choice = 5;
+           Any any = 6;
       }
+}
+
+message Any {
+      string ident = 1;
+      string description = 2;
+      string reference = 3;
+      repeated Extension extensions = 4;
+      OptionalBool config = 14;
+      OptionalBool mandatory = 15;  
 }
 
 message Identity {

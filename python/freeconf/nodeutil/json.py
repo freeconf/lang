@@ -43,7 +43,6 @@ def json_write_str(sel, driver=None):
     return wtr.read().decode('UTF-8')
 
 def __json_write(stream, driver):
-    print(f"py: json wtr req steamHnd={stream.hnd}")
     req = freeconf.pb.fc_pb2.JSONWtrRequest(streamHnd=stream.hnd)
     resp = driver.g_nodeutil.JSONWtr(req)
     return freeconf.handles.RemoteRef(driver, resp.nodeHnd)

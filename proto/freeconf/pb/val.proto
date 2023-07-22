@@ -47,6 +47,7 @@ enum Format {
   // ANY_LIST = 1044;
 }
 
+// when reading from X to Go, you only need id or label, not both
 message EnumVal {
     int32 id = 1;
     string label = 2;
@@ -79,12 +80,13 @@ message ValUnion {
           uint64 uint64_val = 18;
           bytes union_val = 19;
           bytes any_val = 20;
-          // cannot have repeated in 'oneof'
     }
 }
 
 message Val {
     Format format = 1;
+    // either value or list_value, not both.  limitation of proto to that you cannot
+    // have a repeated inside a oneof
     ValUnion value = 2;
     repeated ValUnion list_value = 3;
 }

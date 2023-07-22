@@ -10,6 +10,7 @@ class dummy:
     x = "Hi"
     q = 100
     z = None
+    y = "one"
 
 class request:
     write = False
@@ -38,7 +39,7 @@ class TestReflect(unittest.TestCase):
         self.assertEqual("X", n.field(r, None).v)
 
         # write
-        z = freeconf.val.Val(r.meta.type.format, "Z")
+        z = freeconf.val.Val("Z", r.meta.type.format)
         r.write = True
         n.field(r, z)
         self.assertEqual("Z", obj["x"])
@@ -55,7 +56,7 @@ class TestReflect(unittest.TestCase):
         self.assertEqual("X", n.field(r, None).v)
 
         # write
-        z = freeconf.val.Val(r.meta.type.format, "Z")
+        z = freeconf.val.Val("Z", r.meta.type.format)
         r.write = True
         n.field(r, z)
         self.assertEqual("Z", obj["x"])
@@ -71,7 +72,7 @@ class TestReflect(unittest.TestCase):
 
         # write
         r.write = True
-        n.field(r, freeconf.val.Val(r.meta.type.format, "Bye"))
+        n.field(r, freeconf.val.Val("Bye", r.meta.type.format))
         self.assertEqual("Bye", obj.x)
 
     def test_cls_child(self):

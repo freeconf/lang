@@ -125,6 +125,15 @@ meta LeafList {
 meta DataDef {
 }
 
+meta Any {
+    ident string, ident string;
+    description string, description string;
+    reference string, reference string;
+    extensions Extension, extensions Extension[];
+    config OptionalBool, config OptionalBool;
+    mandatory OptionalBool, mandatory OptionalBool;
+}
+
 meta Identity {
     ident string, ident string;
     description string, description string;

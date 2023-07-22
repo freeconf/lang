@@ -1,5 +1,6 @@
 import freeconf.meta
 import freeconf.val
+from re import sub
 
 class Reflect():
 
@@ -57,28 +58,41 @@ class Reflect():
     def read_field(cls, obj, meta):
         if isinstance(obj, dict):
             return obj.get(meta.ident)
-        return getattr(obj, meta.ident)
-     
+        return getattr(obj, Reflect.find_attr(obj, meta.ident))
+
+    @classmethod
+    def find_attr(cls, obj, candidate):
+        if hasattr(obj, candidate):
+            return candidate
+        snake = snake_case(candidate)
+        if hasattr(obj, snake):
+            return snake
+        raise AttributeError(f"could not find {candidate} or {snake}")
+
     @classmethod
     def write_field(cls, obj, meta, v):
         if isinstance(obj, dict):
             obj[meta.ident] = v
         else:
-            setattr(obj, meta.ident, v)
+            setattr(obj, Reflect.find_attr(obj, meta.ident), v)
 
     @classmethod
     def clear_field(cls, obj, meta):
         if isinstance(obj, dict):
             del obj[meta.ident]
         else:
-            setattr(obj, meta.ident, None)
+            setattr(obj, Reflect.find_attr(obj, meta.ident), None)
 
     @classmethod
     def has_value(cls, obj, meta):
         if isinstance(obj, dict):
             return meta.ident in obj
         else:
-            hasattr(obj, meta.ident)
+            try:
+                Reflect.find_attr(obj, meta.ident)
+                return True
+            except AttributeError:
+                return False
 
     def field(self, r, write_val):
         if r.write:
@@ -89,8 +103,7 @@ class Reflect():
         else:
             v = Reflect.read_field(self.obj, r.meta)
             if v != None:
-                # TODO: coerse value...or let Go coerse it?
-                return freeconf.val.Val(r.meta.type.format, v)
+                return freeconf.val.Val(v)
 
         return None
 
@@ -98,7 +111,8 @@ class Reflect():
         if self.is_dict:
             raise Exception(f'cannot call functions on dicts in {r.path.str()}/{r.meta.ident}')
 
-        f = getattr(self.obj, r.meta.ident)
+        ident = Reflect.find_attr(self.obj, r.meta.ident)
+        f = getattr(self.obj, ident)
         if not f:
             raise Exception(f'no function found for {r.path.str()}/{r.meta.ident}')
 
@@ -125,7 +139,12 @@ class ReflectList():
         if (not self.is_list) and (not self.is_dict):
             raise Exception(f'do not know how to manage list items in {type(self.objs)}')
 
+    def context(self, sel):
+        pass
     
+    def release(self, sel):
+        pass
+
     def new_object(self, r):
         if self.object_hook:
             return self.object_hook(r)
@@ -144,7 +163,7 @@ class ReflectList():
     
     @classmethod
     def read_fields(cls, obj, metas):
-        if not is_empty_list(meta):
+        if not is_empty_list(metas):
             vals = []
             for meta in metas:
                 vals.append(Reflect.read_field(obj, meta))
@@ -171,7 +190,7 @@ class ReflectList():
             if not is_empty_list(key):
                 # while this will happen anyway, setting them on init means
                 # subsequent sets will have these key values already set
-                Reflect.write_fields(found, r.meta.keyMeta(), key)
+                Reflect.write_fields(found, r.meta.key_meta(), key)
 
         elif not is_empty_list(r.key):
             item_key = ReflectList.vals_to_key(r.key)
@@ -183,7 +202,7 @@ class ReflectList():
             else:
                 # brute force iterate list until val matches
                 for i, candidate in enumerate(self.objs):
-                    candidate_vals = ReflectList.read_fields(candidate, r.meta.key)
+                    candidate_vals = ReflectList.read_fields(candidate, r.meta.key_meta())
                     candidate_key = ReflectList.vals_to_key(candidate_vals)
                     if item_key == candidate_key:
                         if r.delete:
@@ -198,7 +217,12 @@ class ReflectList():
             else:
                 # TODO: test if this is efficient when run w/large dict
                 found = self.objs.keys()[r.row]
-            key = ReflectList.read_fields(found, r.meta.key)
+            key_meta = r.meta.key_meta()
+            key_vals = ReflectList.read_fields(found, key_meta)
+            if key_vals != None:
+                key = []
+                for i in range(len(key_vals)):
+                    key.append(freeconf.val.Val(key_vals[i]))
 
         if found != None:
             return Reflect(found, object_hook=self.object_hook), key
@@ -212,3 +236,10 @@ class ReflectList():
 
 def is_empty_list(list):
     return list == None or len(list) == 0
+
+
+def snake_case(s):
+    return '_'.join(
+        sub('([A-Z][a-z]+)', r' \1',
+        sub('([A-Z]+)', r' \1',
+        s.replace('-', ' '))).split()).lower()

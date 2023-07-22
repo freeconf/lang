@@ -8,10 +8,35 @@ class Format(IntEnum):
 {{- end }}
 
 class Val():
-
-    def __init__(self, format, v):
-        self.format = format
+    
+    def __init__(self, v, format=None):
+        """
+        param: format: Go side will coerse values to the required format if it it possible 
+            so in most cases you can return values that are close enough to the YANG.
+        """
         self.v = v
+        if format is None:
+            self.format = Val.auto_pick_format(v)
+        else:
+            self.format = format
+
+    @classmethod
+    def auto_pick_format(cls, v):
+        t = type(v)
+        if t is list:
+            if len(v) > 0:
+                return Val.auto_pick_format(v[0]) + 1024
+            else: # if empty, doesn't really matter
+                return Format.STRING_LIST
+        if t is int:
+            return Format.INT32
+        if t is float:
+            return Format.DECIMAL64
+        if t is bool:
+            return Format.BOOL
+        if t is str:
+            return Format.STRING
+        raise Exception(f"could not auto pick format for {v} with type {type(v)}")        
 
 def proto_encode(val):
     if val == None:
@@ -39,9 +64,9 @@ def proto_decode(proto_val):
         vals = []
         for p_val in proto_val.list_value:
             vals.append(p_val.{{.PyNonListIdent}}_val)
-        return Val(Format.{{.Ident}}, vals)
+        return Val(vals, Format.{{.Ident}})
   {{- else }}
-        return Val(Format.{{.Ident}}, proto_val.value.{{.PyNonListIdent}}_val)
+        return Val(proto_val.value.{{.PyNonListIdent}}_val, Format.{{.Ident}})
   {{- end }}
 {{- end }}
     raise Exception(f'unimplemented list value decoder {pprint(proto_val)}')

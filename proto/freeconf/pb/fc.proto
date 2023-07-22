@@ -183,6 +183,16 @@ service Device {
       rpc DeviceAddBrowser(DeviceAddBrowserRequest) returns (DeviceAddBrowserResponse) {}
       rpc DeviceGetBrowser(DeviceGetBrowserRequest) returns (DeviceGetBrowserResponse) {}
       rpc ApplyStartupConfig(ApplyStartupConfigRequest) returns (ApplyStartupConfigResponse) {}
+      rpc Client(ClientRequest) returns (ClientResponse) {}
+}
+
+message ClientRequest {
+      uint64 ypathHnd = 1;
+      string address = 2;
+}
+
+message ClientResponse {
+      uint64 deviceHnd = 1;
 }
 
 message NewDeviceRequest {
@@ -212,7 +222,7 @@ message DeviceGetBrowserResponse {
 
 message ApplyStartupConfigRequest {
       uint64 deviceHnd = 1;
-      string configFile = 2;
+      uint64 streamHnd = 2;
 }
 
 message ApplyStartupConfigResponse {

@@ -86,14 +86,11 @@ class StreamWriter():
         self.t.start()
 
     def run(self):
-        print("py: StreamWriter.run")
         chunks = self.driver.g_fs.WriterStream(freeconf.pb.fs_pb2.WriterStreamRequest(streamHnd=self.hnd))
         for data in chunks:
-            print(f"py: StreamWriter {len(data.chunk)} chunk")
             n = self.delegate_wtr.write(data.chunk)
             if n != len(data.chunk):
                 raise Exception(f"partial write not supported. requested {len(data.chunk)}, wrote {n} bytes")
-        print("py: StreamWriter.run exiting")
 
 
     def wait(self):

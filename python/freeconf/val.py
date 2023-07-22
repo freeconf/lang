@@ -37,10 +37,35 @@ class Format(IntEnum):
     UINT64_LIST = 1042
 
 class Val():
-
-    def __init__(self, format, v):
-        self.format = format
+    
+    def __init__(self, v, format=None):
+        """
+        param: format: Go side will coerse values to the required format if it it possible 
+            so in most cases you can return values that are close enough to the YANG.
+        """
         self.v = v
+        if format is None:
+            self.format = Val.auto_pick_format(v)
+        else:
+            self.format = format
+
+    @classmethod
+    def auto_pick_format(cls, v):
+        t = type(v)
+        if t is list:
+            if len(v) > 0:
+                return Val.auto_pick_format(v[0]) + 1024
+            else: # if empty, doesn't really matter
+                return Format.STRING_LIST
+        if t is int:
+            return Format.INT32
+        if t is float:
+            return Format.DECIMAL64
+        if t is bool:
+            return Format.BOOL
+        if t is str:
+            return Format.STRING
+        raise Exception(f"could not auto pick format for {v} with type {type(v)}")        
 
 def proto_encode(val):
     if val == None:
@@ -164,115 +189,115 @@ def proto_decode(proto_val):
     if proto_val == None:
         return None
     if proto_val.format == val_pb2.BINARY:
-        return Val(Format.BINARY, proto_val.value.binary_val)
+        return Val(proto_val.value.binary_val, Format.BINARY)
     if proto_val.format == val_pb2.BITS:
-        return Val(Format.BITS, proto_val.value.bits_val)
+        return Val(proto_val.value.bits_val, Format.BITS)
     if proto_val.format == val_pb2.BOOL:
-        return Val(Format.BOOL, proto_val.value.bool_val)
+        return Val(proto_val.value.bool_val, Format.BOOL)
     if proto_val.format == val_pb2.DECIMAL64:
-        return Val(Format.DECIMAL64, proto_val.value.decimal64_val)
+        return Val(proto_val.value.decimal64_val, Format.DECIMAL64)
     if proto_val.format == val_pb2.EMPTY:
-        return Val(Format.EMPTY, proto_val.value.empty_val)
+        return Val(proto_val.value.empty_val, Format.EMPTY)
     if proto_val.format == val_pb2.ENUM:
-        return Val(Format.ENUM, proto_val.value.enum_val)
+        return Val(proto_val.value.enum_val, Format.ENUM)
     if proto_val.format == val_pb2.IDENTITY_REF:
-        return Val(Format.IDENTITY_REF, proto_val.value.identity_ref_val)
+        return Val(proto_val.value.identity_ref_val, Format.IDENTITY_REF)
     if proto_val.format == val_pb2.INT8:
-        return Val(Format.INT8, proto_val.value.int8_val)
+        return Val(proto_val.value.int8_val, Format.INT8)
     if proto_val.format == val_pb2.INT16:
-        return Val(Format.INT16, proto_val.value.int16_val)
+        return Val(proto_val.value.int16_val, Format.INT16)
     if proto_val.format == val_pb2.INT32:
-        return Val(Format.INT32, proto_val.value.int32_val)
+        return Val(proto_val.value.int32_val, Format.INT32)
     if proto_val.format == val_pb2.INT64:
-        return Val(Format.INT64, proto_val.value.int64_val)
+        return Val(proto_val.value.int64_val, Format.INT64)
     if proto_val.format == val_pb2.STRING:
-        return Val(Format.STRING, proto_val.value.string_val)
+        return Val(proto_val.value.string_val, Format.STRING)
     if proto_val.format == val_pb2.UINT8:
-        return Val(Format.UINT8, proto_val.value.uint8_val)
+        return Val(proto_val.value.uint8_val, Format.UINT8)
     if proto_val.format == val_pb2.UINT16:
-        return Val(Format.UINT16, proto_val.value.uint16_val)
+        return Val(proto_val.value.uint16_val, Format.UINT16)
     if proto_val.format == val_pb2.UINT32:
-        return Val(Format.UINT32, proto_val.value.uint32_val)
+        return Val(proto_val.value.uint32_val, Format.UINT32)
     if proto_val.format == val_pb2.UINT64:
-        return Val(Format.UINT64, proto_val.value.uint64_val)
+        return Val(proto_val.value.uint64_val, Format.UINT64)
     if proto_val.format == val_pb2.BINARY_LIST:
         vals = []
         for p_val in proto_val.list_value:
             vals.append(p_val.binary_val)
-        return Val(Format.BINARY_LIST, vals)
+        return Val(vals, Format.BINARY_LIST)
     if proto_val.format == val_pb2.BITS_LIST:
         vals = []
         for p_val in proto_val.list_value:
             vals.append(p_val.bits_val)
-        return Val(Format.BITS_LIST, vals)
+        return Val(vals, Format.BITS_LIST)
     if proto_val.format == val_pb2.BOOL_LIST:
         vals = []
         for p_val in proto_val.list_value:
             vals.append(p_val.bool_val)
-        return Val(Format.BOOL_LIST, vals)
+        return Val(vals, Format.BOOL_LIST)
     if proto_val.format == val_pb2.DECIMAL64_LIST:
         vals = []
         for p_val in proto_val.list_value:
             vals.append(p_val.decimal64_val)
-        return Val(Format.DECIMAL64_LIST, vals)
+        return Val(vals, Format.DECIMAL64_LIST)
     if proto_val.format == val_pb2.EMPTY_LIST:
         vals = []
         for p_val in proto_val.list_value:
             vals.append(p_val.empty_val)
-        return Val(Format.EMPTY_LIST, vals)
+        return Val(vals, Format.EMPTY_LIST)
     if proto_val.format == val_pb2.ENUM_LIST:
         vals = []
         for p_val in proto_val.list_value:
             vals.append(p_val.enum_val)
-        return Val(Format.ENUM_LIST, vals)
+        return Val(vals, Format.ENUM_LIST)
     if proto_val.format == val_pb2.IDENTITY_REF_LIST:
         vals = []
         for p_val in proto_val.list_value:
             vals.append(p_val.identity_ref_val)
-        return Val(Format.IDENTITY_REF_LIST, vals)
+        return Val(vals, Format.IDENTITY_REF_LIST)
     if proto_val.format == val_pb2.INT8_LIST:
         vals = []
         for p_val in proto_val.list_value:
             vals.append(p_val.int8_val)
-        return Val(Format.INT8_LIST, vals)
+        return Val(vals, Format.INT8_LIST)
     if proto_val.format == val_pb2.INT16_LIST:
         vals = []
         for p_val in proto_val.list_value:
             vals.append(p_val.int16_val)
-        return Val(Format.INT16_LIST, vals)
+        return Val(vals, Format.INT16_LIST)
     if proto_val.format == val_pb2.INT32_LIST:
         vals = []
         for p_val in proto_val.list_value:
             vals.append(p_val.int32_val)
-        return Val(Format.INT32_LIST, vals)
+        return Val(vals, Format.INT32_LIST)
     if proto_val.format == val_pb2.INT64_LIST:
         vals = []
         for p_val in proto_val.list_value:
             vals.append(p_val.int64_val)
-        return Val(Format.INT64_LIST, vals)
+        return Val(vals, Format.INT64_LIST)
     if proto_val.format == val_pb2.STRING_LIST:
         vals = []
         for p_val in proto_val.list_value:
             vals.append(p_val.string_val)
-        return Val(Format.STRING_LIST, vals)
+        return Val(vals, Format.STRING_LIST)
     if proto_val.format == val_pb2.UINT8_LIST:
         vals = []
         for p_val in proto_val.list_value:
             vals.append(p_val.uint8_val)
-        return Val(Format.UINT8_LIST, vals)
+        return Val(vals, Format.UINT8_LIST)
     if proto_val.format == val_pb2.UINT16_LIST:
         vals = []
         for p_val in proto_val.list_value:
             vals.append(p_val.uint16_val)
-        return Val(Format.UINT16_LIST, vals)
+        return Val(vals, Format.UINT16_LIST)
     if proto_val.format == val_pb2.UINT32_LIST:
         vals = []
         for p_val in proto_val.list_value:
             vals.append(p_val.uint32_val)
-        return Val(Format.UINT32_LIST, vals)
+        return Val(vals, Format.UINT32_LIST)
     if proto_val.format == val_pb2.UINT64_LIST:
         vals = []
         for p_val in proto_val.list_value:
             vals.append(p_val.uint64_val)
-        return Val(Format.UINT64_LIST, vals)
+        return Val(vals, Format.UINT64_LIST)
     raise Exception(f'unimplemented list value decoder {pprint(proto_val)}')

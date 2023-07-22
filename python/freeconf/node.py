@@ -291,16 +291,18 @@ class XNodeServicer(freeconf.pb.fc_x_pb2_grpc.XNodeServicer):
                     key_in.append(freeconf.val.proto_decode(g_key_val))
 
             req = ListRequest(sel, meta, g_req.new, g_req.delete, g_req.row, g_req.first, key_in)
-            child, key_out = sel.node.next(req)
-            if child != None:
-                child_hnd = ensure_node_hnd(self.driver, child)
-                g_key_out = None
-                if key_out != None:
-                    for v in key_out:
-                        g_key_out.append(freeconf.val.proto_encode(v))
-                return freeconf.pb.fc_x_pb2.XNextResponse(nodeHnd=child_hnd, key=g_key_out)
-            else:
-                return freeconf.pb.fc_x_pb2.XNextResponse()
+            next_resp = sel.node.next(req)
+            if next_resp != None:
+                (child, key_out) = next_resp
+                if child != None:
+                    child_hnd = ensure_node_hnd(self.driver, child)
+                    g_key_out = None
+                    if key_out != None:
+                        g_key_out = []
+                        for v in key_out:
+                            g_key_out.append(freeconf.val.proto_encode(v))
+                    return freeconf.pb.fc_x_pb2.XNextResponse(nodeHnd=child_hnd, key=g_key_out)
+            return freeconf.pb.fc_x_pb2.XNextResponse()
         except Exception as error:
             print(traceback.format_exc())
             raise error
