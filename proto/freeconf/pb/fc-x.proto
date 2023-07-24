@@ -147,8 +147,8 @@ message XNotificationRequest {
 }
 
 message XNotificationResponse {
-      // time
       uint64 nodeHnd = 1;
+      int64 when = 2; // optional nanosecs since epoc, get now() by default
 }
 
 message XReleaseHandleRequest {

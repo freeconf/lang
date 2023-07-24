@@ -11,6 +11,7 @@ import freeconf.val
 import freeconf.parser
 import freeconf.driver
 import traceback
+import time
 
 class Selection():
 
@@ -56,8 +57,9 @@ class Selection():
                 for resp in stream:
                     if resp == None:
                         return
-                    msg = Selection.resolve(self.driver, resp.selHnd)
-                    callback(msg)
+                    event = Selection.resolve(self.driver, resp.selHnd)
+                    when = time.gmtime(float(resp.when) * 1e9)
+                    callback(Notification(event, when))
             except grpc.RpcError as gerr:
                 if not gerr.cancelled():
                     print(f'grpc err. {gerr}')
@@ -183,6 +185,11 @@ class Browser():
             b = Browser(module, None, hnd_id=hnd_id, driver=driver)
         return b
 
+
+class Notification:
+    def __init__(self, event, event_time):
+        self.event = event
+        self.event_time = event_time
 
 class ChildRequest():
 

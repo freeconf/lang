@@ -184,6 +184,7 @@ func (s *NodeService) Notification(in *pb.NotificationRequest, srv pb.Node_Notif
 	closer, err := sel.Notifications(func(n node.Notification) {
 		resp := pb.NotificationResponse{
 			SelHnd: resolveSelection(s.d, n.Event),
+			When:   n.EventTime.Unix(),
 		}
 		if err := srv.Send(&resp); err != nil {
 			panic(err)

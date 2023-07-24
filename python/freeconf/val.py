@@ -46,6 +46,8 @@ class Val():
         self.v = v
         if format is None:
             self.format = Val.auto_pick_format(v)
+        elif format == 0:
+            raise Exception("format UNKNOWN not a legal format")
         else:
             self.format = format
 

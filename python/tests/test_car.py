@@ -1,11 +1,7 @@
 #!/usr/bin/env python3
 import sys, traceback, threading
 import unittest 
-import freeconf.driver
-import freeconf.parser
-import freeconf.node
-import freeconf.nodeutil
-import freeconf.source
+from freeconf import nodeutil, driver, node, parser, source
 import time
 
 sys.path.append(".")
@@ -21,14 +17,14 @@ def dump_threads():
 class TestCar(unittest.TestCase):
 
     def test_start_car(self):
-        drv = freeconf.driver.Driver()
+        drv = driver.Driver()
         drv.load()
 
-        ypath = freeconf.source.path('testdata', driver=drv)
-        schema = freeconf.parser.load_module_file(ypath, 'car', driver=drv)
+        ypath = source.path('testdata', driver=drv)
+        schema = parser.load_module_file(ypath, 'car', driver=drv)
         app = car.Car()
         mgmt = car.manage(app)
-        b = freeconf.node.Browser(schema, mgmt, driver=drv)
+        b = node.Browser(schema, mgmt, driver=drv)
         root = b.root()
         update_called = False
         def update_listener(_msg):
@@ -36,7 +32,7 @@ class TestCar(unittest.TestCase):
             update_called = True
         update_sel = root.find('update')
         unsubscribe = update_sel.notification(update_listener)
-        root.upsert_from(freeconf.nodeutil.Reflect({'speed': 10}))
+        root.upsert_from(nodeutil.Reflect({'speed': 10}))
         update_sel.release()
         start = root.find('start')
         start.action()

@@ -175,6 +175,7 @@ message NotificationRequest {
 
 message NotificationResponse {
       uint64 selHnd = 1;
+      int64 when = 2;
 }
 
 ////////////

@@ -2,6 +2,7 @@ package lang
 
 import (
 	"context"
+	"time"
 
 	"github.com/freeconf/lang/pb"
 	"github.com/freeconf/yang/meta"
@@ -185,7 +186,8 @@ func (n *xnode) Notify(r node.NotifyRequest) (node.NotifyCloser, error) {
 				break
 			}
 			n := n.d.handles.Get(resp.NodeHnd).(node.Node)
-			r.Send(n)
+			when := time.Unix(0, resp.When)
+			r.SendWhen(n, when)
 		}
 	}()
 	return closer, nil
