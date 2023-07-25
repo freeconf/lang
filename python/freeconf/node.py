@@ -243,12 +243,12 @@ class NodeRequest():
         self.new = new
         self.delete = delete
 
-
 class XNodeServicer(freeconf.pb.fc_x_pb2_grpc.XNodeServicer):
     """Bridge between python node navigation and go node navigation"""
 
     def __init__(self, driver):
         self.driver = driver
+        self.cancel_backchannels = {}
 
     def XContext(self, g_req, context):
         try:
@@ -373,6 +373,11 @@ class XNodeServicer(freeconf.pb.fc_x_pb2_grpc.XNodeServicer):
         node_hnd = ensure_node_hnd(self.driver, browser.node())
         return freeconf.pb.fc_x_pb2.XNodeSourceResponse(nodeHnd=node_hnd)
 
+    def XNotificationCancelBackchannel(self, g_req, context):
+        callback = self.cancel_backchannels.pop(g_req.cancelBackchannelHnd, None)
+        if callback != None:
+            callback()
+        return freeconf.pb.fc_x_pb2.XNotificationCancelBackchannelResponse()
 
     def XNotification(self, g_req, context):
         q = queue.Queue()
@@ -382,6 +387,12 @@ class XNodeServicer(freeconf.pb.fc_x_pb2_grpc.XNodeServicer):
         def stream_closed():
             q.put(None)
         context.add_callback(stream_closed)
+
+        # BUG: this doesn't always get called and subsequently the while loop
+        # below does not exit.  I believe there is a bug in python grpc and waiting
+        # to see if async io implementation fixes this.
+        self.cancel_backchannels[g_req.cancelBackchannelHnd] = stream_closed
+
         try:
             while True:
                 node = q.get()
@@ -391,6 +402,7 @@ class XNodeServicer(freeconf.pb.fc_x_pb2_grpc.XNodeServicer):
                 yield freeconf.pb.fc_x_pb2.XNotificationResponse(nodeHnd=node_hnd)
                 q.task_done()
         finally:
+            self.cancel_backchannels.pop(g_req.cancelBackchannelHnd, None)
             closer()
         return None
     

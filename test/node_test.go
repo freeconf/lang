@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/freeconf/restconf"
 	"github.com/freeconf/yang/fc"
 	"github.com/freeconf/yang/node"
 	"github.com/freeconf/yang/nodeutil"
@@ -34,7 +35,7 @@ type nodeTestHarness interface {
 	Connect() error
 }
 
-var goHarness = newGolang(source.Dir("../yang"))
+var goHarness = newGolang(restconf.InternalYPath)
 var pythonHarness = NewHarness("python", &python{})
 
 var allHarnesses = []nodeTestHarness{

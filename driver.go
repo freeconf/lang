@@ -20,6 +20,11 @@ type Driver struct {
 	xfs         pb.FileSystemClient
 	handles     *HandlePool
 	xclientAddr string
+	Stats       DriverStats
+}
+
+type DriverStats struct {
+	OpenNotifications int
 }
 
 func NewDriver(gServerAddr string, xClientAddr string) (*Driver, error) {

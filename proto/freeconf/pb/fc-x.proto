@@ -18,12 +18,23 @@ service XNode {
       rpc XField(XFieldRequest) returns (XFieldResponse) {}
       rpc XAction(XActionRequest) returns (XActionResponse) {}
       rpc XNotification(XNotificationRequest) returns (stream XNotificationResponse) {}
+
+      //
+      rpc XNotificationCancelBackchannel(XNotificationCancelBackchannelRequest) returns (XNotificationCancelBackchannelResponse) {}
+
       rpc XChoose(XChooseRequest) returns (XChooseResponse) {}
       rpc XNext(XNextRequest) returns (XNextResponse) {}
       rpc XBeginEdit(XBeginEditRequest) returns (XBeginEditResponse) {}
       rpc XEndEdit(XEndEditRequest) returns (XEndEditResponse) {}
       rpc XContext(XContextRequest) returns (XContextResponse) {}
       rpc XRelease(XReleaseRequest) returns (XReleaseResponse) {}
+}
+
+message XNotificationCancelBackchannelRequest {
+      uint64 cancelBackchannelHnd = 3;
+}
+
+message XNotificationCancelBackchannelResponse {
 }
 
 message XContextRequest {
@@ -143,7 +154,8 @@ message XActionResponse {
 
 message XNotificationRequest {
       uint64 selHnd = 1;
-      string metaIdent = 3;
+      string metaIdent = 2;
+      uint64 cancelBackchannelHnd = 3;
 }
 
 message XNotificationResponse {

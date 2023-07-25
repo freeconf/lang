@@ -42,7 +42,7 @@ func newHandlePool() *HandlePool {
 func (p *HandlePool) Reserve() uint64 {
 	p.lock.Lock()
 	defer p.lock.Unlock()
-	id := p.nextHnd()
+	id := p.NextHnd()
 	return id
 }
 
@@ -76,7 +76,7 @@ func (p *HandlePool) Hnd(obj any) uint64 {
 
 	hnd, found := p.handles[obj]
 	if !found {
-		hnd = p.nextHnd()
+		hnd = p.NextHnd()
 		p.handles[obj] = hnd
 		p.objects[hnd] = obj
 	}
@@ -86,13 +86,13 @@ func (p *HandlePool) Hnd(obj any) uint64 {
 func (p *HandlePool) Put(x any) uint64 {
 	p.lock.Lock()
 	defer p.lock.Unlock()
-	hnd := p.nextHnd()
+	hnd := p.NextHnd()
 	p.objects[hnd] = x
 	p.handles[x] = hnd
 	return hnd
 }
 
-func (p *HandlePool) nextHnd() uint64 {
+func (p *HandlePool) NextHnd() uint64 {
 	next := p.counter
 	p.counter = p.counter + 1
 	return next

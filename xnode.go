@@ -156,31 +156,57 @@ func (n *xnode) Action(r node.ActionRequest) (output node.Node, err error) {
 }
 
 func (n *xnode) Notify(r node.NotifyRequest) (node.NotifyCloser, error) {
+	cancelBackchannelHnd := n.d.handles.NextHnd()
 	req := pb.XNotificationRequest{
-		SelHnd:    resolveSelection(n.d, r.Selection),
-		MetaIdent: r.Meta.Ident(),
+		SelHnd:               resolveSelection(n.d, r.Selection),
+		MetaIdent:            r.Meta.Ident(),
+		CancelBackchannelHnd: cancelBackchannelHnd,
 	}
 	var recvErr error
 	client, err := n.d.xnodes.XNotification(r.Selection.Context, &req)
 	if err != nil {
 		return nil, err
 	}
+	closed := false
 	closer := func() error {
+		closed = true
 		if client != nil {
 			if err := client.CloseSend(); err != nil && recvErr == nil {
 				return err
 			}
+
+			// Suspected bugin python/grpc: client.CloseSend() does not unblock
+			// client.Recv call below.  In addition python-side is never
+			// unblocked and subscription closer in python is never called.
+			//
+			// Python grpc is switching to an async io that make fix this, might
+			// make things worse, but it is stall a WIP.  We might have to create
+			// a backchannel to break that sender in python
+			cancelReq := pb.XNotificationCancelBackchannelRequest{
+				CancelBackchannelHnd: cancelBackchannelHnd,
+			}
+			if _, err := n.d.xnodes.XNotificationCancelBackchannel(r.Selection.Context, &cancelReq); err != nil {
+				return err
+			}
+
 			client = nil
 		}
-		return recvErr
+		return err
 	}
 	go func() {
+		n.d.Stats.OpenNotifications++
+		defer func() {
+			n.d.Stats.OpenNotifications--
+		}()
 		var resp *pb.XNotificationResponse
 		for client != nil {
 			resp, recvErr = client.Recv()
 			if recvErr != nil {
-				r.Send(node.ErrorNode{Err: recvErr})
-				continue
+				if !closed {
+					err = recvErr
+					r.Send(node.ErrorNode{Err: recvErr})
+					break
+				}
 			}
 			if resp == nil {
 				break

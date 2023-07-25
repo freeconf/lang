@@ -180,13 +180,14 @@ func (s *NodeService) GetModule(ctx context.Context, in *pb.GetModuleRequest) (*
 }
 
 func (s *NodeService) Notification(in *pb.NotificationRequest, srv pb.Node_NotificationServer) error {
+	closed := false
 	sel := s.d.handles.Require(in.SelHnd).(*node.Selection)
 	closer, err := sel.Notifications(func(n node.Notification) {
 		resp := pb.NotificationResponse{
 			SelHnd: resolveSelection(s.d, n.Event),
 			When:   n.EventTime.Unix(),
 		}
-		if err := srv.Send(&resp); err != nil {
+		if err := srv.Send(&resp); err != nil && !closed {
 			panic(err)
 		}
 	})
@@ -194,6 +195,7 @@ func (s *NodeService) Notification(in *pb.NotificationRequest, srv pb.Node_Notif
 		return err
 	}
 	<-srv.Context().Done()
+	closed = true
 	closer()
 	return nil
 }

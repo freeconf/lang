@@ -117,6 +117,10 @@ func (h *Harness) createTestCase(tc pb.TestCase, traceFile string) (node.Node, e
 }
 
 func (h *Harness) finalizeTestCase() error {
+	if h.driver.Stats.OpenNotifications > 0 {
+		fc.Err.Printf("%d open notifications.  proper etiquette is that tests are designed to unsub of every sub", h.driver.Stats.OpenNotifications)
+	}
+
 	req := pb.FinalizeTestCaseRequest{}
 	_, err := h.client.FinalizeTestCase(context.Background(), &req)
 	return err
