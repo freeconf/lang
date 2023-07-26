@@ -54,7 +54,7 @@ def manage(c):
             return node.action(req)
         return None
 
-    def notification(node, req):
+    def notify(node, req):
         if req.meta.ident == 'update':
             def listener(event):
                 req.send(freeconf.nodeutil.reflect.Reflect({
@@ -63,10 +63,10 @@ def manage(c):
             closer = c.on_update(listener)
             return closer
         
-        return node.notification(req)
+        return node.notify(req)
 
     # because car's members and methods align with yang, we can use 
     # reflection for all of the CRUD
     return freeconf.nodeutil.extend.Extend(
         base = freeconf.nodeutil.reflect.Reflect(c),
-        on_action = action, on_notification=notification)
+        on_action = action, on_notify=notify)

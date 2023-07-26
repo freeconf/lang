@@ -383,7 +383,7 @@ class XNodeServicer(freeconf.pb.fc_x_pb2_grpc.XNodeServicer):
         q = queue.Queue()
         sel = Selection.resolve(self.driver, g_req.selHnd)
         meta = sel.path.meta
-        closer = sel.node.notification(NotificationRequest(sel, meta, q))
+        closer = sel.node.notify(NotificationRequest(sel, meta, q))
         def stream_closed():
             q.put(None)
         context.add_callback(stream_closed)

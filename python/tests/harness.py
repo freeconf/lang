@@ -201,13 +201,13 @@ class Echo:
                 self.update_listeners(r.input.node)
             return None
         
-        def notification(node, r):
+        def notify(node, r):
             if r.meta.ident == "recv":
                 def listener(n):
                     r.send(n)
                 return self.on_update(listener)
         
-        return freeconf.nodeutil.Extend(base, on_action=action, on_notification=notification)
+        return freeconf.nodeutil.Extend(base, on_action=action, on_notify=notify)
 
 
 g_addr = sys.argv[1]

@@ -1,7 +1,7 @@
 class Basic():
 
     def __init__(self, on_context=None, on_release=None, on_child=None, on_next=None,                 
-                 on_field=None, on_action=None, on_notification=None, on_begin_edit=None,
+                 on_field=None, on_action=None, on_notify=None, on_begin_edit=None,
                  on_end_edit=None):        
         self.hnd = 0
         self.on_context = on_context
@@ -10,7 +10,7 @@ class Basic():
         self.on_next = on_next
         self.on_field = on_field
         self.on_action = on_action
-        self.on_notification = on_notification
+        self.on_notify = on_notify
         self.on_begin_edit = on_begin_edit
         self.on_end_edit = on_end_edit
 
@@ -44,10 +44,10 @@ class Basic():
         raise Exception(f'action not implemented in {r.path.str()}/{r.meta.ident}')
 
 
-    def notification(self, r):
-        if self.on_notification != None:
-            return self.on_notification(r)
-        raise Exception(f'notification not implemented in {r.path.str()}/{r.meta.ident}')
+    def notify(self, r):
+        if self.on_notify != None:
+            return self.on_notify(r)
+        raise Exception(f'notify not implemented in {r.path.str()}/{r.meta.ident}')
 
 
     def begin_edit(self, r):

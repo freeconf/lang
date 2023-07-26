@@ -102,9 +102,9 @@ class Trace():
         return output
     
 
-    def notification(self, r):
-        self.trace(self.level, "notification", r.meta.ident)
-        return self.target.notification(r)
+    def notify(self, r):
+        self.trace(self.level, "notify", r.meta.ident)
+        return self.target.notify(r)
 
 
     def choose(self, sel, choice):
