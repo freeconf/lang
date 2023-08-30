@@ -64,6 +64,13 @@ class TestUtilNode(unittest.TestCase):
         expected = '{"z":100,"y":{"q":"yo"},"g":{"b":99},"p":[{"f":"ONE","b":1},{"f":"TWO","b":2}],"t":[{"f":"ONE","b":1},{"f":"TWO","b":2}]}'
         self.assertEqual(expected, actual)
 
+        p_two = nodeutil.json_write_str(b.root().find("p=TWO"))
+        self.assertEqual('{"f":"TWO","b":2}', p_two)
+
+        t_two = nodeutil.json_write_str(b.root().find("t=TWO"))
+        self.assertEqual('{"f":"TWO","b":2}', t_two)
+
+
 
     def test_write(self):
         class G():
@@ -96,11 +103,6 @@ class TestUtilNode(unittest.TestCase):
         self.assertEqual("ONE", obj["p"][0]["f"])
         self.assertEqual(2, len(obj["t"]))
         self.assertEqual("ONE", obj["t"]["ONE"]["f"])
-
-    
-
-
-
 
 
 if __name__ == '__main__':

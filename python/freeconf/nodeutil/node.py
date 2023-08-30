@@ -252,9 +252,9 @@ class Node():
                     self.do_delete_by_key(r)
                 return
             if self.on_get_by_key != None:
-                return self.on_get_by_key(self, r)
+                return self.on_get_by_key(self, r), r.key
             else:
-                return self.do_get_by_key(r)
+                return self.do_get_by_key(r), r.key
         if self.on_get_by_row != None:
             return self.on_get_by_row(self, r)
         else:
