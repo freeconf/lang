@@ -252,15 +252,23 @@ message JSONWtrResponse {
 }
 
 ////////////
-service Restconf {
-      rpc NewServer(NewServerRequest) returns (NewServerResponse) {}
+service Proto {
+      rpc RestconfServer(RestconfServerRequest) returns (RestconfServerResponse) {}
+      rpc GnmiServer(GnmiServerRequest) returns (GnmiServerResponse) {}
 }
 
-message NewServerRequest {
+message RestconfServerRequest {
       uint64 deviceHnd = 1;
 }
 
-message NewServerResponse {
+message RestconfServerResponse {
       uint64 serverHnd = 1;
 }
 
+message GnmiServerRequest {
+      uint64 deviceHnd = 1;
+}
+
+message GnmiServerResponse {
+      uint64 serverHnd = 1;
+}

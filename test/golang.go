@@ -87,7 +87,7 @@ func (d *golang) echoNode() node.Node {
 }
 
 func (d *golang) advancedNode(data map[string]interface{}) node.Node {
-	return nodeutil.ReflectChild(data)
+	return &nodeutil.Node{Object: data}
 }
 
 type reciever func(msg node.Node)
@@ -134,7 +134,7 @@ func (d *golang) parseModule(dir string, module string, dumpFilename string) err
 	defer dumpFile.Close()
 	wtr := nodeutil.NewJSONWtr(dumpFile)
 	wtr.Pretty = true
-	b := nodeutil.Schema(d.loadYangModule(), m)
+	b := nodeutil.SchemaBrowser(d.loadYangModule(), m)
 	err = b.Root().UpsertInto(wtr.Node())
 	return err
 }

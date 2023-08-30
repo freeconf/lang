@@ -154,7 +154,7 @@ class Driver():
         self.g_nodes = freeconf.pb.fc_pb2_grpc.NodeStub(self.g_channel)
         self.g_nodeutil = freeconf.pb.fc_pb2_grpc.NodeUtilStub(self.g_channel)
         self.g_device = freeconf.pb.fc_pb2_grpc.DeviceStub(self.g_channel)
-        self.g_restconf = freeconf.pb.fc_pb2_grpc.RestconfStub(self.g_channel)
+        self.g_proto = freeconf.pb.fc_pb2_grpc.ProtoStub(self.g_channel)
         self.g_fs = freeconf.pb.fs_pb2_grpc.FileSystemStub(self.g_channel)
         self.fs = freeconf.fs.FileSystemServicer(self)
 

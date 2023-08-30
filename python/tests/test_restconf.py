@@ -21,6 +21,7 @@ def new_car_app(drv, ypath):
 
 class TestRestconf(unittest.TestCase):
 
+
     def test_server(self):
         drv = freeconf.driver.Driver()
         drv.load()
