@@ -53,6 +53,7 @@ class Node():
                  on_action=None, 
                  on_notify=None, 
                  on_release=None,
+                 on_new_object=None,
                  is_list_node=False):
         self.object = object
         self.on_options = on_options
@@ -78,6 +79,7 @@ class Node():
         self.on_action = on_action
         self.on_notify = on_notify
         self.on_release = on_release
+        self.on_new_object = on_new_object
         self.hnd = None
         if is_list_node:
             self.new_list_handler()
@@ -140,11 +142,20 @@ class Node():
         c.new_list_handler()
         return c
     
+    def new_object(self, m, inside_list):
+        if self.on_new_object != None:
+            return self.on_new_object(m, inside_list)
+        return self.do_new_object(m, inside_list)
+
+
+    def do_new_object(self, m, inside_list):
+        if not inside_list and isinstance(m, meta.List):
+            return []
+        return {}
+
+    
     def do_new_child(self, r):
-        if Node.is_child_list(r):
-            object = []
-        else:
-            object = {}
+        object = self.new_object(r.meta, Node.is_child_list(r))
         self.container.set(r.meta, object)
         return self.new(object, r)
 
@@ -282,8 +293,61 @@ class Node():
             return None, None        
         return self.new(item), key
 
-    # self.on_action = on_action
-    # self.on_notify = on_notify
+    def action(self, r):
+        if self.on_action != None:
+            return self.on_action(self, r)
+        else:
+            return self.do_action(r)
+        
+    def do_action(self, r):
+        h = ActionHandler()
+        opts = self.get_options(r.meta)
+        resp = h.do(self, r, opts)
+        if resp == None:
+            return None
+        return self.new(resp)
+
+    def notify(self, r):
+        if self.on_notify != None:
+            return self.on_notify(self, r)
+        raise NotImplemented
+
+class ActionHandler():
+        
+
+    def do(self, n, r, opts):
+        candidate = opts.ident
+        if candidate == None:
+            candidate = snake_case(r.meta.ident)
+        m = getattr(n.object, candidate, None)
+        if m == None:
+            raise Exception(f"could not find function {candidate} on {object}")
+
+        if r.input != None:
+            input = n.new_object(r.meta.input, False)
+            r.input.upsert_into(n.new(input))
+
+            if opts.action_input_exploded:
+                explode = []
+                for d in r.meta.input.definitions:
+                    explode.append(input.get(d.ident, None))
+                resp = m(*explode)
+            else:
+                resp = m(input)
+        else:
+            resp = m()
+
+        if resp and r.meta.output != None:
+            if opts.action_output_exploded:
+                implode = {}
+                for i, d in enumerate(r.meta.output.definitions):
+                    implode[d.ident] = resp[i]
+                resp = implode
+
+        return resp
+
+
+
 
 class DictionaryList():
 

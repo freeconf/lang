@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import unittest 
-from freeconf import nodeutil, node, parser, source
+from freeconf import nodeutil, node, parser
 
 
 mstr = """
@@ -16,6 +16,9 @@ module x {
     container g {
         leaf b {
             type int32;
+        }
+        leaf h {
+            type string;
         }
     }
     list p {
@@ -39,15 +42,28 @@ module x {
 }
 """
 
+class G():
+    def __init__(self):
+        self.b = 99
+        self.h = "H"
+        self.do_something_called = False
+
+    def set_h(self, h):
+        self.h = h
+
+    def get_h(self):
+        return self.h
+
+    def do_something(self):
+        self.do_something_called = True
+
+
 class TestUtilNode(unittest.TestCase):
 
     def setUp(self):
         self.m = parser.load_module_str(None, mstr)
 
     def test_read(self):
-        class G():
-            def __init__(self):
-                self.b = 99
 
         obj = {
             "z":100, 
@@ -61,7 +77,7 @@ class TestUtilNode(unittest.TestCase):
         )
         b = node.Browser(self.m, n)
         actual = nodeutil.json_write_str(b.root())
-        expected = '{"z":100,"y":{"q":"yo"},"g":{"b":99},"p":[{"f":"ONE","b":1},{"f":"TWO","b":2}],"t":[{"f":"ONE","b":1},{"f":"TWO","b":2}]}'
+        expected = '{"z":100,"y":{"q":"yo"},"g":{"b":99,"h":"H"},"p":[{"f":"ONE","b":1},{"f":"TWO","b":2}],"t":[{"f":"ONE","b":1},{"f":"TWO","b":2}]}'
         self.assertEqual(expected, actual)
 
         p_two = nodeutil.json_write_str(b.root().find("p=TWO"))
@@ -73,14 +89,11 @@ class TestUtilNode(unittest.TestCase):
 
 
     def test_write(self):
-        class G():
-            def __init__(self):
-                self.b = 99
 
         cfg = """{
           "z": 888,
           "y":{"q":"boo!"},
-          "g": {"b":444},
+          "g": {"b":444,"h":"Haytch"},
           "p":[{"f":"ONE","b":1},{"f":"TWO","b":2}],
           "t":[{"f":"ONE","b":1},{"f":"TWO","b":2}]
         }
@@ -99,11 +112,11 @@ class TestUtilNode(unittest.TestCase):
         self.assertEqual(888, obj["z"])
         self.assertEqual("boo!", obj["y"]["q"])
         self.assertEqual(444, obj["g"].b)
+        self.assertEqual("Haytch", obj["g"].get_h())
         self.assertEqual(2, len(obj["p"]))
         self.assertEqual("ONE", obj["p"][0]["f"])
         self.assertEqual(2, len(obj["t"]))
         self.assertEqual("ONE", obj["t"]["ONE"]["f"])
-
 
 if __name__ == '__main__':
     unittest.main()    

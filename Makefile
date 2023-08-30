@@ -89,7 +89,9 @@ PY_TESTS = \
 	test_reflect.py \
 	test_parser.py \
 	test_car.py \
-	test_restconf.py
+	test_restconf.py \
+	test_util_node.py \
+	test_node_action.py
 
 test-py:
 	cd python/tests; \

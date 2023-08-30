@@ -29,9 +29,9 @@ class TestClient(unittest.TestCase):
         srv_dev.add_browser(srv_browser)
 
         _ = freeconf.restconf.Server(srv_dev, driver=drv)
-        srv_dev.apply_startup_config_str('{"fc-restconf":{"web": {"port": ":9999"}}}')
+        srv_dev.apply_startup_config_str('{"fc-restconf":{"web": {"port": ":9998"}}}')
 
-        client_dev = freeconf.device.Device.client(ypath, "http://localhost:9999/restconf", driver=drv)
+        client_dev = freeconf.device.Device.client(ypath, "http://localhost:9998/restconf", driver=drv)
         client_browser = client_dev.get_browser("x")
         root = client_browser.root()
         actual =  freeconf.nodeutil.json.json_write_str(root, driver=drv)
