@@ -59,7 +59,10 @@ func (s NodeService) Find(ctx context.Context, in *pb.FindRequest) (*pb.FindResp
 
 func (s *NodeService) SelectionEdit(ctx context.Context, in *pb.SelectionEditRequest) (*pb.SelectionEditResponse, error) {
 	sel := s.d.handles.Require(in.SelHnd).(*node.Selection)
-	n := s.d.handles.Require(in.NodeHnd).(node.Node)
+	var n node.Node
+	if in.NodeHnd != 0 {
+		n = s.d.handles.Require(in.NodeHnd).(node.Node)
+	}
 	var err error
 	switch in.Op {
 	case pb.SelectionEditOp_UPSERT_INTO:
@@ -80,6 +83,11 @@ func (s *NodeService) SelectionEdit(ctx context.Context, in *pb.SelectionEditReq
 		err = sel.UpdateFrom(n)
 	case pb.SelectionEditOp_REPLACE_FROM:
 		err = sel.ReplaceFrom(n)
+	case pb.SelectionEditOp_DELETE:
+		err = sel.Delete()
+		if err != nil {
+			sel.Release()
+		}
 	}
 	return &pb.SelectionEditResponse{}, err
 }

@@ -118,6 +118,10 @@ class Selection():
         req = freeconf.pb.fc_pb2.SelectionEditRequest(op=freeconf.pb.fc_pb2.REPLACE_FROM, selHnd=self.hnd, nodeHnd=node_hnd)        
         self.driver.g_nodes.SelectionEdit(req)
 
+    def delete(self):
+        req = freeconf.pb.fc_pb2.SelectionEditRequest(op=freeconf.pb.fc_pb2.DELETE, selHnd=self.hnd)
+        self.driver.g_nodes.SelectionEdit(req)
+
     def find(self, path):
         req = freeconf.pb.fc_pb2.FindRequest(selHnd=self.hnd, path=path)
         resp = self.driver.g_nodes.Find(req)

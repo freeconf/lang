@@ -107,7 +107,8 @@ class TestUtilNode(unittest.TestCase):
             object=obj,
         )
         b = node.Browser(self.m, n)
-        b.root().upsert_from(nodeutil.json_read_str(cfg))
+        root = b.root()
+        root.upsert_from(nodeutil.json_read_str(cfg))
 
         self.assertEqual(888, obj["z"])
         self.assertEqual("boo!", obj["y"]["q"])
@@ -117,6 +118,15 @@ class TestUtilNode(unittest.TestCase):
         self.assertEqual("ONE", obj["p"][0]["f"])
         self.assertEqual(2, len(obj["t"]))
         self.assertEqual("ONE", obj["t"]["ONE"]["f"])
+
+        b.root().find("p=TWO").delete()
+        self.assertEqual(1, len(obj["p"]))
+
+        b.root().find("t=TWO").delete()
+        self.assertEqual(1, len(obj["t"]))
+
+        root.release()
+
 
 if __name__ == '__main__':
     unittest.main()    

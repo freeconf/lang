@@ -81,6 +81,7 @@ enum SelectionEditOp {
       UPDATE_INTO = 6;
       UPDATE_FROM = 7;
       REPLACE_FROM = 8;
+      DELETE = 9;
 }
 
 message NewBrowserRequest {
