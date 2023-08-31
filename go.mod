@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/emicklei/proto v1.11.1
-	github.com/freeconf/restconf v0.0.0-20230717113412-74fa7b151411
+	github.com/freeconf/restconf v0.0.0-20230831100555-cc85cd79c19b
 	github.com/freeconf/yang v0.1.0-alpha
 	github.com/iancoleman/strcase v0.2.0
 	google.golang.org/grpc v1.57.0

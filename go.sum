@@ -4,6 +4,8 @@ github.com/freeconf/gnmi v0.0.0-20230406213316-eb3e8f819db1 h1:Ic3SB4U/u8rT0Vqa5
 github.com/freeconf/gnmi v0.0.0-20230406213316-eb3e8f819db1/go.mod h1:8oETs7Jxha/StetQkEX885bGbbx0mK1EqDS6ArjYIXs=
 github.com/freeconf/restconf v0.0.0-20230717113412-74fa7b151411 h1:SiwRySZk38OKIItAZ7b2n9gP2pBeSnWGrv0feB9IVDc=
 github.com/freeconf/restconf v0.0.0-20230717113412-74fa7b151411/go.mod h1:1FiWnwQT4Q+bffOFYvBr+rCpNrYqraY24ah5e1odpIo=
+github.com/freeconf/restconf v0.0.0-20230831100555-cc85cd79c19b h1:alMNHG3jGzFu7G+qhClcVKNHxrC7LeR+5H4ZkLOuwnM=
+github.com/freeconf/restconf v0.0.0-20230831100555-cc85cd79c19b/go.mod h1:Ltyfa09tG4VLxUugCJhbajFI2NCHqtPBXwm+hzBLxdQ=
 github.com/freeconf/yang v0.0.0-20230717113251-4e8ffeccfe9d h1:XAraOt9hheX6HwnwIqEPsnPy2ogZOK6zDayJi0kEdr8=
 github.com/freeconf/yang v0.0.0-20230717113251-4e8ffeccfe9d/go.mod h1:mWEJ47bQKL2+1uMaHsA6VjRtoO+svJ2LcIiN+StJqNY=
 github.com/freeconf/yang v0.1.0-alpha h1:rvKmBgcTjZM2Fyt5g7xe/yL+Og9fQaBe489o/QRpJR8=
