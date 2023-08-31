@@ -1,5 +1,3 @@
-from freeconf.nodeutil import reflect
-
 # Wrap a node with a trace and see all data into and out of node structure without
 # changing operation. 
 #

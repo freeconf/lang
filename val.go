@@ -392,7 +392,6 @@ func newEmptyList(_ any) val.Value {
 
 func newIdentRef(ref *pb.IdentRef) val.IdentRef {
 	return val.IdentRef{
-		//Base:  ref.Base,
 		Label: ref.Label,
 	}
 }
@@ -429,7 +428,6 @@ func newPbEnum(e val.Enum) *pb.EnumVal {
 
 func newPbIdentRef(ref val.IdentRef) *pb.IdentRef {
 	return &pb.IdentRef{
-		//Base:  ref.Base,
 		Label: ref.Label,
 	}
 }

@@ -114,6 +114,7 @@ message Leaf {
       OptionalBool config = 14;
       OptionalBool mandatory = 15;
       string defaultVal = 16;
+      string units = 17;
 }
 
 message List {
@@ -137,6 +138,7 @@ message LeafList {
     repeated Extension extensions = 4;
     OptionalBool config = 14;
     OptionalBool mandatory = 15;
+    string units = 17;
 }
 
 message DataDef {

@@ -72,9 +72,7 @@ class TestUtilNode(unittest.TestCase):
             "p":[{"f":"ONE", "b":1},{"f":"TWO", "b":2}],
             "t":{"ONE":{"f":"ONE", "b":1},"TWO":{"f":"TWO", "b":2}},
         }
-        n = nodeutil.Node(
-            object=obj,
-        )
+        n = nodeutil.Node(obj)
         b = node.Browser(self.m, n)
         actual = nodeutil.json_write_str(b.root())
         expected = '{"z":100,"y":{"q":"yo"},"g":{"b":99,"h":"H"},"p":[{"f":"ONE","b":1},{"f":"TWO","b":2}],"t":[{"f":"ONE","b":1},{"f":"TWO","b":2}]}'
@@ -103,9 +101,7 @@ class TestUtilNode(unittest.TestCase):
             "p":[],
             "t":{},
         }
-        n = nodeutil.Node(
-            object=obj,
-        )
+        n = nodeutil.Node(obj)
         b = node.Browser(self.m, n)
         root = b.root()
         root.upsert_from(nodeutil.json_read_str(cfg))

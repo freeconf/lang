@@ -30,7 +30,7 @@ class NodeOptions():
 
 class Node():
 
-    def __init__(self, object=object, 
+    def __init__(self, object, 
                  options=NodeOptions(),
                  on_options=None,
                  on_child=None, 
@@ -200,7 +200,7 @@ class Node():
                 return self.do_get_field(r)
             
     def do_get_field(self, r):
-        v = self.container.get(r.meta)
+        v = self.read_value(r.meta)
         if v != None:
             return val.Val(v)
         return None

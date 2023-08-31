@@ -57,9 +57,7 @@ class TestAction(unittest.TestCase):
 
         obj = X()
 
-        n = nodeutil.Node(
-            object=obj,
-        )
+        n = nodeutil.Node(obj)
         b = node.Browser(m, n)
 
         b.root().find("a").action(None)
@@ -69,8 +67,7 @@ class TestAction(unittest.TestCase):
         actual = nodeutil.json_write_str(resp)
         self.assertEqual('{"x":"hello"}', actual)
 
-        n = nodeutil.Node(
-            object=obj,
+        n = nodeutil.Node(obj,
             options=nodeutil.NodeOptions(action_input_exploded=True, action_output_exploded=True),
         )
         b = node.Browser(m, n)

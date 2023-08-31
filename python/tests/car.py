@@ -1,7 +1,6 @@
 import time
 import threading
-import freeconf.nodeutil.extend
-import freeconf.nodeutil.reflect
+from freeconf import nodeutil
 
 # Simple application, no connection to management 
 class Car():
@@ -51,13 +50,13 @@ def manage(c):
         elif req.meta.ident == 'start':
             c.start(True)
         else:
-            return node.action(req)
+            return node.do_action(req)
         return None
 
     def notify(node, req):
         if req.meta.ident == 'update':
             def listener(event):
-                req.send(freeconf.nodeutil.reflect.Reflect({
+                req.send(nodeutil.Node({
                     "event": event
                 }))
             closer = c.on_update(listener)
@@ -67,6 +66,5 @@ def manage(c):
 
     # because car's members and methods align with yang, we can use 
     # reflection for all of the CRUD
-    return freeconf.nodeutil.extend.Extend(
-        base = freeconf.nodeutil.reflect.Reflect(c),
+    return nodeutil.Node(c,
         on_action = action, on_notify=notify)

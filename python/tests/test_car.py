@@ -32,7 +32,7 @@ class TestCar(unittest.TestCase):
             update_called = True
         update_sel = root.find('update')
         unsubscribe = update_sel.notification(update_listener)
-        root.upsert_from(nodeutil.Reflect({'speed': 10}))
+        root.upsert_from(nodeutil.Node({'speed': 10}))
         update_sel.release()
         start = root.find('start')
         start.action()
