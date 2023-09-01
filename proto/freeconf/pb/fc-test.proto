@@ -36,8 +36,8 @@ message CreateTestCaseResponse {
 message ParseModuleRequest {
     string dir = 1;
     string moduleIdent = 2;
-    string dumpFile = 3;
 }
 
 message ParseModuleResponse {    
+    uint64 schemaNodeHnd = 1;
 }

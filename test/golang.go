@@ -121,22 +121,13 @@ func (d *golang) loadYangModule() *meta.Module {
 	return d.yangModule
 }
 
-func (d *golang) parseModule(dir string, module string, dumpFilename string) error {
+func (d *golang) parseModule(dir string, module string) (node.Node, error) {
 	ypath := source.Dir(dir)
 	m, err := parser.LoadModule(ypath, module)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	dumpFile, err := os.Create(dumpFilename)
-	if err != nil {
-		return err
-	}
-	defer dumpFile.Close()
-	wtr := nodeutil.NewJSONWtr(dumpFile)
-	wtr.Pretty = true
-	b := nodeutil.SchemaBrowser(d.loadYangModule(), m)
-	err = b.Root().UpsertInto(wtr.Node())
-	return err
+	return nodeutil.Schema2(m), nil
 }
 
 func (d *golang) handleCount() int {

@@ -25,5 +25,5 @@ func (s *metaDef) IsMetaDef() bool {
 	case "DataDef":
 		return false
 	}
-	return true
+	return true && s.Name() != "MetaPointer"
 }

@@ -1,12 +1,7 @@
 #!/usr/bin/env python3
 import sys
-import io
 import unittest 
-import freeconf.driver
-import freeconf.parser
-import freeconf.node
-import freeconf.source
-import freeconf.nodeutil.json as fcjson
+from freeconf import driver, parser, node, source, nodeutil
 
 sys.path.append(".")
 import car
@@ -15,17 +10,17 @@ import car
 class TestJson(unittest.TestCase):
 
     def test_read_car_json(self):
-        drv = freeconf.driver.Driver()
+        drv = driver.Driver()
         drv.load()
 
-        ypath = freeconf.source.path("testdata", driver=drv)
-        schema = freeconf.parser.load_module_file(ypath, 'car', driver=drv)
+        ypath = source.path("testdata", driver=drv)
+        schema = parser.load_module_file(ypath, 'car', driver=drv)
         app = car.Car()
         mgmt = car.manage(app)
-        b = freeconf.node.Browser(schema, mgmt, driver=drv)
+        b = node.Browser(schema, mgmt, driver=drv)
         root = b.root()
         cfg = root.find("?content=config")
-        actual = fcjson.json_write_str(cfg, driver=drv)
+        actual = nodeutil.json_write_str(cfg, driver=drv)
         cfg.release()
         self.assertEqual('{"speed":0}', actual)
         root.release()

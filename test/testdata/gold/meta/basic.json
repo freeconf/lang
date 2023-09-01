@@ -1,43 +1,26 @@
 {
-  "module": {
-    "dataDef": [
-      {
-        "container": {
-          "dataDef": [
-            {
-              "ident": "l",
-              "leaf": {
-                "type": {
-                  "format": "int32",
-                  "ident": "int32"
-                }
-              }
-            }
-          ]
-        },
-        "ident": "x"
-      },
-      {
-        "ident": "z",
-        "list": {
-          "dataDef": [
-            {
-              "ident": "p",
-              "leaf": {
-                "type": {
-                  "format": "string",
-                  "ident": "string"
-                }
-              }
-            }
-          ],
-          "key": [
-            "p"
-          ]
-        }
-      }
-    ],
-    "ident": "basic",
-    "version": "1"
-  }
-}
+"module":{
+  "ident":"basic",
+  "version":"1",
+  "dataDef":[
+    {
+      "ident":"x",
+      "container":{
+        "dataDef":[
+          {
+            "ident":"l",
+            "leaf":{
+              "type":{
+                "ident":"int32",
+                "format":"int32"}}}]}},
+    {
+      "ident":"z",
+      "list":{
+        "key":["p"],
+        "dataDef":[
+          {
+            "ident":"p",
+            "leaf":{
+              "type":{
+                "ident":"string",
+                "format":"string"}}}]}}]}}

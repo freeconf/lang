@@ -183,7 +183,7 @@ func (s *NodeService) GetBrowser(ctx context.Context, in *pb.GetBrowserRequest) 
 func (s *NodeService) GetModule(ctx context.Context, in *pb.GetModuleRequest) (*pb.GetModuleResponse, error) {
 	m := s.d.handles.Require(in.ModuleHnd).(*meta.Module)
 	return &pb.GetModuleResponse{
-		Module: new(MetaEncoder).Encode(m),
+		Module: NewMetaEncoder().Encode(m),
 	}, nil
 }
 

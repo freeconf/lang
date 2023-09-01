@@ -1,8 +1,6 @@
 package lang
 
 import (
-	"io/ioutil"
-	"strings"
 	"testing"
 
 	"github.com/freeconf/yang/fc"
@@ -13,28 +11,39 @@ import (
 func TestBasicMetaEncoder(t *testing.T) {
 	ypath := source.Dir("./test/testdata/yang")
 	m := parser.RequireModule(ypath, "testme")
-	x := new(MetaEncoder).Encode(m)
+	x := NewMetaEncoder().Encode(m)
 	fc.AssertEqual(t, "testme", x.Ident)
 	fc.AssertEqual(t, len(m.DataDefinitions()), len(x.Definitions))
 	fc.AssertEqual(t, "x", x.Definitions[0].GetLeaf().Ident)
 	fc.AssertEqual(t, "z", x.Definitions[1].GetContainer().Ident)
 }
 
-/*
-parse all files just to flush out encoding errs
-*/
+var testFiles = []string{
+	"car",
+	"echo",
+	"meta",
+	"testme",
+	"advanced",
+}
+
 func TestMetaEncoder(t *testing.T) {
-	d := "./test/testdata/yang"
-	ypath := source.Dir(d)
-	files, err := ioutil.ReadDir(d)
-	fc.RequireEqual(t, nil, err)
-	for _, f := range files {
-		fname := f.Name()
-		if strings.HasSuffix(fname, ".yang") {
-			name := fname[:len(fname)-5]
-			t.Log(name)
-			m := parser.RequireModule(ypath, name)
-			new(MetaEncoder).Encode(m)
-		}
+	ypath := source.Dir("./test/testdata/yang")
+	for _, f := range testFiles {
+		t.Log(f)
+		m := parser.RequireModule(ypath, f)
+		NewMetaEncoder().Encode(m)
 	}
+}
+
+func TestRecurse(t *testing.T) {
+	ypath := source.Dir("./test/testdata/yang")
+	m := parser.RequireModule(ypath, "recurse")
+	x := NewMetaEncoder().Encode(m)
+	zdef := x.Definitions[0]
+	z := zdef.GetContainer()
+	fc.AssertEqual(t, "z", z.Ident)
+	fc.AssertEqual(t, "a", z.Definitions[0].GetLeaf().Ident)
+	fc.AssertEqual(t, "z", z.Definitions[1].GetContainer().Ident)
+
+	//fc.AssertEqual(t, true, z == z.Definitions[1].GetContainer())
 }

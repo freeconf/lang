@@ -4,13 +4,9 @@ import enum
 import signal
 import logging
 import json
-import freeconf.node
-import freeconf.driver
-import freeconf.nodeutil
+from freeconf import node, driver, nodeutil, parser, source
 import freeconf.pb.fc_test_pb2
 import freeconf.pb.fc_test_pb2_grpc
-import freeconf.parser
-import freeconf.source
 
 usage = f"""
 Usage: {sys.argv[0]} fc-g-socket-file fc-x-socket-file
@@ -46,11 +42,11 @@ class TestHarnessServicer(freeconf.pb.fc_test_pb2_grpc.TestHarnessServicer):
             e = Echo()
             n = e.node()
         elif req.testCase == freeconf.pb.fc_test_pb2.BASIC:
-            n = freeconf.nodeutil.Reflect({})
+            n = nodeutil.Node({})
         else:
             raise Exception("unimplemented test case")
-        self.trace_node = freeconf.nodeutil.Trace(n, out)
-        node_hnd = freeconf.node.ensure_node_hnd(self.driver, self.trace_node)
+        self.trace_node = nodeutil.Trace(n, out)
+        node_hnd = node.ensure_node_hnd(self.driver, self.trace_node)
         self.trace_file = out
         return freeconf.pb.fc_test_pb2.CreateTestCaseResponse(nodeHnd=node_hnd)
     
@@ -65,13 +61,17 @@ class TestHarnessServicer(freeconf.pb.fc_test_pb2_grpc.TestHarnessServicer):
 
 
     def ParseModule(self, req, context):
-        ypath = freeconf.source.path(req.dir, driver=self.driver)
-        m = freeconf.parser.load_module_file(ypath, req.moduleIdent, driver=self.driver)
-        dump = {"module":meta_walk(["module"], m)}
+        ypath = source.path(req.dir, driver=self.driver)
+        m = parser.load_module_file(ypath, req.moduleIdent, driver=self.driver)
+        dumper = schema_dumper(m)
+        node_hnd = node.ensure_node_hnd(self.driver, dumper)
+        print(f"dumper.hnd={node_hnd}")
+        return freeconf.pb.fc_test_pb2.ParseModuleResponse(schemaNodeHnd=node_hnd)
 
-        with open(req.dumpFile, 'w') as f:
-            json.dump(dump, f, indent=4)
-        return freeconf.pb.fc_test_pb2.ParseModuleResponse()
+
+def schema_dumper(m):
+
+    return nodeutil.Node(m)
 
 
 def meta_walk(path, val):
@@ -189,30 +189,27 @@ class Echo:
         for l in self.listeners:
             l(n)
 
-    def node(self):
-        base = freeconf.nodeutil.Reflect({})
+    def echo(self, input):
+        return input
+    
+    def send(self, input):
+        self.update_listeners(input)
 
-        def action(parent, r):
-            if r.meta.ident == "echo":
-                n = freeconf.nodeutil.Reflect({})
-                r.input.insert_into(n)
-                return n
-            elif r.meta.ident == "send":
-                self.update_listeners(r.input.node)
-            return None
+    def node(self):
         
-        def notify(node, r):
+        def notify(p, r):
             if r.meta.ident == "recv":
                 def listener(n):
                     r.send(n)
                 return self.on_update(listener)
+            return None
         
-        return freeconf.nodeutil.Extend(base, on_action=action, on_notify=notify)
+        return nodeutil.Node(self, on_notify=notify)
 
 
 g_addr = sys.argv[1]
 x_addr = sys.argv[2]
-d = freeconf.driver.Driver(g_addr, x_addr)
+d = driver.Driver(g_addr, x_addr)
 test_harness = TestHarnessServicer(d)
 d.load(test_harness)
 

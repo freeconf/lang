@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/freeconf/restconf"
+	"github.com/freeconf/yang"
 	"github.com/freeconf/yang/fc"
 	"github.com/freeconf/yang/node"
 	"github.com/freeconf/yang/nodeutil"
@@ -25,7 +26,7 @@ type nodeTestHarness interface {
 	createTestCase(tc pb.TestCase, tracefile string) (node.Node, error)
 	finalizeTestCase() error
 
-	parseModule(dir string, module string, dumpFile string) error
+	parseModule(dir string, module string) (node.Node, error)
 
 	Name() string
 
@@ -175,6 +176,7 @@ var yangFiles = []string{
 
 func TestMeta(t *testing.T) {
 	dir := "testdata/yang"
+	fcYang := parser.RequireModule(yang.InternalYPath, "fc-yang")
 	for _, h := range Langs() {
 		// setup
 		fc.RequireEqual(t, nil, h.Connect())
@@ -185,11 +187,18 @@ func TestMeta(t *testing.T) {
 
 			for _, f := range yangFiles {
 				t.Log(f)
-				dumpFile := tempFileName()
-				fc.AssertEqual(t, nil, h.parseModule(dir, f, dumpFile))
-				fc.AssertEqual(t, nil, reformatJson(dumpFile))
+				dumpFile, err := os.CreateTemp("", "json")
+				fc.RequireEqual(t, nil, err)
+				dumper, err := h.parseModule(dir, f)
+				fc.RequireEqual(t, nil, err)
+				b := node.NewBrowser(fcYang, dumper)
+				to := nodeutil.NewJSONWtr(dumpFile)
+				to.Pretty = true
+				fc.RequireEqual(t, nil, b.Root().UpsertInto(to.Node()))
 				goldFile := fmt.Sprintf("testdata/gold/meta/%s.json", f)
-				fc.GoldFile(t, *update, dumpFile, goldFile)
+				dumpFile.Close()
+				fc.GoldFile(t, *update, dumpFile.Name(), goldFile)
+				os.Remove(dumpFile.Name())
 			}
 			fc.AssertEqual(t, nil, h.finalizeTestCase())
 		})

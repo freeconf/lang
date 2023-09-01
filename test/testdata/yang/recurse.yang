@@ -1,0 +1,12 @@
+module recurse {
+
+    grouping x {
+        container z {
+            leaf a {
+                type string;
+            }
+            uses x;
+        }
+    }
+    uses x;
+}

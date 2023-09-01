@@ -126,10 +126,15 @@ func (h *Harness) finalizeTestCase() error {
 	return err
 }
 
-func (h *Harness) parseModule(dir string, moduleIdent string, dumpFile string) error {
-	req := pb.ParseModuleRequest{Dir: dir, ModuleIdent: moduleIdent, DumpFile: dumpFile}
-	_, err := h.client.ParseModule(context.Background(), &req)
-	return err
+func (h *Harness) parseModule(dir string, moduleIdent string) (node.Node, error) {
+	req := pb.ParseModuleRequest{Dir: dir, ModuleIdent: moduleIdent}
+	resp, err := h.client.ParseModule(context.Background(), &req)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Printf("schemaNodeHnd=%d\n", resp.SchemaNodeHnd)
+	dumper := h.access.ResolveHnd(resp.SchemaNodeHnd).(node.Node)
+	return dumper, err
 }
 
 func (h *Harness) handleCount() int {

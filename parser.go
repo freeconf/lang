@@ -41,6 +41,6 @@ func (s *ParserService) LoadModule(ctx context.Context, in *pb.LoadModuleRequest
 	}
 	return &pb.LoadModuleResponse{
 		ModuleHnd: s.d.handles.Put(m),
-		Module:    new(MetaEncoder).Encode(m),
+		Module:    NewMetaEncoder().Encode(m),
 	}, nil
 }

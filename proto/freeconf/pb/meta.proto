@@ -92,6 +92,7 @@ message Container {
       string reference = 3;
       repeated Extension extensions = 4;
       repeated DataDef definitions = 5;
+      bool isRecursive = 6;
       OptionalBool config = 14;
       OptionalBool mandatory = 15;
       repeated Rpc actions = 16;
@@ -123,6 +124,7 @@ message List {
     string reference = 3;
     repeated Extension extensions = 4;
     repeated DataDef definitions = 5;
+    bool isRecursive = 6;
     OptionalBool config = 14;
     OptionalBool mandatory = 15;
     OptionalBool unbounded = 16;
@@ -141,6 +143,10 @@ message LeafList {
     string units = 17;
 }
 
+message MetaPointer {
+      string path = 1;
+}
+
 message DataDef {
       oneof def_oneof {
            Container container = 1;
@@ -149,6 +155,7 @@ message DataDef {
            List list = 4;
            Choice choice = 5;
            Any any = 6;
+           MetaPointer ptr = 7;
       }
 }
 
@@ -205,6 +212,7 @@ message ChoiceCase {
       string reference = 3;
       repeated Extension extensions = 4;
       repeated DataDef definitions = 5;
+      bool isRecursive = 6;
       // when
       // ifs
 }

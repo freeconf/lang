@@ -1,57 +1,36 @@
 {
-  "module": {
-    "dataDef": [
-      {
-        "choice": {
-          "dataDef": [
-            {
-              "case": {
-                "dataDef": [
-                  {
-                    "ident": "one",
-                    "leaf": {
-                      "type": {
-                        "format": "string",
-                        "ident": "string"
-                      }
-                    }
-                  }
-                ]
-              },
-              "ident": "one"
-            },
-            {
-              "case": {
-                "dataDef": [
-                  {
-                    "ident": "two",
-                    "leaf": {
-                      "type": {
-                        "format": "string",
-                        "ident": "string"
-                      }
-                    }
-                  }
-                ]
-              },
-              "ident": "two"
-            }
-          ]
-        },
-        "ident": "x"
-      }
-    ],
-    "ident": "advanced",
-    "namespace": "n",
-    "prefix": "p",
-    "revision": {
-      "ident": "0000-00-00"
-    },
-    "revisions": [
-      {
-        "ident": "0000-00-00"
-      }
-    ],
-    "version": "1"
-  }
-}
+"module":{
+  "ident":"advanced",
+  "namespace":"n",
+  "prefix":"p",
+  "version":"1",
+  "revision":{
+    "ident":"0000-00-00"},
+  "revisions":[
+    {
+      "ident":"0000-00-00"}],
+  "dataDef":[
+    {
+      "ident":"x",
+      "choice":{
+        "dataDef":[
+          {
+            "ident":"one",
+            "case":{
+              "dataDef":[
+                {
+                  "ident":"one",
+                  "leaf":{
+                    "type":{
+                      "ident":"string",
+                      "format":"string"}}}]}},
+          {
+            "ident":"two",
+            "case":{
+              "dataDef":[
+                {
+                  "ident":"two",
+                  "leaf":{
+                    "type":{
+                      "ident":"string",
+                      "format":"string"}}}]}}]}}]}}

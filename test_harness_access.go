@@ -20,6 +20,10 @@ func (c *TestHarnessAccess) ResolveSelection(sel node.Selection) uint64 {
 	return resolveSelection(c.d, &sel)
 }
 
+func (c *TestHarnessAccess) ResolveHnd(hnd uint64) any {
+	return c.d.handles.Get(hnd)
+}
+
 func (c *TestHarnessAccess) CreateNode(nodeHnd uint64) node.Node {
 	return &xnode{d: c.d, nodeHnd: nodeHnd}
 }
