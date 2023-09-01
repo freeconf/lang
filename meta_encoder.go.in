@@ -15,12 +15,12 @@ import (
 // updates as well.  Simple fields to proto files generally do not require 
 // changes to this template but do require the template be exercised.
 type MetaEncoder struct {
-    recursive map[meta.Meta]string
+    recursive map[string]struct{}
 }
 
 func NewMetaEncoder() *MetaEncoder {
     return &MetaEncoder{
-        recursive: make(map[meta.Meta]string),
+        recursive: make(map[string]struct{}),
     }
 }
 
@@ -107,22 +107,6 @@ func (e *MetaEncoder) encodeChoiceCaseList(parent any, from map[string]*meta.Cho
 func (e *MetaEncoder) encodeDataDefList(parent any, from []meta.Definition) []*pb.DataDef {
     to := make([]*pb.DataDef, len(from))
     for i, d := range from {
-        if x, valid := d.(meta.HasDefinitions); valid && x.IsRecursive() {
-            // use a pointer instead so we do not infinitely recurse 
-            if path, found := e.recursive[d]; found {
-                to[i] = &pb.DataDef{
-					DefOneof: &pb.DataDef_Ptr{
-						Ptr: &pb.MetaPointer{
-							Path: path,
-						},
-					},
-                }
-                continue
-            }
-            // remember it for next time
-            e.recursive[d] = meta.SchemaPath(d)
-        }
-
         switch x := d.(type) {
 {{- range .MetaDefs}}
 {{- if .IsDataDef }}
@@ -155,10 +139,20 @@ func (e *MetaEncoder) encode{{.Name}}(parent any, from *meta.{{.Name}}) *pb.{{.N
         return nil
     }
     var def pb.{{.Name}}
-
     {{- range .Fields}}
         {{- if eq .Type "OptionalBool" }}
         def.{{.GoName}} = e.encodeOptionalBool(from.{{.GoName}}(), from.Is{{.GoName}}Set())
+        {{- else if eq .GoName "RecursivePath"}}
+        if from.IsRecursive() {
+            path := meta.SchemaPath(from)
+            if _, found := e.recursive[path]; found {
+                // this item should be replaced with meta item at the this path when decoded
+                def.RecursivePath = path
+                return &def
+            } else {
+                e.recursive[path] = struct{}{}
+            }
+        }
         {{- else if eq .Type "DataDef" }}
         def.{{.GoName}} = e.encodeDataDefList(&def, from.DataDefinitions())        
         {{- else if eq .GoName "Definition" }}

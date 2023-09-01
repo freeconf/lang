@@ -20,10 +20,19 @@ func (s *metaDef) IsDataDef() bool {
 	return false
 }
 
+func (s *metaDef) RecurseCapable() bool {
+	for _, f := range s.Fields() {
+		if f.Name == "isRecursive" {
+			return true
+		}
+	}
+	return false
+}
+
 func (s *metaDef) IsMetaDef() bool {
 	switch s.Message.Name {
 	case "DataDef":
 		return false
 	}
-	return true && s.Name() != "MetaPointer"
+	return true
 }

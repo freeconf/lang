@@ -39,11 +39,13 @@ func TestRecurse(t *testing.T) {
 	ypath := source.Dir("./test/testdata/yang")
 	m := parser.RequireModule(ypath, "recurse")
 	x := NewMetaEncoder().Encode(m)
-	zdef := x.Definitions[0]
-	z := zdef.GetContainer()
+	z := x.Definitions[0].GetContainer()
 	fc.AssertEqual(t, "z", z.Ident)
 	fc.AssertEqual(t, "a", z.Definitions[0].GetLeaf().Ident)
-	fc.AssertEqual(t, "z", z.Definitions[1].GetContainer().Ident)
-
-	//fc.AssertEqual(t, true, z == z.Definitions[1].GetContainer())
+	z2 := z.Definitions[1].GetContainer()
+	fc.AssertEqual(t, "z", z2.Ident)
+	fc.AssertEqual(t, "", z2.RecursivePath)
+	fc.AssertEqual(t, true, z2.IsRecursive)
+	z3 := z2.Definitions[1].GetContainer()
+	fc.AssertEqual(t, "recurse/z/z", z3.RecursivePath)
 }
