@@ -7,6 +7,9 @@ import freeconf.val
 class Decoder():
     """Convert the protobuf Module to a meta Module """
 
+    def __init__(self):
+        self.ptrs = []
+
     def decode_ExtensionDefArgList(self, parent, encoded_list):        
         pass
 
@@ -69,6 +72,22 @@ class Decoder():
             return True
         return False
 
+    def decode_MetaPointer(self, parent, encoded):
+        ptr = MetaPointer(parent, encoded.path)
+        self.ptrs.append(ptr)
+        return ptr
+
+    def resolve_ptrs(self, root):
+        for ptr in self.ptrs:
+            orig = freeconf.meta.Path.find(root, ptr.path)
+            if orig == None:
+                raise Exception(f"could not find {encoded.path} when resolving recursive nodes")
+            for i in range(len(ptr.parent.definitions)):
+                if ptr.parent.definitions[i] == ptr:
+                    ptr.parent.definitions[i] = orig
+                    break
+
+
     def decode_Format(self, parent, encoded):
         return freeconf.val.Format(encoded)
 
@@ -112,4 +131,13 @@ class Decoder():
 {{ end }}
 
     def decode(self, encoded_module):
-        return self.decode_Module(None, encoded_module)
+        m = self.decode_Module(None, encoded_module)
+        self.resolve_ptrs(m)
+        return m
+
+
+class MetaPointer:
+    def __init__(self, parent, path):
+        self.parent = parent
+        self.path = path
+        self.ident = path.split("/")[-1]

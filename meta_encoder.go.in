@@ -107,6 +107,20 @@ func (e *MetaEncoder) encodeChoiceCaseList(parent any, from map[string]*meta.Cho
 func (e *MetaEncoder) encodeDataDefList(parent any, from []meta.Definition) []*pb.DataDef {
     to := make([]*pb.DataDef, len(from))
     for i, d := range from {
+
+        if r, ok := d.(meta.RecursiveCapable); ok {
+            if r.IsRecursive() {
+                path := meta.SchemaPathNoModule(d)
+                if _, found := e.recursive[path]; found {
+                    // this item should be replaced with meta item at the this path when decoded
+                    to[i] = &pb.DataDef{DefOneof:&pb.DataDef_Ptr{Ptr: &pb.MetaPointer{Path: path}}}
+                    continue
+                } else {
+                    e.recursive[path] = struct{}{}
+                }
+            }
+        }
+
         switch x := d.(type) {
 {{- range .MetaDefs}}
 {{- if .IsDataDef }}
@@ -142,17 +156,6 @@ func (e *MetaEncoder) encode{{.Name}}(parent any, from *meta.{{.Name}}) *pb.{{.N
     {{- range .Fields}}
         {{- if eq .Type "OptionalBool" }}
         def.{{.GoName}} = e.encodeOptionalBool(from.{{.GoName}}(), from.Is{{.GoName}}Set())
-        {{- else if eq .GoName "RecursivePath"}}
-        if from.IsRecursive() {
-            path := meta.SchemaPath(from)
-            if _, found := e.recursive[path]; found {
-                // this item should be replaced with meta item at the this path when decoded
-                def.RecursivePath = path
-                return &def
-            } else {
-                e.recursive[path] = struct{}{}
-            }
-        }
         {{- else if eq .Type "DataDef" }}
         def.{{.GoName}} = e.encodeDataDefList(&def, from.DataDefinitions())        
         {{- else if eq .GoName "Definition" }}

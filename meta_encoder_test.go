@@ -46,6 +46,6 @@ func TestRecurse(t *testing.T) {
 	fc.AssertEqual(t, "z", z2.Ident)
 	fc.AssertEqual(t, "", z2.RecursivePath)
 	fc.AssertEqual(t, true, z2.IsRecursive)
-	z3 := z2.Definitions[1].GetContainer()
-	fc.AssertEqual(t, "recurse/z/z", z3.RecursivePath)
+	p3 := z2.Definitions[1].GetPtr()
+	fc.AssertEqual(t, "z/z", p3.Path)
 }

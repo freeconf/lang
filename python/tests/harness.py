@@ -4,7 +4,7 @@ import enum
 import signal
 import logging
 import json
-from freeconf import node, driver, nodeutil, parser, source
+from freeconf import node, driver, nodeutil, parser, source, meta
 import freeconf.pb.fc_test_pb2
 import freeconf.pb.fc_test_pb2_grpc
 
@@ -70,8 +70,34 @@ class TestHarnessServicer(freeconf.pb.fc_test_pb2_grpc.TestHarnessServicer):
 
 
 def schema_dumper(m):
-
-    return nodeutil.Node(m)
+    def child(n, r):
+        if r.meta.ident in ['module']:
+            return n
+        return n.do_child(r)
+    
+    def field(n, r, v):
+        if r.meta.ident == "status":
+            if isinstance(n.object, meta.Module) or isinstance(n.object, meta.ExtensionDefArg):
+                return None
+        return n.do_field(r, v)
+    
+    def options(n, m, opts):
+        aliases = {
+            "notify": "notifications",
+            "dataDef": "definitions",
+            "identity": "identities",
+        }
+        opts.ident = aliases.get(m.ident, None)
+        return opts
+                
+    opts = nodeutil.NodeOptions(
+        try_plural_on_lists=True
+    )
+    return nodeutil.Node(m, 
+        options=opts,
+        on_child=child,
+        on_field=field, 
+        on_options=options)
 
 
 def meta_walk(path, val):
@@ -184,23 +210,23 @@ class Echo:
             self.listeners.remove(listener)
         return closer
 
-    def update_listeners(self, n):
+    def update_listeners(self, data):
         print(f'update_listeners called')
         for l in self.listeners:
-            l(n)
+            l(data)
 
-    def echo(self, input):
-        return input
+    def echo(self, data):
+        return data
     
-    def send(self, input):
-        self.update_listeners(input)
+    def send(self, data):
+        self.update_listeners(data)
 
     def node(self):
         
         def notify(p, r):
             if r.meta.ident == "recv":
-                def listener(n):
-                    r.send(n)
+                def listener(data):
+                    r.send(nodeutil.Node(data))
                 return self.on_update(listener)
             return None
         

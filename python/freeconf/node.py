@@ -125,6 +125,8 @@ class Selection():
     def find(self, path):
         req = freeconf.pb.fc_pb2.FindRequest(selHnd=self.hnd, path=path)
         resp = self.driver.g_nodes.Find(req)
+        if resp.selHnd == 0:
+            return None
         return Selection.resolve(self.driver, resp.selHnd)
 
     def release(self):

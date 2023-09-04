@@ -87,12 +87,54 @@ class Path():
         return path
 
 
+    @classmethod
+    def find(cls, meta, path_str):
+        """
+        Given a source meta, find a target meta described by a given path
+        """
+        if path_str == "" or meta == None:
+            return meta
+        if path_str.startswith('/'):
+            return Path.find(root(meta), path_str[1:])
+        if path_str.startswith('../'):
+            return Path.find(meta.parent, path_str[3:])
+        segs = path_str.split("/")
+        p = meta
+        for seg in segs:
+            p = find_def(p, seg)
+            if p == None:
+                return None
+        return p
+
 class InvalidPathException(Exception):
     pass
 
-def get_def(meta, ident):
+
+def root(meta):
+    """
+    get the root module from any meta object in a tree
+    """
+    p = meta
+    while p.parent != None:
+        p = p.parent
+    return p
+
+
+def find_def(meta, ident):
     if not meta:
         raise Exception(f'no meta given to find {ident}')
+    if isinstance(meta, Choice):
+        for ddef_case in meta.cases.values():
+            if ddef_case.ident == ident:
+                return ddef_case
+    else:
+        for ddef in meta.definitions:
+            if ddef.ident == ident:
+                return ddef
+    raise InvalidPathException(f'definition {ident} not found in {meta.ident}')
+
+
+def get_def(meta, ident):
     for ddef in meta.definitions:
         if isinstance(ddef, Choice):
             for ddef_cases in ddef.cases.values():
@@ -101,7 +143,6 @@ def get_def(meta, ident):
                         return case_ddef            
         elif ddef.ident == ident:
             return ddef
-    raise InvalidPathException(f'definition {ident} not found in {meta.ident}')
 
 
 def get_choice(meta, ident):

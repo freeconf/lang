@@ -90,14 +90,14 @@ message Container {
       string ident = 1;
       string description = 2;
       string reference = 3;
-      bool isRecursive = 4;
-      string recursivePath = 5;
+      Status status = 4;
       repeated Extension extensions = 6;
       repeated DataDef definitions = 7;
       OptionalBool config = 14;
       OptionalBool mandatory = 15;
       repeated Rpc actions = 16;
       repeated Notification notifications = 12;
+      bool isRecursive = 13;
 }
 
 message Type {
@@ -111,8 +111,9 @@ message Leaf {
       string ident = 1;
       string description = 2;
       string reference = 3;
-      repeated Extension extensions = 4;
+      Status status = 4;
       Type type = 5;
+      repeated Extension extensions = 6;
       OptionalBool config = 14;
       OptionalBool mandatory = 15;
       string defaultVal = 16;
@@ -120,29 +121,34 @@ message Leaf {
 }
 
 message List {
-    string ident = 1;
-    string description = 2;
-    string reference = 3;
-    bool isRecursive = 4;
-    string recursivePath = 5;
-    repeated Extension extensions = 6;
-    repeated DataDef definitions = 7;
-    OptionalBool config = 14;
-    OptionalBool mandatory = 15;
-    OptionalBool unbounded = 16;
-    repeated Rpc actions = 17;
-    repeated Notification notifications = 18;
-    repeated string key = 19;
+      string ident = 1;
+      string description = 2;
+      string reference = 3;
+      Status status = 4;
+      repeated Extension extensions = 6;
+      repeated DataDef definitions = 7;
+      OptionalBool config = 14;
+      OptionalBool mandatory = 15;
+      OptionalBool unbounded = 16;
+      repeated Rpc actions = 17;
+      repeated Notification notifications = 18;
+      repeated string key = 19;
+      bool isRecursive = 20;
 }
 
 message LeafList {
     string ident = 1;
     string description = 2;
     string reference = 3;
-    repeated Extension extensions = 4;
+    Status status = 4;
+    repeated Extension extensions = 5;
     OptionalBool config = 14;
     OptionalBool mandatory = 15;
     string units = 17;
+}
+
+message MetaPointer {
+      string path = 1;
 }
 
 message DataDef {
@@ -153,6 +159,7 @@ message DataDef {
            List list = 4;
            Choice choice = 5;
            Any any = 6;
+           MetaPointer ptr = 7;
       }
 }
 
@@ -160,7 +167,8 @@ message Any {
       string ident = 1;
       string description = 2;
       string reference = 3;
-      repeated Extension extensions = 4;
+      Status status = 4;
+      repeated Extension extensions = 5;
       OptionalBool config = 14;
       OptionalBool mandatory = 15;  
 }
@@ -169,7 +177,8 @@ message Identity {
       string ident = 1;
       string description = 2;
       string reference = 3;
-      repeated string baseIds = 4;
+      Status status = 4;
+      repeated string baseIds = 5;
       // derived
       // ifs
       repeated Extension extensions = 7;
@@ -179,6 +188,7 @@ message Feature {
       string ident = 1;
       string description = 2;
       string reference = 3;
+      Status status = 4;
       // ifs
       repeated Extension extensions = 7;
 }
@@ -194,8 +204,8 @@ message Choice {
       string ident = 1;
       string description = 2;
       string reference = 3;
-      repeated Extension extensions = 4;
-      Status status = 5;
+      Status status = 4;
+      repeated Extension extensions = 5;
       OptionalBool config = 14;
       OptionalBool mandatory = 15;
       string defaultVal = 16;
@@ -207,6 +217,7 @@ message ChoiceCase {
       string ident = 1;
       string description = 2;
       string reference = 3;
+      Status status = 4;
       repeated Extension extensions = 6;
       repeated DataDef definitions = 7;
       // when

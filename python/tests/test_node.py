@@ -24,7 +24,7 @@ class TestNode(unittest.TestCase):
 
         actual = io.StringIO()
         actual.write('\n')        
-        dumper = freeconf.nodeutil.Trace(freeconf.nodeutil.Reflect({}), actual)
+        dumper = freeconf.nodeutil.Trace(freeconf.nodeutil.Node({}), actual)
         b = freeconf.node.Browser(m, dumper, driver=d)
         cfg = """
             {

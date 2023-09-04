@@ -84,6 +84,12 @@ class TestUtilNode(unittest.TestCase):
         t_two = nodeutil.json_write_str(b.root().find("t=TWO"))
         self.assertEqual('{"f":"TWO","b":2}', t_two)
 
+    def test_read_empty(self):
+        obj = {}
+        n = nodeutil.Node(obj)
+        b = node.Browser(self.m, n)
+        actual = nodeutil.json_write_str(b.root())
+        self.assertEqual('{}', actual)
 
 
     def test_write(self):
@@ -122,6 +128,21 @@ class TestUtilNode(unittest.TestCase):
         self.assertEqual(1, len(obj["t"]))
 
         root.release()
+
+    def test_options(self):
+        class X:
+            def __init__(self):
+                self.ps = [{"f":"ONE","b":1},{"f":"TWO","b":2}]
+
+        n = nodeutil.Node(
+            X(),
+            options = nodeutil.NodeOptions(
+                try_plural_on_lists=True,
+            )
+        )
+        b = node.Browser(self.m, n)
+        self.assertIsNotNone(b.root().find("p=ONE"))
+
 
 
 if __name__ == '__main__':

@@ -52,13 +52,11 @@ module x {
         d = driver.Driver()
         d.load()
 
-        ypath = source.path("testdata", driver=d)
+        ypath = source.path("../../test/testdata/yang", driver=d)
 
-        files = ['car2']
+        files = ['car', 'recurse']
         for f in files:
             parser.load_module_file(ypath, f, driver=d)
-
-        d.unload()
 
 
 if __name__ == '__main__':

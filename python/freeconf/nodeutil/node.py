@@ -1,4 +1,5 @@
 
+import types
 from re import sub
 import copy
 from freeconf import meta, val, node
@@ -115,7 +116,8 @@ class Node():
 
     def get_options(self, meta):
         if self.on_options != None:
-            return self.on_options(self, meta)
+            opts = copy.copy(self.options)
+            return self.on_options(self, meta, opts)
         return self.options
     
     def do_delete_child(self, r):
@@ -320,8 +322,8 @@ class ActionHandler():
         if candidate == None:
             candidate = snake_case(r.meta.ident)
         m = getattr(n.object, candidate, None)
-        if m == None:
-            raise Exception(f"could not find function {candidate} on {object}")
+        if m == None or type(m) != types.MethodType:
+            raise Exception(f"could not find function '{candidate}' on '{object}'")
 
         if r.input != None:
             input = n.new_object(r.meta.input, False)
@@ -484,7 +486,7 @@ class ObjectContainer():
         if h == None:
             h = self.new_field_handler(meta)
             if h == None:
-                raise Exception(f"could not find field for {meta.ident} on {self.node.object} using reflection")
+                raise Exception(f"could not find field '{meta.ident}' on '{self.node.object}'")
             self.field_handlers[meta.ident] = h
         return h
 
@@ -496,8 +498,8 @@ class ObjectContainer():
         # support @ tags for properties?
 
         for candidate in FieldHandler.field_name_candidates(opts, meta):
-            hasattr(self.node.object, candidate)
-            if hasattr(self.node.object, candidate):
+            f = getattr(self.node.object, candidate, None)
+            if f != None and type(f) != types.MethodType:
                 # found something, but continue on to look for getters or setters
                 h.field = candidate
                 break
@@ -508,7 +510,7 @@ class ObjectContainer():
             getter_prefix = "get_"
         for candidate in FieldHandler.accessor_name_candidates(opts, meta, getter_prefix):
             getter = getattr(self.node.object, candidate, None)
-            if getter != None:
+            if getter != None and type(getter) == types.MethodType:
                 h.getter = getter
                 break
 
@@ -518,7 +520,7 @@ class ObjectContainer():
             setter_prefix = "set_"
         for candidate in FieldHandler.accessor_name_candidates(opts, meta, setter_prefix):
             setter = getattr(self.node.object, candidate, None)
-            if setter != None:
+            if setter != None and type(setter) == types.MethodType:
                 h.setter = setter
                 break
 
@@ -527,34 +529,34 @@ class ObjectContainer():
         return h
 
 
-
 class FieldHandler():
     
-    def __init__(self, object, meta, opts):
+    def __init__(self, object, m, opts):
         self.object = object
-        self.meta = meta
+        self.m = m
         self.opts = opts
         self.field = None
         self.getter = None
         self.setter = None
 
     @classmethod
-    def field_name_candidates(cls, opts, meta):
+    def field_name_candidates(cls, opts, m):
         if opts.ident != None:
             return [opts.ident]
-        candidates = [snake_case(meta.ident)]
+        candidates = [snake_case(m.ident)]
         if opts.try_plural_on_lists:
-            if isinstance(meta, meta.List) or isinstance(meta, meta.List):
+            if isinstance(m, meta.List) or isinstance(m, meta.LeafList):
                 candidates.append(candidates[0]+"s")
         return candidates
 
 
     @classmethod
-    def accessor_name_candidates(cls, opts, meta, prefix):
-        field_candidates = FieldHandler.field_name_candidates(opts, meta)
+    def accessor_name_candidates(cls, opts, m, prefix):
+        field_candidates = FieldHandler.field_name_candidates(opts, m)
         candidates = []
         for candidate in field_candidates:
             candidates.append(prefix+candidate)
+        candidates.extend(field_candidates)
         return candidates
 
 
