@@ -30,37 +30,44 @@ message Module {
       repeated Rpc actions = 12;
       repeated Identity identities = 13;
       repeated Feature features = 14;
-      // feature set = 15
       repeated Extension extensions = 16;
 }
 
 message RpcInput {
       string reference = 1;
-      repeated Extension extensions = 2;
       repeated DataDef definitions = 3;
+      repeated IfFeature ifFeatures = 20;
+      repeated Must musts = 21;
+      repeated Extension extensions = 22;
 }
 
 message RpcOutput {
       string reference = 1;
-      repeated Extension extensions = 2;
       repeated DataDef definitions = 3;
+      repeated IfFeature ifFeatures = 20;
+      repeated Must musts = 21;
+      repeated Extension extensions = 22;
 }
 
 message Rpc {
       string ident = 1;
       string description = 2;
-      repeated Extension extensions = 3;
       string reference = 4;
       RpcInput input = 5;
       RpcOutput output = 6;
+      Status status = 19;
+      repeated IfFeature ifFeatures = 20;
+      repeated Extension extensions = 22;
 }
 
 message Notification {
       string ident = 1;
       string description = 2;
-      repeated Extension extensions = 3;
       string reference = 4;
       repeated DataDef definitions = 5;
+      Status status = 19;
+      repeated IfFeature ifFeatures = 20;
+      repeated Extension extensions = 22;
 }
 
 message ExtensionDefArg {
@@ -86,18 +93,50 @@ message Extension {
       repeated string arguments = 5;
 }
 
+message IfFeature {
+      string expression = 1;
+      repeated Extension extensions = 2;
+}
+
+message Must {
+      string expression = 1;
+      string description = 2;
+      string reference = 3;
+      string errorMessage = 4;
+      string errorAppTag = 5;
+      repeated Extension extensions = 6;
+}
+
+message When {
+      string expression = 1;
+      string description = 2;
+      string reference = 3;
+      repeated Extension extensions = 4;
+}
+
 message Container {
       string ident = 1;
       string description = 2;
       string reference = 3;
-      Status status = 4;
-      repeated Extension extensions = 6;
+      string presence = 4;
       repeated DataDef definitions = 7;
       OptionalBool config = 14;
       OptionalBool mandatory = 15;
       repeated Rpc actions = 16;
-      repeated Notification notifications = 12;
-      bool isRecursive = 13;
+      repeated Notification notifications = 17;
+      When when = 18;
+      Status status = 19;
+      repeated IfFeature ifFeatures = 20;
+      repeated Must musts = 21;
+      repeated Extension extensions = 22;
+}
+
+message Enum {
+      string ident = 1;
+      string description = 2;
+      string reference = 3;
+      int32 value = 4;
+      repeated Extension extensions = 5;
 }
 
 message Type {
@@ -105,46 +144,68 @@ message Type {
       string description = 2;
       string reference = 3;
       Format format = 4;
+      repeated Enum enums = 5;
+      // bits
+      // ranges
+      // lengths
+      // patterns
+      // path
+      // fractionDigits
+      // delegate
+      // base
+      // identities
+      // bool requireInstance
+      // unionTypes
+      repeated Extension extensions = 20;
 }
 
 message Leaf {
       string ident = 1;
       string description = 2;
       string reference = 3;
-      Status status = 4;
       Type type = 5;
-      repeated Extension extensions = 6;
       OptionalBool config = 14;
       OptionalBool mandatory = 15;
       string defaultVal = 16;
       string units = 17;
+      When when = 18;
+      Status status = 19;
+      repeated IfFeature ifFeatures = 20;
+      repeated Must musts = 21;
+      repeated Extension extensions = 22;
 }
 
 message List {
       string ident = 1;
       string description = 2;
       string reference = 3;
-      Status status = 4;
-      repeated Extension extensions = 6;
       repeated DataDef definitions = 7;
+      repeated Notification notifications = 12;
+      repeated string key = 13;
       OptionalBool config = 14;
       OptionalBool mandatory = 15;
       OptionalBool unbounded = 16;
       repeated Rpc actions = 17;
-      repeated Notification notifications = 18;
-      repeated string key = 19;
-      bool isRecursive = 20;
+      When when = 18;
+      Status status = 19;
+      repeated IfFeature ifFeatures = 20;
+      repeated Must musts = 21;
+      repeated Extension extensions = 22;
 }
 
 message LeafList {
     string ident = 1;
     string description = 2;
     string reference = 3;
-    Status status = 4;
-    repeated Extension extensions = 5;
     OptionalBool config = 14;
     OptionalBool mandatory = 15;
+    repeated string defaultVals = 16;
     string units = 17;
+    When when = 18;
+    Status status = 19;
+    repeated IfFeature ifFeatures = 20;
+    repeated Must musts = 21;
+    repeated Extension extensions = 22;
 }
 
 message MetaPointer {
@@ -167,10 +228,13 @@ message Any {
       string ident = 1;
       string description = 2;
       string reference = 3;
-      Status status = 4;
-      repeated Extension extensions = 5;
       OptionalBool config = 14;
       OptionalBool mandatory = 15;  
+      When when = 18;
+      Status status = 19;
+      repeated IfFeature ifFeatures = 20;
+      repeated Must musts = 21;
+      repeated Extension extensions = 22;
 }
 
 message Identity {
@@ -204,22 +268,26 @@ message Choice {
       string ident = 1;
       string description = 2;
       string reference = 3;
-      Status status = 4;
-      repeated Extension extensions = 5;
       OptionalBool config = 14;
       OptionalBool mandatory = 15;
       string defaultVal = 16;
       repeated ChoiceCase cases = 9;
-      // ifs  
+
+      When when = 18;
+      Status status = 19;
+      repeated IfFeature ifFeatures = 20;
+      repeated Extension extensions = 22;
 }
 
 message ChoiceCase {
       string ident = 1;
       string description = 2;
       string reference = 3;
-      Status status = 4;
-      repeated Extension extensions = 6;
       repeated DataDef definitions = 7;
-      // when
+      When when = 18;
+      Status status = 19;
+      repeated IfFeature ifFeatures = 20;
+      repeated Extension extensions = 22;
+
       // ifs
 }

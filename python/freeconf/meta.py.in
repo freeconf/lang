@@ -1,11 +1,10 @@
-from enum import Enum
+import enum
 import freeconf.pb.common_pb2
-import freeconf.val
-import freeconf.parser
+from freeconf import val, parser
 
 # This file is generated from meta.py.in
 
-class Status(Enum):
+class Status(enum.Enum):
     CURRENT = 0
     DEPRECATED = 1
     OBSOLETE = 2
@@ -60,7 +59,7 @@ class Path():
 
     @classmethod
     def resolve(cls, driver, resp):
-        module = freeconf.parser.resolve_module(driver, resp.moduleHnd)
+        module = parser.resolve_module(driver, resp.moduleHnd)
         path = Path(None, module)
         if resp.segments == None:
             return path
@@ -83,7 +82,7 @@ class Path():
             else:
                 raise Exception(f"unrecognized path segment type {seg.type} at {path.meta.ident}")
             if seg.key != None and len(seg.key) > 0:
-                path.key = [freeconf.val.proto_decode(v) for v in seg.key]
+                path.key = [val.proto_decode(v) for v in seg.key]
         return path
 
 

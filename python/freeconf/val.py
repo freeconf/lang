@@ -37,13 +37,15 @@ class Format(IntEnum):
     UINT64_LIST = 1042
 
 class Val():
-    
-    def __init__(self, v, format=None):
+
+    def __init__(self, v, format=None, label=None):
         """
-        param: format: Go side will coerse values to the required format if it it possible 
+        param: format: Go side will coerse values to the required format if it it possible
             so in most cases you can return values that are close enough to the YANG.
         """
         self.v = v
+        if label != None:
+            self.label = label
         if format is None:
             self.format = Val.auto_pick_format(v)
         elif format == 0:
@@ -67,7 +69,42 @@ class Val():
             return Format.BOOL
         if t is str:
             return Format.STRING
-        raise Exception(f"could not auto pick format for {v} with type {type(v)}")        
+        raise Exception(f"could not auto pick format for {v} with type {type(v)}")
+
+    @classmethod
+    def new(cls, v, fc_type):
+        py_type = type(v)
+        if fc_type.format == Format.ENUM:
+            if py_type is int:
+                for fc_enum in fc_type.enums:
+                    if v == fc_enum.value:
+                        return Val(fc_enum.value, format=fc_type.format, label=fc_enum.ident)
+                raise Exception(f"could not find valid enum in '{fc_type.ident}' with int value {v}")
+            elif py_type is str:
+                for fc_enum in fc_type.enums:
+                    if v == fc_enum.ident:
+                        return Val(fc_enum.value, format=fc_type.format, label=fc_enum.ident)
+                raise Exception(f"could not find valid enum in '{fc_type.ident}' with str value {v}")
+            else:
+                try:
+                    # works for IntEnum and possibly other types
+                    return Val.new(v.value, fc_type)
+                except:
+                    pass
+
+                try:
+                    return Val.new(str(v), fc_type)
+                except:
+                    pass
+            raise Exception(f"could not map value {v} to string or int for enum '{fc_type.ident}'")
+
+        elif fc_type.format == Format.STRING:
+            if py_type != str:
+                raise Exception(f"'{py_type}' is not a string")
+
+        # TODO: check basic types
+        return Val(v, fc_type.format)
+
 
 def proto_encode(val):
     if val == None:
@@ -83,7 +120,8 @@ def proto_encode(val):
     if val.format == Format.EMPTY:
         return val_pb2.Val(format=val_pb2.EMPTY, value=val_pb2.ValUnion(empty_val=val.v))
     if val.format == Format.ENUM:
-        return val_pb2.Val(format=val_pb2.ENUM, value=val_pb2.ValUnion(enum_val=val.v))
+        enum_val = val_pb2.EnumVal(id=val.v, label=val.label)
+        return val_pb2.Val(format=val_pb2.ENUM, value=val_pb2.ValUnion(enum_val=enum_val))
     if val.format == Format.IDENTITY_REF:
         return val_pb2.Val(format=val_pb2.IDENTITY_REF, value=val_pb2.ValUnion(identity_ref_val=val.v))
     if val.format == Format.INT8:

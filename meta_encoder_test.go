@@ -3,6 +3,7 @@ package lang
 import (
 	"testing"
 
+	"github.com/freeconf/yang"
 	"github.com/freeconf/yang/fc"
 	"github.com/freeconf/yang/parser"
 	"github.com/freeconf/yang/source"
@@ -38,14 +39,16 @@ func TestMetaEncoder(t *testing.T) {
 func TestRecurse(t *testing.T) {
 	ypath := source.Dir("./test/testdata/yang")
 	m := parser.RequireModule(ypath, "recurse")
-	x := NewMetaEncoder().Encode(m)
+	e := NewMetaEncoder()
+	x := e.Encode(m)
 	z := x.Definitions[0].GetContainer()
 	fc.AssertEqual(t, "z", z.Ident)
 	fc.AssertEqual(t, "a", z.Definitions[0].GetLeaf().Ident)
-	z2 := z.Definitions[1].GetContainer()
-	fc.AssertEqual(t, "z", z2.Ident)
-	fc.AssertEqual(t, "", z2.RecursivePath)
-	fc.AssertEqual(t, true, z2.IsRecursive)
-	p3 := z2.Definitions[1].GetPtr()
-	fc.AssertEqual(t, "z/z", p3.Path)
+	zPtr := z.Definitions[1].GetPtr()
+	fc.AssertEqual(t, "z", zPtr.Path)
+}
+
+func TestMassiveRecurse(t *testing.T) {
+	m := parser.RequireModule(yang.InternalYPath, "fc-yang")
+	NewMetaEncoder().Encode(m)
 }

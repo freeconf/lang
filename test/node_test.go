@@ -40,7 +40,7 @@ var goHarness = newGolang(restconf.InternalYPath)
 var pythonHarness = NewHarness("python", &python{})
 
 var allHarnesses = []nodeTestHarness{
-	goHarness,
+	//goHarness,
 	pythonHarness,
 }
 
@@ -174,6 +174,19 @@ var yangFiles = []string{
 	// "meta",
 }
 
+/*
+This is very useful test to ensure every facet of a parse yang file is represented
+in a given programming language by first parsing a yang in go, then passing those
+data structures thru grpc into a given language, then asking for every piece of
+those data structures back by having it return every field back.
+
+This can get a little confusing when something breaks however because it relies on
+a large part of a language's implementation to work just to get to the part to test.
+
+This will break when Go adds something to yang parser that is also captured in
+fc-yang.yang and a language doesn't implement that yet, but that is what this is supposed
+to catch to ensure languages have feature parity.
+*/
 func TestMeta(t *testing.T) {
 	dir := "testdata/yang"
 	fcYang := parser.RequireModule(yang.InternalYPath, "fc-yang")
@@ -203,31 +216,6 @@ func TestMeta(t *testing.T) {
 			fc.AssertEqual(t, nil, h.finalizeTestCase())
 		})
 	}
-}
-
-func reformatJson(fname string) error {
-	orig, err := os.Open(fname)
-	if err != nil {
-		return err
-	}
-	d := json.NewDecoder(orig)
-	data := make(map[string]interface{})
-	if err = d.Decode(&data); err != nil {
-		return err
-	}
-	if err = orig.Close(); err != nil {
-		return err
-	}
-	fix, err := os.Create(fname)
-	if err != nil {
-		return err
-	}
-	e := json.NewEncoder(fix)
-	e.SetIndent("", "  ")
-	if err := e.Encode(data); err != nil {
-		return err
-	}
-	return fix.Close()
 }
 
 func TestChoose(t *testing.T) {

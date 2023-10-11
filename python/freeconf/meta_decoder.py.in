@@ -55,6 +55,28 @@ class Decoder():
             to[notif.ident] = notif
         return to
 
+    def decode_EnumList(self, parent, encoded_list):
+        to = []
+        for encoded in encoded_list:
+            e = self.decode_Enum(parent, encoded)
+            to.append(e)
+        return to
+
+
+    def decode_IfFeatureList(self, parent, encoded_list):
+        to = []
+        for encoded in encoded_list:
+            e = self.decode_IfFeature(parent, encoded)
+            to.append(e)
+        return to
+    
+    def decode_MustList(self, parent, encoded_list):
+        to = []
+        for encoded in encoded_list:
+            e = self.decode_Must(parent, encoded)
+            to.append(e)
+        return to        
+
     def decode_ChoiceCaseList(self, parent, encoded_list):
         to = {}
         for encoded in encoded_list:
@@ -81,11 +103,15 @@ class Decoder():
         for ptr in self.ptrs:
             orig = freeconf.meta.Path.find(root, ptr.path)
             if orig == None:
-                raise Exception(f"could not find {encoded.path} when resolving recursive nodes")
+                raise Exception(f"could not find {ptr.path} when resolving recursive nodes")
+            found = False
             for i in range(len(ptr.parent.definitions)):
                 if ptr.parent.definitions[i] == ptr:
                     ptr.parent.definitions[i] = orig
+                    found = True
                     break
+            if not found:
+                raise Exception(f"could not find ptr for {ptr.path}")
 
 
     def decode_Format(self, parent, encoded):
@@ -119,7 +145,7 @@ class Decoder():
         to.parent = parent
         {{- range .Fields }}
         {{- if .PyCustomDecoder }}
-        to.{{.PyName}} = self.decode_{{.PyCustomDecoder}}(to, encoded.{{.PyName}} )
+        to.{{.PyName}} = self.decode_{{.PyCustomDecoder}}(to, encoded.{{.Name}} )
         {{- else if .Repeated }}
         to.{{.PyName}} = self.decode_repeated_scalar(encoded.{{.Name}})
         {{- else }}        

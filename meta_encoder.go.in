@@ -15,12 +15,12 @@ import (
 // updates as well.  Simple fields to proto files generally do not require 
 // changes to this template but do require the template be exercised.
 type MetaEncoder struct {
-    recursive map[string]struct{}
+    recursive map[meta.HasDataDefinitions]struct{}
 }
 
 func NewMetaEncoder() *MetaEncoder {
     return &MetaEncoder{
-        recursive: make(map[string]struct{}),
+        recursive: make(map[meta.HasDataDefinitions]struct{}),
     }
 }
 
@@ -108,16 +108,13 @@ func (e *MetaEncoder) encodeDataDefList(parent any, from []meta.Definition) []*p
     to := make([]*pb.DataDef, len(from))
     for i, d := range from {
 
-        if r, ok := d.(meta.RecursiveCapable); ok {
-            if r.IsRecursive() {
-                path := meta.SchemaPathNoModule(d)
-                if _, found := e.recursive[path]; found {
-                    // this item should be replaced with meta item at the this path when decoded
-                    to[i] = &pb.DataDef{DefOneof:&pb.DataDef_Ptr{Ptr: &pb.MetaPointer{Path: path}}}
-                    continue
-                } else {
-                    e.recursive[path] = struct{}{}
-                }
+        if r, ok := d.(meta.HasDataDefinitions); ok {
+            if _, isRecursive := e.recursive[r]; isRecursive {
+                path := meta.SchemaPathNoModule(r)
+                to[i] = &pb.DataDef{DefOneof:&pb.DataDef_Ptr{Ptr: &pb.MetaPointer{Path: path}}}
+                continue
+            } else {
+                e.recursive[r] = struct{}{}
             }
         }
 
@@ -145,6 +142,38 @@ func (e *MetaEncoder) encodeStatus(parent interface{}, from meta.Status) pb.Stat
     return pb.Status(from)
 }
 
+func (e *MetaEncoder) encodeEnumList(parent *pb.Type, from []*meta.Enum) []*pb.Enum {
+    if len(from) == 0 {
+        return nil
+    }
+    to := make([]*pb.Enum, len(from))    
+    for i, f := range from {
+        to[i] = e.encodeEnum(parent, f)
+    }
+    return to    
+}
+
+func (e *MetaEncoder) encodeIfFeatureList(parent any, from []*meta.IfFeature) []*pb.IfFeature {
+    if len(from) == 0 {
+        return nil
+    }
+    to := make([]*pb.IfFeature, len(from))    
+    for i, f := range from {
+        to[i] = e.encodeIfFeature(parent, f)
+    }
+    return to    
+}
+
+func (e *MetaEncoder) encodeMustList(parent any, from []*meta.Must) []*pb.Must {
+    if len(from) == 0 {
+        return nil
+    }
+    to := make([]*pb.Must, len(from))    
+    for i, f := range from {
+        to[i] = e.encodeMust(parent, f)
+    }
+    return to    
+}
 
 {{ range .MetaDefs}}
 {{ if .IsMetaDef }}
@@ -164,7 +193,13 @@ func (e *MetaEncoder) encode{{.Name}}(parent any, from *meta.{{.Name}}) *pb.{{.N
         def.{{.GoName}} = e.encode{{.CustomEncoder}}(&def, from.{{.GoName}}())
         {{- else if eq .GoName "Key" }}
         def.Key = e.encodeListKeys(from)
+        {{- else if eq .GoName "Value" }}
+        def.Value = int32(from.Value())
         {{- else if eq .GoName "DefaultVal" }}
+        if from.HasDefault() {
+            def.{{.GoName}} = from.Default()
+        }
+        {{- else if eq .GoName "DefaultVals" }}
         if from.HasDefault() {
             def.{{.GoName}} = from.Default()
         }

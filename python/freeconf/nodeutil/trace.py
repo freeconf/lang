@@ -88,13 +88,13 @@ class Trace():
     def action(self, r):
         self.trace(self.level, "action", r.meta.ident)
         if r.input is None:
-            self.trace(self.level+1, "input", "nil")
+            self.trace(self.level+1, "input", "<nil>")
         else:
             self.trace(self.level+1, "input", "true")
             
         output = self.target.action(r)
         if output is None:
-            self.trace(self.level+1, "output", "nil")
+            self.trace(self.level+1, "output", "<nil>")
         else:
             self.trace(self.level+1, "output", "true")
         return output
@@ -117,7 +117,7 @@ class Trace():
 
     def trace(self, level, key, val):
         if val == None:
-            val_str = "nil"
+            val_str = "<nil>"
         elif isinstance(val, bool):
             val_str = "true" if val else "false"
         else:

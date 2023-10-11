@@ -9,4 +9,19 @@ module recurse {
         }
     }
     uses x;
+
+    grouping p {
+        container q {
+            leaf f {
+                type string;
+            }
+        }
+    }
+
+    container zz {
+        uses p;
+        container zzz {
+            uses p;
+        }
+    }
 }

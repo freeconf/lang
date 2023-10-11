@@ -33,4 +33,17 @@
                   "leaf":{
                     "type":{
                       "ident":"string",
-                      "format":"string"}}}]}}]}}]}}
+                      "format":"string"}}}]}}]}},
+    {
+      "ident":"z",
+      "leaf":{
+        "type":{
+          "ident":"enumeration",
+          "enumeration":[
+            {
+              "label":"ten",
+              "id":10},
+            {
+              "label":"eleven",
+              "id":11}],
+          "format":"enum"}}}]}}

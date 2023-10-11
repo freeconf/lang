@@ -204,7 +204,7 @@ class Node():
     def do_get_field(self, r):
         v = self.read_value(r.meta)
         if v != None:
-            return val.Val(v)
+            return val.Val.new(v, r.meta.type)
         return None
 
     def do_clear_field(self, r):
@@ -233,9 +233,16 @@ class Node():
     def do_choose(self, sel, choice):
         for choice_case in choice.cases.values():
             for case_ddef in choice_case.definitions:
-                if self.container.get(case_ddef) != None:
+                if self.exists(case_ddef):
                     return choice_case
         return None
+
+    def exists(self, m):
+        if isinstance(m, meta.List) or isinstance(m, meta.Container):
+            r = node.ChildRequest(None, m, False, False)
+            return self.child(r) != None
+        r = node.FieldRequest(None, m, False, False)
+        return self.field(r, None) != None
     
     def begin_edit(self, r):
         if self.on_begin_edit != None:
@@ -498,11 +505,15 @@ class ObjectContainer():
         # support @ tags for properties?
 
         for candidate in FieldHandler.field_name_candidates(opts, meta):
-            f = getattr(self.node.object, candidate, None)
-            if f != None and type(f) != types.MethodType:
-                # found something, but continue on to look for getters or setters
-                h.field = candidate
-                break
+            try:
+                f = getattr(self.node.object, candidate)
+                if type(f) != types.MethodType:
+                    # found something, but continue on to look for getters or setters
+                    h.field = candidate
+                    break
+            except AttributeError:
+                pass
+
 
         if opts.getter_prefix:
             getter_prefix = opts.getter_prefix

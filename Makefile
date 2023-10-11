@@ -92,13 +92,13 @@ PY_TESTS = \
 	test_util_node.py \
 	test_node_action.py
 
-test-py: test-py-tests test-py-harness
+test-py: test-py-py test-py-go
 
 test-py-py:
 	cd python/tests; \
 		$(foreach T,$(PY_TESTS),echo $(T) && python3 $(T) || exit;)
 
-test-py-harness:
+test-py-go:
 	FC_LANG=python go test -v ./test
 
 deps-py:

@@ -3,10 +3,13 @@ import sys
 import enum
 import signal
 import logging
-import json
-from freeconf import node, driver, nodeutil, parser, source, meta
+from freeconf import node, driver, nodeutil, parser, source, meta, val
 import freeconf.pb.fc_test_pb2
 import freeconf.pb.fc_test_pb2_grpc
+
+sys.path.append(".")
+import schema_dumper
+
 
 usage = f"""
 Usage: {sys.argv[0]} fc-g-socket-file fc-x-socket-file
@@ -38,10 +41,10 @@ class TestHarnessServicer(freeconf.pb.fc_test_pb2_grpc.TestHarnessServicer):
 
     def CreateTestCase(self, req, context):
         out = open(req.traceFile, "w")
-        if req.testCase == freeconf.pb.fc_test_pb2.ECHO or req.testCase == freeconf.pb.fc_test_pb2.ADVANCED:
+        if req.testCase == freeconf.pb.fc_test_pb2.ECHO:
             e = Echo()
             n = e.node()
-        elif req.testCase == freeconf.pb.fc_test_pb2.BASIC:
+        elif req.testCase == freeconf.pb.fc_test_pb2.BASIC or req.testCase == freeconf.pb.fc_test_pb2.ADVANCED:
             n = nodeutil.Node({})
         else:
             raise Exception("unimplemented test case")
@@ -63,136 +66,10 @@ class TestHarnessServicer(freeconf.pb.fc_test_pb2_grpc.TestHarnessServicer):
     def ParseModule(self, req, context):
         ypath = source.path(req.dir, driver=self.driver)
         m = parser.load_module_file(ypath, req.moduleIdent, driver=self.driver)
-        dumper = schema_dumper(m)
+        dumper = schema_dumper.Dumper().node(m)
         node_hnd = node.ensure_node_hnd(self.driver, dumper)
-        print(f"dumper.hnd={node_hnd}")
         return freeconf.pb.fc_test_pb2.ParseModuleResponse(schemaNodeHnd=node_hnd)
 
-
-def schema_dumper(m):
-    def child(n, r):
-        if r.meta.ident in ['module']:
-            return n
-        return n.do_child(r)
-    
-    def field(n, r, v):
-        if r.meta.ident == "status":
-            if isinstance(n.object, meta.Module) or isinstance(n.object, meta.ExtensionDefArg):
-                return None
-        return n.do_field(r, v)
-    
-    def options(n, m, opts):
-        aliases = {
-            "notify": "notifications",
-            "dataDef": "definitions",
-            "identity": "identities",
-        }
-        opts.ident = aliases.get(m.ident, None)
-        return opts
-                
-    opts = nodeutil.NodeOptions(
-        try_plural_on_lists=True
-    )
-    return nodeutil.Node(m, 
-        options=opts,
-        on_child=child,
-        on_field=field, 
-        on_options=options)
-
-
-def meta_walk(path, val):
-    """
-      print every facet of a module and recurse into every meta object
-      in that module. print in a format that matches Go test harness metaDump
-      so that dump files can be diff'ed to ensure python is decoding modules
-      properly
-
-      it is my hope to replace this with implementation of schema_node.go so
-      python can generate the same exact file fc-yang and then better diffs can be
-      made.
-    """
-    context = path[-1]
-    if not val:
-        return None
-    if isinstance(val, dict):
-        if len(val) == 0:
-            return
-        obj = {}
-        for attr, attr_val in enumerate(val):
-            child = meta_walk(path_push(path, attr), attr_val)
-            if child:
-                obj[attr] = child
-        return obj
-    elif isinstance(val, list):
-        if len(val) == 0:
-            return
-        children = []
-        for item in val:
-            children.append(meta_walk(path, item))
-        return children
-    elif context == "dataDef":
-        return meta_walk_datadef(path, val)
-    elif context == "choice":
-        return meta_walk_choice(path, val)
-    elif hasattr(val, '__module__') and val.__module__ == "freeconf.meta":
-        obj = {}
-        for attr in dir(val):
-            if attr.startswith("__") or attr == "hnd" or attr == "parent":
-                continue
-            name = lookup_alias(attr)
-            child = meta_walk(path_push(path, name), getattr(val, attr))
-            if child:
-                obj[name] = child
-
-        if context == "module":
-            rev = val.revision()
-            if rev:
-                obj["revision"] = meta_walk(path_push(path, "revision"), rev)
-
-        return obj
-    elif context == "config" and val == True:
-        return None
-    elif isinstance(val, enum.Enum):
-        return val.name.lower()
-    else:
-        return val
-
-
-def meta_walk_datadef(path, ddef):
-    def_name = lookup_alias(ddef.__class__.__name__.lower())
-    data_def = {def_name:meta_walk(path_push(path, def_name), ddef)}
-    for pop_ident in ["ident", "description"]:
-        if pop_ident in data_def[def_name]:
-            data_def[pop_ident] = data_def[def_name].pop(pop_ident)
-    return data_def
-
-
-def meta_walk_choice(path, choice):
-     defs = []
-     idents = sorted(choice.cases.keys())
-     for ident in idents:
-        kase = meta_walk(path_push(path, "case"), choice.cases[ident])
-        del kase["ident"]
-        defs.append({
-            "case": kase,
-            "ident": ident,
-        })
-     return {"dataDef": defs, "ident": choice.ident}
-
-
-aliases = {
-    "definitions" : "dataDef",
-    "leaflist" : "leaf-list",
-}
-
-
-def lookup_alias(id):
-    return aliases.get(id, id)
-
-def path_push(path, item):
-    copy = path.copy()
-    copy.append(item)
-    return copy
 
 class Echo:
     """

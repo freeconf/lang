@@ -11,4 +11,13 @@ module advanced {
             type string; 
         }
     }
+
+    leaf z {
+        type enumeration {
+            enum ten {
+                value 10;
+            }
+            enum eleven;
+        }
+    }
 }

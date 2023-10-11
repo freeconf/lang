@@ -19,3 +19,5 @@ choose: x
     choosen: two
 field.read: two
     val: string(dos)
+field.read: z
+    val: <nil>

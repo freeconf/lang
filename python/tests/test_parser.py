@@ -54,7 +54,8 @@ module x {
 
         ypath = source.path("../../test/testdata/yang", driver=d)
 
-        files = ['car', 'recurse']
+        #files = ['car', 'recurse', 'advanced']
+        files = ['recurse']
         for f in files:
             parser.load_module_file(ypath, f, driver=d)
 

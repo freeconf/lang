@@ -48,6 +48,11 @@ func (h *Harness) Name() string {
 	return h.name
 }
 
+/*
+Connect - under normal circumstances the python side (or whatever) library starts
+the Go side by executing the fc-lang binary but here we reverse that can have
+Go start the python side because it is executing within a Go unit test.
+*/
 func (h *Harness) Connect() error {
 	fc.Debug.Println("starting x server")
 	if err := h.x.connect(h.gAddr, h.xAddr); err != nil {
