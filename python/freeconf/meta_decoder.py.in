@@ -84,6 +84,13 @@ class Decoder():
             to[x.ident] = x
         return to
 
+    def decode_BitList(self, parent, encoded_list):
+        to = []
+        for encoded in encoded_list:
+            x = self.decode_Bit(parent, encoded)
+            to[x.ident] = x
+        return to        
+
     def decode_Status(self, parent, encoded):
         return freeconf.meta.Status(encoded)
 
@@ -114,9 +121,30 @@ class Decoder():
                 raise Exception(f"could not find ptr for {ptr.path}")
 
 
+    def decode_RangeList(self, parent, encoded_list):
+        to = []
+        for encoded in encoded_list:
+            x = self.decode_Range(parent, encoded)
+            to.append(x)
+        return to
+
+    def decode_PatternList(self, parent, encoded_list):
+        to = []
+        for encoded in encoded_list:
+            x = self.decode_Range(parent, encoded)
+            to.append(x)
+        return to
+
+    def decode_TypeList(self, parent, encoded_list):
+        to = []
+        for encoded in encoded_list:
+            x = self.decode_Type(parent, encoded)
+            to.append(x)
+        return to
+
     def decode_Format(self, parent, encoded):
         return freeconf.val.Format(encoded)
-
+    
     # grpc wraps arrays with customer class that acts like an array. here we
     # drop that wackyness
     def decode_repeated_scalar(self, ary):

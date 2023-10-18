@@ -18,27 +18,37 @@ func encodeVal(v val.Value) *pb.Val {
 	switch v.Format() {
 {{- range .ValEnums }}
   {{- if .IsList }}
+    {{- if eq .GoFmtId "FmtLeafRefList" }}
+    case val.FmtLeafRefList:
+        panic("leafref list is not a valid value type for decoding")
+    {{- else }}    
 	case val.{{.GoFmtId }}:
         xVals := v.Value().({{.GoType}})
         vals := make([]*pb.ValUnion, len(xVals))
         for i, xVal := range xVals {
-    {{- if .GoToProtoNonListConversionRequired }}
+      {{- if .GoToProtoNonListConversionRequired }}
             x := newPb{{.ProtoType}}(xVal)
-    {{- else }}
+      {{- else }}
             x := {{"xVal" | .GoToProtoCast }}
-    {{- end }}
+      {{- end }}
             vals[i] = &pb.ValUnion{Value: &pb.ValUnion_{{.ProtoType}}Val{ {{.ProtoType}}Val: x} }
         }
 		return &pb.Val{Format:f, ListValue:vals}
+    {{- end }}
   {{- else }}
+    {{- if eq .GoFmtId "FmtLeafRef" }}
+    case val.FmtLeafRef:
+        panic("leafref is not a valid value type for encoding")
+    {{- else }}
 	case val.{{.GoFmtId }}:
         xVal := v.Value().({{.GoType}})
-    {{- if .GoToProtoNonListConversionRequired }}
+      {{- if .GoToProtoNonListConversionRequired }}
         x := newPb{{.ProtoType}}(xVal)
-    {{- else }}
+      {{- else }}
         x := {{"xVal" | .GoToProtoCast}}
-    {{- end }}
+      {{- end }}
 		return &pb.Val{Format:f, Value:&pb.ValUnion{Value: &pb.ValUnion_{{.ProtoType }}Val{ {{.ProtoType}}Val: x} } }
+    {{- end }}
   {{- end }}
 {{- end }}
     }
@@ -53,31 +63,41 @@ func decodeVal(v *pb.Val) val.Value {
     switch f {
 {{- range .ValEnums }}
   {{- if not .IsList }}
+    {{- if eq .GoFmtId "FmtLeafRef" }}
+    case val.FmtLeafRef:
+        panic("leafref is not a valid value type for decoding")
+    {{- else }}
     case val.{{.GoFmtId }}:
         pval := v.Value.Value.(*pb.ValUnion_{{.ProtoType}}Val).{{.ProtoType}}Val
-    {{- if .ProtoToGoNonListConversionRequired }}
+      {{- if .ProtoToGoNonListConversionRequired }}
         return new{{.ValType}}(pval)
-    {{- else }}
+      {{- else }}
         return val.{{.ValType}}({{"pval" | .ProtoToGoCast}})
+      {{- end }}
     {{- end }}
   {{- end }}
 {{- end }}
 {{- range .ValEnums }}
   {{- if .IsList }}
+    {{- if eq .GoFmtId "FmtLeafRefList" }}
+    case val.FmtLeafRefList:
+        panic("leafref list is not a valid value type for decoding")
+    {{- else }}
     case val.{{.GoFmtId }}:
         xVals := make([]{{.GoNonListType}}, len(v.ListValue))
         for i, next := range v.ListValue {      
             pval := next.Value.(*pb.ValUnion_{{.ProtoType}}Val).{{.ProtoType}}Val
-    {{- if .ProtoToGoNonListConversionRequired }}
+        {{- if .ProtoToGoNonListConversionRequired }}
             xVals[i] = new{{.ValNonListType}}(pval)
-    {{- else }}
+        {{- else }}
             xVals[i] = {{"pval" | .ProtoToGoCast}}
-    {{- end }}
+        {{- end }}
                 }
-    {{- if .ProtoToGoConversionRequired }}
+        {{- if .ProtoToGoConversionRequired }}
         return new{{.ValType}}(xVals)
-    {{- else }}
+        {{- else }}
         return val.{{.ValType}}(xVals)
+        {{- end }}
     {{- end }}
   {{- end }}
 {{- end }}
@@ -85,7 +105,6 @@ func decodeVal(v *pb.Val) val.Value {
             panic(fmt.Sprintf("proto decoder not implemented type %s", v))
     }
 }
-
 
 func newEmpty(_ any) val.Value {
     return val.NotEmpty

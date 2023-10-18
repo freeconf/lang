@@ -59,6 +59,8 @@ func encodeVal(v val.Value) *pb.Val {
 		xVal := v.Value().(int64)
 		x := xVal
 		return &pb.Val{Format: f, Value: &pb.ValUnion{Value: &pb.ValUnion_Int64Val{Int64Val: x}}}
+	case val.FmtLeafRef:
+		panic("leafref is not a valid value type for encoding")
 	case val.FmtString:
 		xVal := v.Value().(string)
 		x := xVal
@@ -167,6 +169,8 @@ func encodeVal(v val.Value) *pb.Val {
 			vals[i] = &pb.ValUnion{Value: &pb.ValUnion_Int64Val{Int64Val: x}}
 		}
 		return &pb.Val{Format: f, ListValue: vals}
+	case val.FmtLeafRefList:
+		panic("leafref list is not a valid value type for decoding")
 	case val.FmtStringList:
 		xVals := v.Value().([]string)
 		vals := make([]*pb.ValUnion, len(xVals))
@@ -250,6 +254,8 @@ func decodeVal(v *pb.Val) val.Value {
 	case val.FmtInt64:
 		pval := v.Value.Value.(*pb.ValUnion_Int64Val).Int64Val
 		return val.Int64(pval)
+	case val.FmtLeafRef:
+		panic("leafref is not a valid value type for decoding")
 	case val.FmtString:
 		pval := v.Value.Value.(*pb.ValUnion_StringVal).StringVal
 		return val.String(pval)
@@ -342,6 +348,8 @@ func decodeVal(v *pb.Val) val.Value {
 			xVals[i] = pval
 		}
 		return val.Int64List(xVals)
+	case val.FmtLeafRefList:
+		panic("leafref list is not a valid value type for decoding")
 	case val.FmtStringList:
 		xVals := make([]string, len(v.ListValue))
 		for i, next := range v.ListValue {

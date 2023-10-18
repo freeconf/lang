@@ -40,7 +40,7 @@ var goHarness = newGolang(restconf.InternalYPath)
 var pythonHarness = NewHarness("python", &python{})
 
 var allHarnesses = []nodeTestHarness{
-	//goHarness,
+	goHarness,
 	pythonHarness,
 }
 
@@ -214,6 +214,36 @@ func TestMeta(t *testing.T) {
 				os.Remove(dumpFile.Name())
 			}
 			fc.AssertEqual(t, nil, h.finalizeTestCase())
+		})
+	}
+}
+
+func TestValTypes(t *testing.T) {
+	ypath := source.Dir("testdata/yang")
+	m := parser.RequireModule(ypath, "val-types")
+	for _, h := range Langs() {
+		fc.RequireEqual(t, nil, h.Connect())
+		t.Run(h.Name(), func(t *testing.T) {
+			defer func() {
+				fc.RequireEqual(t, nil, h.Close())
+			}()
+			// setup
+			traceFile := tempFileName()
+			n, err := h.createTestCase(pb.TestCase_VAL_TYPES, traceFile)
+			fc.RequireEqual(t, nil, err)
+			b := node.NewBrowser(m, n)
+
+			// test
+			root := b.Root()
+			two, err := nodeutil.WritePrettyJSON(root)
+			fc.AssertEqual(t, nil, err)
+			fc.Gold(t, *update, []byte(two), "testdata/gold/val-types.json")
+
+			fc.AssertEqual(t, nil, h.finalizeTestCase())
+			fc.GoldFile(t, *update, traceFile, "testdata/gold/val-types.trace")
+
+			// teardown
+			os.Remove(traceFile)
 		})
 	}
 }

@@ -48,6 +48,11 @@ func (e *MetaEncoder) encodeFormat(parent *pb.Type, from val.Format) pb.Format {
     return pb.Format(from)
 }
 
+
+func (e *MetaEncoder) encodeInt(parent *pb.Type, from int) int32 {
+    return int32(from)
+}
+
 func (e *MetaEncoder) encodeOptionalBool(value bool, specified bool) pb.OptionalBool {
     if !specified {
         return pb.OptionalBool_NOT_SPECIFIED
@@ -175,26 +180,103 @@ func (e *MetaEncoder) encodeMustList(parent any, from []*meta.Must) []*pb.Must {
     return to    
 }
 
+func (e *MetaEncoder) encodeBitList(parent any, from []*meta.Bit) []*pb.Bit {
+    if len(from) == 0 {
+        return nil
+    }
+    to := make([]*pb.Bit, len(from))    
+    for i, f := range from {
+        to[i] = e.encodeBit(parent, f)
+    }
+    return to    
+}
+
+func (e *MetaEncoder) encodeRangeList(parent any, from []*meta.Range) []*pb.Range {
+    if len(from) == 0 {
+        return nil
+    }
+    to := make([]*pb.Range, len(from))    
+    for i, f := range from {
+        to[i] = e.encodeRange(parent, f)
+    }
+    return to    
+}
+
+func (e *MetaEncoder) encodePatternList(parent any, from []*meta.Pattern) []*pb.Pattern {
+    if len(from) == 0 {
+        return nil
+    }
+    to := make([]*pb.Pattern, len(from))    
+    for i, f := range from {
+        to[i] = e.encodePattern(parent, f)
+    }
+    return to    
+}
+
+func (e *MetaEncoder) encodeIdentities(from []*meta.Identity) []string {
+    to := make([]string, len(from))
+    for i, f := range from {
+        to[i] = f.Ident()
+    }
+    return to
+}
+
+func (e *MetaEncoder) encodeTypeList(parent any, from []*meta.Type) []*pb.Type {
+    if len(from) == 0 {
+        return nil
+    }
+    to := make([]*pb.Type, len(from))
+    for i, f := range from {
+        to[i] = e.encodeType(parent, f)
+    }
+    return to
+}
+
 {{ range .MetaDefs}}
 {{ if .IsMetaDef }}
 func (e *MetaEncoder) encode{{.Name}}(parent any, from *meta.{{.Name}}) *pb.{{.Name}} {
     if from == nil {
         return nil
     }
+
     var def pb.{{.Name}}
     {{- range .Fields}}
         {{- if eq .Type "OptionalBool" }}
         def.{{.GoName}} = e.encodeOptionalBool(from.{{.GoName}}(), from.Is{{.GoName}}Set())
         {{- else if eq .Type "DataDef" }}
         def.{{.GoName}} = e.encodeDataDefList(&def, from.DataDefinitions())        
+        {{- else if eq .Type "RangeNumber" }}
+        def.{{.GoName}} = e.encodeRangeNumber(&def, &from.{{.GoName}})
         {{- else if eq .GoName "Definition" }}
         def.{{.GoName}} = from.Definition().Ident()
-        {{- else if .CustomEncoder }}
-        def.{{.GoName}} = e.encode{{.CustomEncoder}}(&def, from.{{.GoName}}())
         {{- else if eq .GoName "Key" }}
         def.Key = e.encodeListKeys(from)
         {{- else if eq .GoName "Value" }}
         def.Value = int32(from.Value())
+        {{- else if eq .GoName "Str" }}
+        def.Str = from.String()
+        {{- else if eq .GoName "Integer" }}
+        if from.Integer() != nil {
+            def.Integer = *from.Integer()
+        }
+        {{- else if eq .GoName "IntegerSet" }}
+        def.IntegerSet = from.Integer() != nil
+        {{- else if eq .GoName "Unsigned" }}
+        if from.Unsigned() != nil {
+            def.Unsigned = *from.Unsigned()
+        }
+        {{- else if eq .GoName "UnsignedSet" }}
+        def.UnsignedSet = from.Unsigned() != nil
+        {{- else if eq .GoName "Float" }}
+        if from.Float() != nil {
+            def.Float = *from.Float()
+        }
+        {{- else if eq .GoName "FloatSet" }}
+        def.FloatSet = from.Float() != nil
+        {{- else if and (eq .GoName "Pattern") (eq .Type "string") }}
+        def.Pattern = from.Pattern
+        {{- else if eq .GoName "Position" }}
+        def.Position = int32(from.Position)
         {{- else if eq .GoName "DefaultVal" }}
         if from.HasDefault() {
             def.{{.GoName}} = from.Default()
@@ -203,6 +285,10 @@ func (e *MetaEncoder) encode{{.Name}}(parent any, from *meta.{{.Name}}) *pb.{{.N
         if from.HasDefault() {
             def.{{.GoName}} = from.Default()
         }
+        {{- else if eq .GoName "Base" }}
+        def.Base = e.encodeIdentities(from.Base())
+        {{- else if .CustomEncoder }}
+        def.{{.GoName}} = e.encode{{.CustomEncoder}}(&def, from.{{.GoName}}())
         {{- else }}
         def.{{.GoName}} = from.{{.GoName}}()
         {{- end }}

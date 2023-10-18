@@ -14,6 +14,7 @@ class Format(IntEnum):
     INT16 = 10
     INT32 = 11
     INT64 = 12
+    LEAF_REF = 13
     STRING = 14
     UINT8 = 15
     UINT16 = 16
@@ -30,6 +31,7 @@ class Format(IntEnum):
     INT16_LIST = 1034
     INT32_LIST = 1035
     INT64_LIST = 1036
+    LEAF_REF_LIST = 1037
     STRING_LIST = 1038
     UINT8_LIST = 1039
     UINT16_LIST = 1040
@@ -132,6 +134,8 @@ def proto_encode(val):
         return val_pb2.Val(format=val_pb2.INT32, value=val_pb2.ValUnion(int32_val=val.v))
     if val.format == Format.INT64:
         return val_pb2.Val(format=val_pb2.INT64, value=val_pb2.ValUnion(int64_val=val.v))
+    if val.format == Format.LEAF_REF:
+        return val_pb2.Val(format=val_pb2.LEAF_REF, value=val_pb2.ValUnion(leaf_ref_val=val.v))
     if val.format == Format.STRING:
         return val_pb2.Val(format=val_pb2.STRING, value=val_pb2.ValUnion(string_val=val.v))
     if val.format == Format.UINT8:
@@ -197,6 +201,11 @@ def proto_encode(val):
         for x_val in val.v:
             vals.append(val_pb2.ValUnion(int64_val=x_val))
         return val_pb2.Val(format=val_pb2.INT64_LIST, list_value=vals)
+    if val.format == Format.LEAF_REF_LIST:
+        vals = []
+        for x_val in val.v:
+            vals.append(val_pb2.ValUnion(leaf_ref_val=x_val))
+        return val_pb2.Val(format=val_pb2.LEAF_REF_LIST, list_value=vals)
     if val.format == Format.STRING_LIST:
         vals = []
         for x_val in val.v:
@@ -250,6 +259,8 @@ def proto_decode(proto_val):
         return Val(proto_val.value.int32_val, Format.INT32)
     if proto_val.format == val_pb2.INT64:
         return Val(proto_val.value.int64_val, Format.INT64)
+    if proto_val.format == val_pb2.LEAF_REF:
+        return Val(proto_val.value.leaf_ref_val, Format.LEAF_REF)
     if proto_val.format == val_pb2.STRING:
         return Val(proto_val.value.string_val, Format.STRING)
     if proto_val.format == val_pb2.UINT8:
@@ -315,6 +326,11 @@ def proto_decode(proto_val):
         for p_val in proto_val.list_value:
             vals.append(p_val.int64_val)
         return Val(vals, Format.INT64_LIST)
+    if proto_val.format == val_pb2.LEAF_REF_LIST:
+        vals = []
+        for p_val in proto_val.list_value:
+            vals.append(p_val.leaf_ref_val)
+        return Val(vals, Format.LEAF_REF_LIST)
     if proto_val.format == val_pb2.STRING_LIST:
         vals = []
         for p_val in proto_val.list_value:

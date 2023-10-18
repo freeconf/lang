@@ -16,7 +16,7 @@ enum Format {
   INT16 = 10;
   INT32 = 11;
   INT64 = 12;
-  // LEAF_REF = 13;
+  LEAF_REF = 13;
   STRING = 14;
   UINT8 = 15;
   UINT16 = 16;
@@ -37,7 +37,7 @@ enum Format {
   INT16_LIST = 1034;
   INT32_LIST = 1035;
   INT64_LIST = 1036;
-  // LEAF_REF_LIST = 1037;
+  LEAF_REF_LIST = 1037;
   STRING_LIST = 1038;
   UINT8_LIST = 1039;
   UINT16_LIST = 1040;
@@ -72,7 +72,6 @@ message ValUnion {
           int32 int16_val = 10;
           int32 int32_val = 11;
           int64 int64_val = 12;
-          string leaf_ref_val = 13;
           string string_val = 14;
           uint32 uint8_val = 15;
           uint32 uint16_val = 16;

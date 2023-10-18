@@ -17,6 +17,7 @@ enum TestCase {
     BASIC = 0;
     ECHO = 1;
     ADVANCED = 2;
+    VAL_TYPES = 3;
 }
 
 message FinalizeTestCaseRequest {

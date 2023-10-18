@@ -53,6 +53,9 @@ class Dumper:
             elif r.meta.ident == "when":
                 if n.object.when != None:
                     return val.Val(n.object.when.expression)
+            elif r.meta.ident == "label":
+                if isinstance(n.object, meta.Bit) or isinstance(n.object, meta.Enum):
+                    return val.Val(n.object.ident)
             #  for default, add to meta/protos
             return n.do_field(r, v)
         

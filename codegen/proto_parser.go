@@ -177,6 +177,10 @@ func (f *fieldDef) GoName() string {
 }
 
 func (f *fieldDef) PyCustomDecoder() string {
+	switch f.Type {
+	case "int32":
+		return ""
+	}
 	return f.CustomEncoder()
 }
 
@@ -186,8 +190,10 @@ func (f *fieldDef) CustomEncoder() string {
 		return title(f.Name)
 	}
 	switch f.Type {
-	case "string", "bool", "int32", "int64":
+	case "string", "bool", "int64":
 		return ""
+	case "int32":
+		return "Int"
 	}
 	encoder := f.Type
 	if f.Repeated {

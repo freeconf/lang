@@ -1,0 +1,12 @@
+module val-types {
+
+    leaf a {
+        type string;
+    }
+
+    leaf a-ref {
+        type leafref {
+            path "/a";
+        }
+    }
+}

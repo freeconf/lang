@@ -46,6 +46,8 @@ class TestHarnessServicer(freeconf.pb.fc_test_pb2_grpc.TestHarnessServicer):
             n = e.node()
         elif req.testCase == freeconf.pb.fc_test_pb2.BASIC or req.testCase == freeconf.pb.fc_test_pb2.ADVANCED:
             n = nodeutil.Node({})
+        elif req.testCase == freeconf.pb.fc_test_pb2.VAL_TYPES:
+            n = valTypes()
         else:
             raise Exception("unimplemented test case")
         self.trace_node = nodeutil.Trace(n, out)
@@ -69,6 +71,18 @@ class TestHarnessServicer(freeconf.pb.fc_test_pb2_grpc.TestHarnessServicer):
         dumper = schema_dumper.Dumper().node(m)
         node_hnd = node.ensure_node_hnd(self.driver, dumper)
         return freeconf.pb.fc_test_pb2.ParseModuleResponse(schemaNodeHnd=node_hnd)
+
+
+def valTypes():
+    obj = {
+        "a": "hello"
+    }
+    def field(p, r, v):
+        if r.meta.ident == "a-ref":
+            return val.Val(obj["a"], format=val.Format.STRING)
+        return p.do_field(r, v)
+        
+    return nodeutil.Node(obj, on_field=field)
 
 
 class Echo:

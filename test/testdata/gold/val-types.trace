@@ -1,0 +1,5 @@
+context: 
+field.read: a
+    val: string(hello)
+field.read: a-ref
+    val: string(hello)

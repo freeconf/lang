@@ -139,23 +139,64 @@ message Enum {
       repeated Extension extensions = 5;
 }
 
+message Bit {
+      string ident = 1;
+      string description = 2;
+      string reference = 3;
+      int32 position = 4;
+}
+
+message RangeNumber {
+      string str = 1;
+      bool isMax = 2;
+      bool isMin = 3;
+      int64 integer = 4;
+      bool integerSet = 5;
+      uint64 unsigned = 6;
+      bool unsignedSet = 7;
+      double float = 8;
+      bool floatSet = 9;
+}
+
+message RangeEntry {
+      RangeNumber min = 1;
+      RangeNumber max = 2;
+      RangeNumber exact = 3;
+}
+
+message Range {
+      string description = 2;
+      string reference = 3;
+      string errorMessage = 4;
+      string errorAppTag = 5;
+      repeated Extension extensions = 6;     
+}
+
+message Pattern {
+      string description = 2;
+      string reference = 3;
+      string pattern = 4;
+      string errorMessage = 5;
+      string errorAppTag = 6;
+      bool inverted = 7;
+      repeated Extension extensions = 8;     
+}
+
 message Type {
       string ident = 1;
       string description = 2;
       string reference = 3;
       Format format = 4;
       repeated Enum enums = 5;
-      // bits
-      // ranges
-      // lengths
-      // patterns
-      // path
-      // fractionDigits
-      // delegate
-      // base
-      // identities
-      // bool requireInstance
-      // unionTypes
+      repeated Bit bits = 6;
+      repeated Range range = 7;
+      repeated Range length = 8;
+      repeated Pattern patterns = 9;
+      string path = 10;
+      int32 fractionDigits = 11;
+      repeated string base = 13;
+      bool requireInstance = 15;
+      repeated Type union = 16;
       repeated Extension extensions = 20;
 }
 
@@ -175,6 +216,23 @@ message Leaf {
       repeated Extension extensions = 22;
 }
 
+message LeafList {
+      string ident = 1;
+      string description = 2;
+      string reference = 3;
+      Type type = 5;
+      OptionalBool config = 14;
+      OptionalBool mandatory = 15;
+      repeated string defaultVals = 16;
+      string units = 17;
+      When when = 18;
+      Status status = 19;
+      repeated IfFeature ifFeatures = 20;
+      repeated Must musts = 21;
+      repeated Extension extensions = 22;
+}
+  
+
 message List {
       string ident = 1;
       string description = 2;
@@ -193,20 +251,6 @@ message List {
       repeated Extension extensions = 22;
 }
 
-message LeafList {
-    string ident = 1;
-    string description = 2;
-    string reference = 3;
-    OptionalBool config = 14;
-    OptionalBool mandatory = 15;
-    repeated string defaultVals = 16;
-    string units = 17;
-    When when = 18;
-    Status status = 19;
-    repeated IfFeature ifFeatures = 20;
-    repeated Must musts = 21;
-    repeated Extension extensions = 22;
-}
 
 message MetaPointer {
       string path = 1;

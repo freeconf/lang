@@ -10,6 +10,7 @@ import (
 	"github.com/freeconf/yang/nodeutil"
 	"github.com/freeconf/yang/parser"
 	"github.com/freeconf/yang/source"
+	"github.com/freeconf/yang/val"
 )
 
 type golang struct {
@@ -47,6 +48,8 @@ func (d *golang) createTestCase(c pb.TestCase, tracefile string) (node.Node, err
 		n = d.echoNode()
 	case pb.TestCase_ADVANCED:
 		n = d.advancedNode(make(map[string]interface{}))
+	case pb.TestCase_VAL_TYPES:
+		n = d.valTypes()
 	default:
 		panic("test case not implemented")
 	}
@@ -56,6 +59,24 @@ func (d *golang) createTestCase(c pb.TestCase, tracefile string) (node.Node, err
 	}
 	d.traceFile = f
 	return nodeutil.Trace(n, f), nil
+}
+
+func (d *golang) valTypes() node.Node {
+	data := map[string]interface{}{
+		"a":     "hello",
+		"a-ref": "hello",
+	}
+	return &nodeutil.Extend{
+		Base: &nodeutil.Node{Object: data},
+		OnField: func(p node.Node, r node.FieldRequest, hnd *node.ValueHandle) error {
+			switch r.Meta.Ident() {
+			case "a-ref":
+				hnd.Val = val.String(data["a"].(string))
+				return nil
+			}
+			return p.Field(r, hnd)
+		},
+	}
 }
 
 func (d *golang) echoNode() node.Node {
