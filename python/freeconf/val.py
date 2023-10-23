@@ -48,6 +48,8 @@ class Val():
         self.v = v
         if label != None:
             self.label = label
+        if format == Format.LEAF_REF or format == Format.LEAF_REF_LIST:
+            raise Exception("use format of reference type not leafref type")
         if format is None:
             self.format = Val.auto_pick_format(v)
         elif format == 0:

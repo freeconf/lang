@@ -56,8 +56,19 @@ class Dumper:
             elif r.meta.ident == "label":
                 if isinstance(n.object, meta.Bit) or isinstance(n.object, meta.Enum):
                     return val.Val(n.object.ident)
-            #  for default, add to meta/protos
-            return n.do_field(r, v)
+            elif r.meta.ident == "base":
+                if n.object.base:
+                    return val.Val(n.object.base, format=val.Format.STRING_LIST)
+            # elif r.meta.ident == "default":
+            #     if n.object.default:
+            #         return val.Val(n.object.base, format=val.Format.STRING_LIST)
+            #         raise Exception("TODO")
+            # elif r.meta.ident == "defaults":
+            #     raise Exception("TODO")
+            else:
+                #  for default, add to meta/protos
+                return n.do_field(r, v)
+            return None
         
         def options(n, m, opts):
             aliases = {

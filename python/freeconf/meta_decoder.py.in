@@ -101,6 +101,7 @@ class Decoder():
             return True
         return False
 
+    # ptrs will be replaced later once the whole tree is formed
     def decode_MetaPointer(self, parent, encoded):
         ptr = MetaPointer(parent, encoded.path)
         self.ptrs.append(ptr)

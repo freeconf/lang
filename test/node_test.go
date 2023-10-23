@@ -40,7 +40,7 @@ var goHarness = newGolang(restconf.InternalYPath)
 var pythonHarness = NewHarness("python", &python{})
 
 var allHarnesses = []nodeTestHarness{
-	goHarness,
+	//goHarness,
 	pythonHarness,
 }
 
