@@ -1,6 +1,5 @@
 import enum
-import freeconf.pb.common_pb2
-from freeconf import val, parser
+from freeconf import val, parser, pb
 
 # This file is generated from meta.py.in
 
@@ -8,6 +7,10 @@ class Status(enum.Enum):
     CURRENT = 0
     DEPRECATED = 1
     OBSOLETE = 2
+
+class OrderedBy(enum.Enum):
+    SYSTEM = 0
+    USER = 1
 
 {{ range $index, $def := .MetaDefs}}
 {{ if $def.IsMetaDef }}
@@ -38,7 +41,7 @@ class {{ .Name }}():
         if len(self.revisions) > 0:
             return self.revisions[0]
         return None
-    {{- end }}
+    {{- end }}    
 
 {{- end }}
 
@@ -64,19 +67,19 @@ class Path():
         if resp.segments == None:
             return path
         for seg in resp.segments:
-            if seg.type == freeconf.pb.common_pb2.DATA_DEF:
+            if seg.type == pb.common_pb2.DATA_DEF:
                 ddef_meta = get_def(path.meta, seg.metaIdent)
                 path = Path(path, ddef_meta)
-            elif seg.type == freeconf.pb.common_pb2.RPC:
+            elif seg.type == pb.common_pb2.RPC:
                 rpc_meta = get_rpc(path.meta, seg.metaIdent)
                 path = Path(path, rpc_meta)
-            elif seg.type == freeconf.pb.common_pb2.NOTIFICATION:
+            elif seg.type == pb.common_pb2.NOTIFICATION:
                 notif_meta = get_notification(path.meta, seg.metaIdent)
                 path = Path(path, notif_meta)
-            elif seg.type == freeconf.pb.common_pb2.RPC_INPUT:
+            elif seg.type == pb.common_pb2.RPC_INPUT:
                 input_meta = path.meta.input
                 path = Path(path, input_meta)
-            elif seg.type == freeconf.pb.common_pb2.RPC_OUTPUT:
+            elif seg.type == pb.common_pb2.RPC_OUTPUT:
                 output_meta = path.meta.output
                 path = Path(path, output_meta)
             else:
@@ -168,3 +171,22 @@ def get_notification(meta, ident):
     if ddef:
         return ddef
     raise InvalidPathException(f'notification {ident} not found in {meta.ident}')
+
+def schema_path(meta):
+    s = ""
+    while meta != None:
+        s = string_prepend(s, meta.ident, "/")
+        meta = meta.parent
+    return s
+
+def schema_path_no_module(meta):
+    s = ""
+    while meta.parent != None:
+        s = string_prepend(s, meta.ident, "/")
+        meta = meta.parent
+    return s
+
+def string_prepend(target, seg, sep):
+    if target == "":
+        return seg
+    return seg + sep + target

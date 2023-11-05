@@ -36,6 +36,9 @@ class Dumper:
             if r.meta.ident in ['module', 'container', 'list', 'choice', 'case', 'leaf-list', 'leaf', 'anyxml', 'pointer']:
                 return n.new(n.object)
             elif r.meta.ident == 'dataDef':
+                if isinstance(n.object, meta.Choice):
+                    return n.new_list(n.object.cases)
+
                 if self.has_recursive_child(n.object):
                     copy = []
                     for ddef in n.object.definitions:
@@ -51,7 +54,7 @@ class Dumper:
                 if isinstance(n.object, meta.Module) or isinstance(n.object, meta.ExtensionDefArg):
                     return None
             elif r.meta.ident == "when":
-                if n.object.when != None:
+                if n.object.when != None and len(n.object.when.expression) > 0:
                     return val.Val(n.object.when.expression)
             elif r.meta.ident == "label":
                 if isinstance(n.object, meta.Bit) or isinstance(n.object, meta.Enum):
@@ -59,14 +62,21 @@ class Dumper:
             elif r.meta.ident == "base":
                 if n.object.base:
                     return val.Val(n.object.base, format=val.Format.STRING_LIST)
-            # elif r.meta.ident == "default":
-            #     if n.object.default:
-            #         return val.Val(n.object.base, format=val.Format.STRING_LIST)
-            #         raise Exception("TODO")
-            # elif r.meta.ident == "defaults":
-            #     raise Exception("TODO")
+            elif r.meta.ident == "id":
+                return val.Val(n.object.value)
+            elif r.meta.ident == "fractionDigits":
+                if n.object.fraction_digits > 0:
+                    return val.Val(n.object.fraction_digits, val.Format.INT32)
+            elif r.meta.ident == "config":
+                if n.object.config == False:
+                    return val.Val(False, val.Format.BOOL)
+            elif r.meta.ident == "requireInstance":
+                if n.object.require_instance == True:
+                    return val.Val(True, val.Format.BOOL)
+            elif r.meta.ident == "orderedBy":
+                if n.object.ordered_by != meta.OrderedBy.SYSTEM:
+                    return val.Val.new(n.object.ordered_by, r.meta.type)
             else:
-                #  for default, add to meta/protos
                 return n.do_field(r, v)
             return None
         
@@ -75,9 +85,9 @@ class Dumper:
                 "notify": "notifications",
                 "dataDef": "definitions",
                 "identity": "identities",
-                "default": "default_val",
+                "enumeration" : "enums",
+                "default" : "default_val",
                 "defaults" : "default_vals",
-                "enumeration" : "enums"
             }
             opts.ident = aliases.get(m.ident, None)
             return opts

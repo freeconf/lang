@@ -1,6 +1,4 @@
-import freeconf.meta
-import freeconf.pb.meta_pb2
-import freeconf.val
+from freeconf import meta, pb, val
 
 # generated file
 
@@ -10,9 +8,23 @@ class Decoder():
     def __init__(self):
         self.ptrs = []
 
-    def decode_ExtensionDefArgList(self, parent, encoded_list):        
-        pass
 
+    def decode_ExtensionDefList(self, parent, encoded_list):
+        to = {}
+        for encoded in encoded_list:
+            x = self.decode_ExtensionDef(parent, encoded)
+            to[encoded.ident] = x
+        return to
+
+
+    def decode_ExtensionDefArgList(self, parent, encoded_list):        
+        to = []
+        for encoded in encoded_list:
+            x = self.decode_ExtensionDefArg(parent, encoded)
+            to.append(x)
+        return to
+
+    
     def decode_ExtensionList(self, parent, encoded_list):
         to = {}
         for encoded in encoded_list:
@@ -92,14 +104,19 @@ class Decoder():
         return to        
 
     def decode_Status(self, parent, encoded):
-        return freeconf.meta.Status(encoded)
+        return meta.Status(encoded)
 
     def decode_OptionalBool(self, parent, encoded):
-        if encoded == freeconf.pb.meta_pb2.NOT_SPECIFIED:
+        if encoded == pb.meta_pb2.NOT_SPECIFIED:
             return None
-        if encoded == freeconf.pb.meta_pb2.TRUE:
+        if encoded == pb.meta_pb2.TRUE:
             return True
         return False
+
+    def decode_OptionalInt(self, parent, encoded):
+        if encoded.valid:
+            return encoded.i
+        return None
 
     # ptrs will be replaced later once the whole tree is formed
     def decode_MetaPointer(self, parent, encoded):
@@ -107,13 +124,21 @@ class Decoder():
         self.ptrs.append(ptr)
         return ptr
 
+
+    def _resolve_ptr(self, root, path):
+        target = meta.Path.find(root, path)
+        if target == None:
+            raise Exception(f"could not find {path} when resolving recursive nodes")
+        if isinstance(target, MetaPointer):
+            raise Exception(f"bad schema at {p} points to itself")
+        return target
+
+
     def resolve_ptrs(self, root):
         for ptr in self.ptrs:
-            orig = freeconf.meta.Path.find(root, ptr.path)
-            if orig == None:
-                raise Exception(f"could not find {ptr.path} when resolving recursive nodes")
+            orig = self._resolve_ptr(root, ptr.path)
             found = False
-            for i in range(len(ptr.parent.definitions)):
+            for i in range(len(ptr.parent.definitions)):            
                 if ptr.parent.definitions[i] == ptr:
                     ptr.parent.definitions[i] = orig
                     found = True
@@ -143,8 +168,17 @@ class Decoder():
             to.append(x)
         return to
 
+    def decode_UniqueList(self, to, encoded_list):
+        to = []
+        for encoded in encoded_list:
+            to.append(encoded.leafs)
+        return to
+
     def decode_Format(self, parent, encoded):
-        return freeconf.val.Format(encoded)
+        return val.Format(encoded)
+
+    def decode_OrderedBy(self, parent, encoded):
+        return meta.OrderedBy(encoded)
     
     # grpc wraps arrays with customer class that acts like an array. here we
     # drop that wackyness
@@ -170,7 +204,7 @@ class Decoder():
 {{ range .MetaDefs }}
 {{- if .IsMetaDef }}
     def decode_{{.Name}}(self, parent, encoded):
-        to = freeconf.meta.{{.Name}}()
+        to = meta.{{.Name}}()
         to.parent = parent
         {{- range .Fields }}
         {{- if .PyCustomDecoder }}

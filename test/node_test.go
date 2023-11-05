@@ -40,7 +40,7 @@ var goHarness = newGolang(restconf.InternalYPath)
 var pythonHarness = NewHarness("python", &python{})
 
 var allHarnesses = []nodeTestHarness{
-	//goHarness,
+	goHarness,
 	pythonHarness,
 }
 
@@ -171,7 +171,6 @@ func TestNotify(t *testing.T) {
 var yangFiles = []string{
 	"basic",
 	"advanced",
-	// "meta",
 }
 
 /*

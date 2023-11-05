@@ -144,6 +144,14 @@ class TestUtilNode(unittest.TestCase):
         self.assertIsNotNone(b.root().find("p=ONE"))
 
 
+        n = nodeutil.Node(
+            {"y":{}},
+            options = nodeutil.NodeOptions(
+                ignore_empty=True,
+            )
+        )
+        b = node.Browser(self.m, n)
+        self.assertIsNone(b.root().find("y"))
 
 if __name__ == '__main__':
     unittest.main()    

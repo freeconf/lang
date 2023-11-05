@@ -16,17 +16,20 @@ class NodeOptions():
                  getter_prefix=None,
                  setter_prefix=None,
                  action_output_exploded=False,
-                 action_input_exploded=False):
-        self.identities_as_strings = identities_as_strings
-        self.enums_as_ints = enums_as_ints
-        self.ignore_empty = ignore_empty
+                 action_input_exploded=False):        
         self.try_plural_on_lists = try_plural_on_lists
         self.ident = ident
         self.getter_prefix = getter_prefix
         self.setter_prefix = setter_prefix
-        self.enums_as_strings = enums_as_strings
         self.action_output_exploded = action_output_exploded
         self.action_input_exploded = action_input_exploded
+
+        #TODO
+        self.identities_as_strings = identities_as_strings
+        self.enums_as_ints = enums_as_ints
+        self.ignore_empty = ignore_empty
+        self.enums_as_strings = enums_as_strings
+
 
 
 class Node():
@@ -162,10 +165,14 @@ class Node():
         return self.new(object, r)
 
     def do_get_child(self, r):
-        c = self.container.get(r.meta)
-        if c == None:
+        obj = self.container.get(r.meta)
+        if obj == None:
             return None
-        return self.new(c, r)
+        
+        if not r.new and self.options.ignore_empty and reflect_is_empty(obj):
+            return None
+
+        return self.new(obj, r)
 
     def new_list_handler(self):
         if isinstance(self.object, dict):
@@ -203,9 +210,9 @@ class Node():
             
     def do_get_field(self, r):
         v = self.read_value(r.meta)
-        if v != None:
-            return val.Val.new(v, r.meta.type)
-        return None
+        if v == None:
+            return None
+        return val.Val.new(v, r.meta.type)
 
     def do_clear_field(self, r):
         self.container.clear(r.meta)
@@ -320,6 +327,11 @@ class Node():
         if self.on_notify != None:
             return self.on_notify(self, r)
         raise NotImplemented
+
+def reflect_is_empty(obj):
+    if isinstance(obj, list) or isinstance(obj, dict) or isinstance(obj, str):
+        return len(obj) == 0
+    return obj == None
 
 class ActionHandler():
         
@@ -468,6 +480,7 @@ class DictionaryContainer():
     def set(self, meta, v):
         self.object[meta.ident] = v
 
+
 class ObjectContainer():
     """Reads and writes to a object instance created from a class"""
 
@@ -536,6 +549,7 @@ class ObjectContainer():
                 break
 
         if h.field == None and h.getter == None and h.setter == None:
+            print(f"opts={vars(opts)}")
             return None
         return h
 
@@ -575,11 +589,14 @@ class FieldHandler():
         self.set(None)
 
 
-    def get(self):
+    def get(self):        
         if self.getter != None:
-            return self.getter()
+            v = self.getter()
         else:
-            return getattr(self.object, self.field)
+            v = getattr(self.object, self.field)
+        if reflect_is_empty(v):
+            return None
+        return v
 
     def set(self, v):
         if self.setter != None:

@@ -26,11 +26,12 @@ class Trace():
         else:
             self.trace(self.level, f'next.read[{r.row}]', self.ident_str(r.meta, r.key))
         next, key = self.target.next(r)
-        self.trace(self.level+1, "found", next!=None)
-        if not r.new:
+        found = next != None
+        self.trace(self.level+1, "found", found)
+        if not r.new and found:
             self.trace_vals(self.level+1, "response.key", key)
-        if next == None:
-            return None, key        
+        if not found:
+            return None, None
         return Trace(next, self.out, level=self.level+1), key
 
 
@@ -47,8 +48,9 @@ class Trace():
         else:
             self.trace(self.level, "child.read", self.meta_str(r.meta))
         child = self.target.child(r)
-        self.trace(self.level+1, "found", child!=None)
-        if child == None:
+        found = child != None
+        self.trace(self.level+1, "found", found)
+        if not found:
             return None
         return Trace(child, self.out, level=self.level+1)
 

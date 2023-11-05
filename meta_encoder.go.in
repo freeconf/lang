@@ -34,6 +34,16 @@ func (e *MetaEncoder) encodeRpcList(parent any, from map[string]*meta.Rpc) []*pb
     return to
 }
 
+func (e *MetaEncoder) encodeExtensionDefList(parent any, from map[string]*meta.ExtensionDef) []*pb.ExtensionDef {
+    to := make([]*pb.ExtensionDef, len(from))    
+    i := 0
+    for _, x := range from {
+        to[i] = e.encodeExtensionDef(parent, x)
+        i++
+    }
+    return to
+}
+
 func (e *MetaEncoder) encodeNotificationList(parent any, from map[string]*meta.Notification) []*pb.Notification {
     to := make([]*pb.Notification, len(from))    
     i := 0
@@ -49,8 +59,12 @@ func (e *MetaEncoder) encodeFormat(parent *pb.Type, from val.Format) pb.Format {
 }
 
 
-func (e *MetaEncoder) encodeInt(parent *pb.Type, from int) int32 {
+func (e *MetaEncoder) encodeInt(parent any, from int) int32 {
     return int32(from)
+}
+
+func (e *MetaEncoder) encodeOrderedBy(parent any, from meta.OrderedBy) pb.OrderedBy {
+	return pb.OrderedBy(from)
 }
 
 func (e *MetaEncoder) encodeOptionalBool(value bool, specified bool) pb.OptionalBool {
@@ -109,18 +123,29 @@ func (e *MetaEncoder) encodeChoiceCaseList(parent any, from map[string]*meta.Cho
     return to
 }
 
-func (e *MetaEncoder) encodeDataDefList(parent any, from []meta.Definition) []*pb.DataDef {
+func (e *MetaEncoder) encodeUniqueList(parent any, from [][]string) []*pb.Unique {
+    to := make([]*pb.Unique, len(from))
+    i := 0
+    for _, x := range from {
+        to[i] = &pb.Unique{Leafs: x}
+        i++
+    }
+    return to    
+}
+
+
+func (e *MetaEncoder) isRecursive(p meta.HasDataDefinitions, d meta.Definition) bool {
+    return d.Parent().(meta.HasDataDefinitions) != p
+}
+
+func (e *MetaEncoder) encodeDataDefList(parent any, hasDefs meta.HasDataDefinitions, from []meta.Definition) []*pb.DataDef {
     to := make([]*pb.DataDef, len(from))
     for i, d := range from {
 
-        if r, ok := d.(meta.HasDataDefinitions); ok {
-            if _, isRecursive := e.recursive[r]; isRecursive {
-                path := meta.SchemaPathNoModule(r)
-                to[i] = &pb.DataDef{DefOneof:&pb.DataDef_Ptr{Ptr: &pb.MetaPointer{Path: path}}}
-                continue
-            } else {
-                e.recursive[r] = struct{}{}
-            }
+        if e.isRecursive(hasDefs, d) {
+            path := meta.SchemaPathNoModule(d)
+            to[i] = &pb.DataDef{DefOneof:&pb.DataDef_Ptr{Ptr: &pb.MetaPointer{Path: path}}}
+            continue
         }
 
         switch x := d.(type) {
@@ -232,6 +257,11 @@ func (e *MetaEncoder) encodeTypeList(parent any, from []*meta.Type) []*pb.Type {
     return to
 }
 
+func (e *MetaEncoder) encodeOptionalInt(i int, valid bool) *pb.OptionalInt {
+    return &pb.OptionalInt{Valid:valid, I: int32(i)}
+}
+
+
 {{ range .MetaDefs}}
 {{ if .IsMetaDef }}
 func (e *MetaEncoder) encode{{.Name}}(parent any, from *meta.{{.Name}}) *pb.{{.Name}} {
@@ -243,8 +273,10 @@ func (e *MetaEncoder) encode{{.Name}}(parent any, from *meta.{{.Name}}) *pb.{{.N
     {{- range .Fields}}
         {{- if eq .Type "OptionalBool" }}
         def.{{.GoName}} = e.encodeOptionalBool(from.{{.GoName}}(), from.Is{{.GoName}}Set())
+        {{- else if eq .Type "OptionalInt" }}
+        def.{{.GoName}} = e.encodeOptionalInt(from.{{.GoName}}(), from.Is{{.GoName}}Set())
         {{- else if eq .Type "DataDef" }}
-        def.{{.GoName}} = e.encodeDataDefList(&def, from.DataDefinitions())        
+        def.{{.GoName}} = e.encodeDataDefList(&def, from, from.DataDefinitions())        
         {{- else if eq .Type "RangeNumber" }}
         def.{{.GoName}} = e.encodeRangeNumber(&def, &from.{{.GoName}})
         {{- else if eq .GoName "Definition" }}

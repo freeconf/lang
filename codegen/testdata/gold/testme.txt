@@ -1,4 +1,9 @@
 
+meta OptionalInt {
+    valid bool, valid bool;
+    i int32, i int32;
+}
+
 meta Module {
     ident string, ident string;
     namespace string, namespace string;
@@ -15,35 +20,44 @@ meta Module {
     identities Identity, identities Identity[];
     features Feature, features Feature[];
     extensions Extension, extensions Extension[];
+    extensionDefs ExtensionDef, extension_defs ExtensionDef[];
 }
 
 meta RpcInput {
     reference string, reference string;
-    extensions Extension, extensions Extension[];
     definitions DataDef, definitions DataDef[];
+    ifFeatures IfFeature, if_features IfFeature[];
+    musts Must, musts Must[];
+    extensions Extension, extensions Extension[];
 }
 
 meta RpcOutput {
     reference string, reference string;
-    extensions Extension, extensions Extension[];
     definitions DataDef, definitions DataDef[];
+    ifFeatures IfFeature, if_features IfFeature[];
+    musts Must, musts Must[];
+    extensions Extension, extensions Extension[];
 }
 
 meta Rpc {
     ident string, ident string;
     description string, description string;
-    extensions Extension, extensions Extension[];
     reference string, reference string;
     input RpcInput, input RpcInput;
     output RpcOutput, output RpcOutput;
+    status Status, status Status;
+    ifFeatures IfFeature, if_features IfFeature[];
+    extensions Extension, extensions Extension[];
 }
 
 meta Notification {
     ident string, ident string;
     description string, description string;
-    extensions Extension, extensions Extension[];
     reference string, reference string;
     definitions DataDef, definitions DataDef[];
+    status Status, status Status;
+    ifFeatures IfFeature, if_features IfFeature[];
+    extensions Extension, extensions Extension[];
 }
 
 meta ExtensionDefArg {
@@ -69,16 +83,93 @@ meta Extension {
     arguments string, arguments string[];
 }
 
+meta IfFeature {
+    expression string, expression string;
+    extensions Extension, extensions Extension[];
+}
+
+meta Must {
+    expression string, expression string;
+    description string, description string;
+    reference string, reference string;
+    errorMessage string, error_message string;
+    errorAppTag string, error_app_tag string;
+    extensions Extension, extensions Extension[];
+}
+
+meta When {
+    expression string, expression string;
+    description string, description string;
+    reference string, reference string;
+    extensions Extension, extensions Extension[];
+}
+
 meta Container {
     ident string, ident string;
     description string, description string;
     reference string, reference string;
-    extensions Extension, extensions Extension[];
+    presence string, presence string;
     definitions DataDef, definitions DataDef[];
     config OptionalBool, config OptionalBool;
     mandatory OptionalBool, mandatory OptionalBool;
     actions Rpc, actions Rpc[];
     notifications Notification, notifications Notification[];
+    when When, when When;
+    status Status, status Status;
+    ifFeatures IfFeature, if_features IfFeature[];
+    musts Must, musts Must[];
+    extensions Extension, extensions Extension[];
+}
+
+meta Enum {
+    ident string, ident string;
+    description string, description string;
+    reference string, reference string;
+    value int32, value int32;
+    extensions Extension, extensions Extension[];
+}
+
+meta Bit {
+    ident string, ident string;
+    description string, description string;
+    reference string, reference string;
+    position int32, position int32;
+}
+
+meta RangeNumber {
+    str string, str string;
+    isMax bool, is_max bool;
+    isMin bool, is_min bool;
+    integer int64, integer int64;
+    integerSet bool, integer_set bool;
+    unsigned uint64, unsigned uint64;
+    unsignedSet bool, unsigned_set bool;
+    float double, float double;
+    floatSet bool, float_set bool;
+}
+
+meta RangeEntry {
+    min RangeNumber, min RangeNumber;
+    max RangeNumber, max RangeNumber;
+    exact RangeNumber, exact RangeNumber;
+}
+
+meta Range {
+    description string, description string;
+    reference string, reference string;
+    errorMessage string, error_message string;
+    errorAppTag string, error_app_tag string;
+    extensions Extension, extensions Extension[];
+}
+
+meta Pattern {
+    description string, description string;
+    reference string, reference string;
+    pattern string, pattern string;
+    errorMessage string, error_message string;
+    errorAppTag string, error_app_tag string;
+    inverted bool, inverted bool;
+    extensions Extension, extensions Extension[];
 }
 
 meta Type {
@@ -86,40 +177,79 @@ meta Type {
     description string, description string;
     reference string, reference string;
     format Format, format Format;
+    enums Enum, enums Enum[];
+    bits Bit, bits Bit[];
+    range Range, range Range[];
+    length Range, length Range[];
+    patterns Pattern, patterns Pattern[];
+    path string, path string;
+    fractionDigits int32, fraction_digits int32;
+    base string, base string[];
+    requireInstance bool, require_instance bool;
+    union Type, union Type[];
+    extensions Extension, extensions Extension[];
 }
 
 meta Leaf {
     ident string, ident string;
     description string, description string;
     reference string, reference string;
-    extensions Extension, extensions Extension[];
     type Type, type Type;
     config OptionalBool, config OptionalBool;
     mandatory OptionalBool, mandatory OptionalBool;
     defaultVal string, default_val string;
-}
-
-meta List {
-    ident string, ident string;
-    description string, description string;
-    reference string, reference string;
+    units string, units string;
+    when When, when When;
+    status Status, status Status;
+    ifFeatures IfFeature, if_features IfFeature[];
+    musts Must, musts Must[];
     extensions Extension, extensions Extension[];
-    definitions DataDef, definitions DataDef[];
-    config OptionalBool, config OptionalBool;
-    mandatory OptionalBool, mandatory OptionalBool;
-    unbounded OptionalBool, unbounded OptionalBool;
-    actions Rpc, actions Rpc[];
-    notifications Notification, notifications Notification[];
-    key string, key string[];
 }
 
 meta LeafList {
     ident string, ident string;
     description string, description string;
     reference string, reference string;
-    extensions Extension, extensions Extension[];
+    type Type, type Type;
     config OptionalBool, config OptionalBool;
     mandatory OptionalBool, mandatory OptionalBool;
+    defaultVals string, default_vals string[];
+    units string, units string;
+    when When, when When;
+    status Status, status Status;
+    ifFeatures IfFeature, if_features IfFeature[];
+    musts Must, musts Must[];
+    extensions Extension, extensions Extension[];
+}
+
+meta Unique {
+    leafs string, leafs string[];
+}
+
+meta List {
+    ident string, ident string;
+    description string, description string;
+    reference string, reference string;
+    definitions DataDef, definitions DataDef[];
+    notifications Notification, notifications Notification[];
+    key string, key string[];
+    config OptionalBool, config OptionalBool;
+    mandatory OptionalBool, mandatory OptionalBool;
+    actions Rpc, actions Rpc[];
+    when When, when When;
+    status Status, status Status;
+    ifFeatures IfFeature, if_features IfFeature[];
+    musts Must, musts Must[];
+    extensions Extension, extensions Extension[];
+    unique Unique, unique Unique[];
+    orderedBy OrderedBy, ordered_by OrderedBy;
+    minElements OptionalInt, min_elements OptionalInt;
+    maxElements OptionalInt, max_elements OptionalInt;
+    unbounded OptionalBool, unbounded OptionalBool;
+}
+
+meta MetaPointer {
+    path string, path string;
 }
 
 meta DataDef {
@@ -129,15 +259,20 @@ meta Any {
     ident string, ident string;
     description string, description string;
     reference string, reference string;
-    extensions Extension, extensions Extension[];
     config OptionalBool, config OptionalBool;
     mandatory OptionalBool, mandatory OptionalBool;
+    when When, when When;
+    status Status, status Status;
+    ifFeatures IfFeature, if_features IfFeature[];
+    musts Must, musts Must[];
+    extensions Extension, extensions Extension[];
 }
 
 meta Identity {
     ident string, ident string;
     description string, description string;
     reference string, reference string;
+    status Status, status Status;
     baseIds string, base_ids string[];
     extensions Extension, extensions Extension[];
 }
@@ -146,6 +281,7 @@ meta Feature {
     ident string, ident string;
     description string, description string;
     reference string, reference string;
+    status Status, status Status;
     extensions Extension, extensions Extension[];
 }
 
@@ -160,20 +296,25 @@ meta Choice {
     ident string, ident string;
     description string, description string;
     reference string, reference string;
-    extensions Extension, extensions Extension[];
-    status Status, status Status;
     config OptionalBool, config OptionalBool;
     mandatory OptionalBool, mandatory OptionalBool;
     defaultVal string, default_val string;
     cases ChoiceCase, cases ChoiceCase[];
+    when When, when When;
+    status Status, status Status;
+    ifFeatures IfFeature, if_features IfFeature[];
+    extensions Extension, extensions Extension[];
 }
 
 meta ChoiceCase {
     ident string, ident string;
     description string, description string;
     reference string, reference string;
-    extensions Extension, extensions Extension[];
     definitions DataDef, definitions DataDef[];
+    when When, when When;
+    status Status, status Status;
+    ifFeatures IfFeature, if_features IfFeature[];
+    extensions Extension, extensions Extension[];
 }
 
 meta EnumVal {
@@ -219,6 +360,8 @@ val {
 
  INT64, Int64
 
+ LEAF_REF, LeafRef
+
  STRING, String
 
  UINT8, Uint8
@@ -250,6 +393,8 @@ val {
  INT32_LIST, Int32
 
  INT64_LIST, Int64
+
+ LEAF_REF_LIST, LeafRef
 
  STRING_LIST, String
 

@@ -15,6 +15,16 @@ enum Status {
       OBSOLETE = 2;
 }
 
+enum OrderedBy {
+      SYSTEM = 0;
+      USER = 1;
+}
+
+message OptionalInt {
+      bool valid = 1;
+      int32 i = 2;
+}
+
 message Module {
       string ident = 1;
       string namespace = 2;
@@ -31,6 +41,7 @@ message Module {
       repeated Identity identities = 13;
       repeated Feature features = 14;
       repeated Extension extensions = 16;
+      repeated ExtensionDef extensionDefs = 17;
 }
 
 message RpcInput {
@@ -231,7 +242,10 @@ message LeafList {
       repeated Must musts = 21;
       repeated Extension extensions = 22;
 }
-  
+
+message Unique {
+      repeated string leafs = 1;
+}
 
 message List {
       string ident = 1;
@@ -242,13 +256,17 @@ message List {
       repeated string key = 13;
       OptionalBool config = 14;
       OptionalBool mandatory = 15;
-      OptionalBool unbounded = 16;
       repeated Rpc actions = 17;
       When when = 18;
       Status status = 19;
       repeated IfFeature ifFeatures = 20;
       repeated Must musts = 21;
       repeated Extension extensions = 22;
+      repeated Unique unique = 23;
+      OrderedBy orderedBy = 24;
+      OptionalInt minElements = 25;
+      OptionalInt maxElements = 26;
+      OptionalBool unbounded = 27;
 }
 
 

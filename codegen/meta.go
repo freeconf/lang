@@ -31,7 +31,7 @@ func (s *metaDef) RecurseCapable() bool {
 
 func (s *metaDef) IsMetaDef() bool {
 	switch s.Message.Name {
-	case "DataDef":
+	case "DataDef", "Unique", "OptionalInt":
 		return false
 	}
 	return true && s.Name() != "MetaPointer"

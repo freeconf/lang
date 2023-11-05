@@ -22,7 +22,6 @@ child.new: z
         new: true
     next.read[0]: z=aa
         found: false
-        response.key: nil
     next.new[0]: z=aa
         found: true
         context: 
@@ -37,7 +36,6 @@ child.new: z
 release: 
     next.read[1]: z=bb
         found: false
-        response.key: nil
     next.new[1]: z=bb
         found: true
         context: 
