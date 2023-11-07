@@ -171,6 +171,7 @@ func TestNotify(t *testing.T) {
 var yangFiles = []string{
 	"basic",
 	"advanced",
+	"meta",
 }
 
 /*

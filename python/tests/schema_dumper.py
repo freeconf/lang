@@ -88,12 +88,14 @@ class Dumper:
                 "enumeration" : "enums",
                 "default" : "default_val",
                 "defaults" : "default_vals",
+                "derivedIds" : "derived_direct_ids",
             }
             opts.ident = aliases.get(m.ident, None)
             return opts
                     
         opts = nodeutil.NodeOptions(
-            try_plural_on_lists=True
+            try_plural_on_lists=True,
+            ignore_empty=True
         )
         return nodeutil.Node(m, 
             options=opts,

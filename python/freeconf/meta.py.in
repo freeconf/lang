@@ -43,6 +43,17 @@ class {{ .Name }}():
         return None
     {{- end }}    
 
+    {{- if eq $def.Name "Identity" }}
+    def base(self):
+        return [self.parent.identities[id] for id in self.base_ids]
+
+
+    def derived_direct(self):
+        return [self.parent.identities[id] for id in self.derived_direct_ids]
+
+    {{- end }}    
+
+
 {{- end }}
 
 class Path():

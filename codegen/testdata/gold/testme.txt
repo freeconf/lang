@@ -65,6 +65,7 @@ meta ExtensionDefArg {
     description string, description string;
     reference string, reference string;
     yinElement bool, yin_element bool;
+    extensions Extension, extensions Extension[];
 }
 
 meta ExtensionDef {
@@ -73,6 +74,7 @@ meta ExtensionDef {
     reference string, reference string;
     status Status, status Status;
     arguments ExtensionDefArg, arguments ExtensionDefArg[];
+    extensions Extension, extensions Extension[];
 }
 
 meta Extension {
@@ -274,6 +276,8 @@ meta Identity {
     reference string, reference string;
     status Status, status Status;
     baseIds string, base_ids string[];
+    derivedDirectIds string, derived_direct_ids string[];
+    ifFeatures IfFeature, if_features IfFeature[];
     extensions Extension, extensions Extension[];
 }
 
@@ -282,6 +286,7 @@ meta Feature {
     description string, description string;
     reference string, reference string;
     status Status, status Status;
+    ifFeatures IfFeature, if_features IfFeature[];
     extensions Extension, extensions Extension[];
 }
 

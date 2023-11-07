@@ -1,0 +1,97 @@
+{
+"module":{
+  "ident":"meta",
+  "description":"smogishboard of yang features",
+  "reference":"ref here",
+  "namespace":"m.freeconf.org",
+  "prefix":"m",
+  "contact":"douglas@hubler.us",
+  "organization":"freeconf.org",
+  "version":"\"1.1\"",
+  "revision":{
+    "ident":"2023-05-18",
+    "description":"day i wrote this",
+    "reference":"ref here"},
+  "revisions":[
+    {
+      "ident":"2023-05-18",
+      "description":"day i wrote this",
+      "reference":"ref here"},
+    {
+      "ident":"2023-05-01",
+      "description":"older revsion",
+      "reference":"another ref here"}],
+  "dataDef":[
+    {
+      "ident":"bird",
+      "description":"tweet tweet",
+      "list":{
+        "key":["name"],
+        "dataDef":[
+          {
+            "ident":"name",
+            "description":"who dat?",
+            "leaf":{
+              "type":{
+                "ident":"string",
+                "format":"string"}}},
+          {
+            "ident":"ground-bird",
+            "extension":[
+              {
+                "prefix":"m",
+                "ident":"advanced",
+                "arguments":["5"]}],
+            "leaf":{
+              "type":{
+                "ident":"boolean",
+                "format":"boolean"}}},
+          {
+            "ident":"transport",
+            "choice":{
+              "dataDef":[
+                {
+                  "ident":"fly-speed",
+                  "case":{
+                    "dataDef":[
+                      {
+                        "ident":"fly-speed",
+                        "leaf":{
+                          "units":"\"m/s\"",
+                          "type":{
+                            "ident":"decimal64",
+                            "format":"decimal64"}}}]}},
+                {
+                  "ident":"swim-speed",
+                  "case":{
+                    "dataDef":[
+                      {
+                        "ident":"swim-speed",
+                        "leaf":{
+                          "units":"\"knots\"",
+                          "type":{
+                            "ident":"decimal64",
+                            "format":"decimal64"}}}]}}]}}]}}],
+  "identity":[
+    {
+      "ident":"continent",
+      "derivedIds":["country"]},
+    {
+      "ident":"country",
+      "baseIds":["continent"]}],
+  "feature":[
+    {
+      "ident":"migration",
+      "description":"birds are moving",
+      "reference":"audobon guide"},
+    {
+      "ident":"nesting",
+      "description":"home sweet home",
+      "reference":"national geographic"}],
+  "extensionDef":[
+    {
+      "ident":"advanced",
+      "description":"this fact for the leet only",
+      "argument":[
+        {
+          "ident":"\"level\""}]}]}}

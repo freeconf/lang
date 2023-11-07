@@ -137,7 +137,6 @@ func (h *Harness) parseModule(dir string, moduleIdent string) (node.Node, error)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("schemaNodeHnd=%d\n", resp.SchemaNodeHnd)
 	dumper := h.access.ResolveHnd(resp.SchemaNodeHnd).(node.Node)
 	return dumper, err
 }

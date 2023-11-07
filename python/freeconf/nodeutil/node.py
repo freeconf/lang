@@ -331,6 +331,8 @@ class Node():
 def reflect_is_empty(obj):
     if isinstance(obj, list) or isinstance(obj, dict) or isinstance(obj, str):
         return len(obj) == 0
+    if isinstance(obj, bool):
+        return True
     return obj == None
 
 class ActionHandler():
@@ -549,7 +551,6 @@ class ObjectContainer():
                 break
 
         if h.field == None and h.getter == None and h.setter == None:
-            print(f"opts={vars(opts)}")
             return None
         return h
 
@@ -594,7 +595,7 @@ class FieldHandler():
             v = self.getter()
         else:
             v = getattr(self.object, self.field)
-        if reflect_is_empty(v):
+        if self.opts.ignore_empty and reflect_is_empty(v):
             return None
         return v
 
