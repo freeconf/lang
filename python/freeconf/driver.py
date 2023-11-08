@@ -141,6 +141,7 @@ class Driver():
         i = 0
         while i < 20 or wait_forever:
             if os.path.exists(self.sock_file):
+                time.sleep(0.1)
                 return
             time.sleep(0.5)
             i = i + 1
