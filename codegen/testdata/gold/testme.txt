@@ -73,7 +73,7 @@ meta ExtensionDef {
     description string, description string;
     reference string, reference string;
     status Status, status Status;
-    arguments ExtensionDefArg, arguments ExtensionDefArg[];
+    argument ExtensionDefArg, argument ExtensionDefArg;
     extensions Extension, extensions Extension[];
 }
 
@@ -81,8 +81,7 @@ meta Extension {
     ident string, ident string;
     prefix string, prefix string;
     keyword string, keyword string;
-    definition string, definition string;
-    arguments string, arguments string[];
+    argument string, argument string;
 }
 
 meta IfFeature {

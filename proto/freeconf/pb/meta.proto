@@ -94,7 +94,7 @@ message ExtensionDef {
     string description = 2;
     string reference = 3;
     Status status = 4;
-    repeated ExtensionDefArg arguments = 5;
+    ExtensionDefArg argument = 5;
     repeated Extension extensions = 22;
 }
 
@@ -102,8 +102,8 @@ message Extension {
       string ident = 1;
       string prefix = 2;
       string keyword = 3;
-      string definition = 4;
-      repeated string arguments = 5;
+      string argument = 5;
+      // TODO: full yang structure (e.g. yang-data)
 }
 
 message IfFeature {

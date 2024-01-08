@@ -30,8 +30,6 @@ class NodeOptions():
         self.ignore_empty = ignore_empty
         self.enums_as_strings = enums_as_strings
 
-
-
 class Node():
 
     def __init__(self, object, 

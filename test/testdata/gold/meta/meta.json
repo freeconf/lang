@@ -41,7 +41,7 @@
               {
                 "prefix":"m",
                 "ident":"advanced",
-                "arguments":["5"]}],
+                "argument":"5"}],
             "leaf":{
               "type":{
                 "ident":"boolean",
@@ -92,6 +92,5 @@
     {
       "ident":"advanced",
       "description":"this fact for the leet only",
-      "argument":[
-        {
-          "ident":"\"level\""}]}]}}
+      "argument":{
+        "ident":"\"level\""}}]}}
